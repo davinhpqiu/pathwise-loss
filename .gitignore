@@ -25,3 +25,7 @@ slurm-*.out
 
 # OS
 .DS_Store
+
+# R
+.Rhistory
+.RData
