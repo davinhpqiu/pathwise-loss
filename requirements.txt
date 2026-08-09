@@ -1,0 +1,24 @@
+# Core dependencies — everything needed for notebook 01 and the test suite.
+# Nothing here needs a compiler, a GPU, or a git clone. Install this and you
+# can run all current work.
+#
+#     pip install -r requirements.txt
+#
+# The torch + signature stack is deliberately NOT here: see requirements-ml.txt.
+
+# Numerics
+numpy>=1.26
+scipy>=1.11
+matplotlib>=3.8
+pandas>=2.1
+
+# Interactive work
+jupyterlab>=4.0
+ipykernel>=6.29
+
+# Config parsing (scripts/run_experiment.py)
+pyyaml>=6.0
+
+# Testing / hygiene
+pytest>=8.0
+ruff>=0.5

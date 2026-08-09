@@ -1,0 +1,41 @@
+# Modelling stack — NOT needed until week 2. Install separately, and expect
+# this one to require attention; the signature libraries are fussy.
+#
+#     pip install -r requirements-ml.txt
+#
+# Then, separately, the signature kernel (see note at the bottom):
+#
+#     pip install --no-build-isolation git+https://github.com/crispitagorico/sigkernel.git
+
+# --- deep learning ---------------------------------------------------------
+torch>=2.2
+torchcde>=0.2.5           # continuous interpolation + CDE solvers (Kidger)
+torchdiffeq>=0.2.3
+
+# --- signatures ------------------------------------------------------------
+# iisignature: pure CPU, no torch coupling, installs cleanly. Use this first.
+iisignature>=0.24
+
+# Build tooling that some of the above need to compile against.
+# Listed explicitly so `--no-build-isolation` installs have them available.
+cython>=3.0
+
+# --- NOT listed as a dependency, install manually ---------------------------
+#
+# sigkernel (Salvi et al. 2021, the Goursat-PDE signature kernel)
+#   Its setup.py imports Cython but does not declare it in build-system.requires,
+#   so pip's isolated build environment fails with
+#       ModuleNotFoundError: No module named 'Cython'
+#   Fix: install cython and torch FIRST (they are above), then bypass isolation:
+#       pip install --no-build-isolation git+https://github.com/crispitagorico/sigkernel.git
+#   It is a git dependency with a compile step, so it does not belong in a
+#   requirements file that anything else depends on completing.
+#
+# signatory
+#   Pinned to specific torch versions and effectively unmaintained; it does not
+#   build on Python 3.11+. Use iisignature (CPU) or signax (JAX) instead.
+#
+# --- optional JAX alternative ----------------------------------------------
+# jax[cpu]>=0.4.26
+# diffrax>=0.5              # the solver used as reference in Ferrucci-Perree-Lyons
+# signax>=0.2

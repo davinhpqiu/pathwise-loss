@@ -1,0 +1,39 @@
+# Baseline: pointwise MSE on a seq2seq model. Everything else is measured
+# against this. One YAML per experiment;
+
+name: baseline_mse
+seed: 0
+
+data:
+  generator: ornstein_uhlenbeck   # {ornstein_uhlenbeck, brownian_motion, smooth_test_path}
+  n_paths: 2048
+  n_fine: 4097                    # ground-truth "continuous" grid
+  T: 1.0
+  theta: 2.0
+  sigma: 0.5
+  sampling:
+    mode: bernoulli               # {none, bernoulli, clustered}
+    keep: 0.25
+    missingness: 0.0
+
+model:
+  kind: lstm                      # {lstm, transformer, linear_ncde}
+  hidden: 64
+  layers: 2
+  interpolation: cubic_hermite    # control path for the CDE models
+
+loss:
+  kind: mse                       # {mse, integral_lp, sig_mmd, kernel_score}
+  p: 2
+
+train:
+  epochs: 200
+  batch_size: 64
+  lr: 1.0e-3
+  device: cuda
+
+eval:
+  # Always report these together -- see logbook 2026-08-06: a loss value is
+  # uninterpretable without the sampling density that produced it.
+  metrics: [mse, integral_l2, integral_linf, sampling_density]
+  bootstrap_resamples: 500

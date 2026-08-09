@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+
+# Data and outputs — regenerate, don't commit
+data/raw/*
+data/synthetic/*
+!data/**/.gitkeep
+results/runs/*
+results/logs/*
+!results/**/.gitkeep
+
+# Keep figures that go in the report, ignore scratch ones
+results/figures/scratch/
+
+# ARC / SLURM
+slurm-*.out
+*.err
+
+# OS
+.DS_Store

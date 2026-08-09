@@ -1,0 +1,286 @@
+% Bibliography for "Principled loss functions for continuous-time learning"
+%
+% Works are cited at the point of use, in the notebook or logbook entry where
+% they affected a decision. This file is the single list; there is no separate
+% reading index. `note` fields give the local PDF filename where we have one.
+% ---------------------------------------------------------------- functional data / integral norms
+@book{ramsay2005functional,
+  title     = {Functional Data Analysis},
+  author    = {Ramsay, James O. and Silverman, Bernard W.},
+  edition   = {2nd},
+  publisher = {Springer},
+  year      = {2005},
+  note      = {Ch. 3--5: basis representation, Gram matrices, roughness penalties}
+}
+
+@article{ferraty2006nonparametric,
+  title   = {Nonparametric regression on functional data: inference and practical aspects},
+  author  = {Ferraty, Fr{\'e}d{\'e}ric and Vieu, Philippe},
+  journal = {Australian \& New Zealand Journal of Statistics},
+  volume  = {49},
+  pages   = {267--286},
+  year    = {2006}
+}
+
+% ---------------------------------------------------------------- p-variation, computation
+@article{butkus2018computation,
+  title   = {Computation of p-variation},
+  author  = {Butkus, Vygantas and Norvai{\v{s}}a, Rimas},
+  journal = {Lithuanian Mathematical Journal},
+  volume  = {58},
+  pages   = {360--378},
+  year    = {2018},
+  doi     = {10.1007/s10986-018-9414-3},
+  note    = {R package \texttt{pvar}}
+}
+
+@misc{ferrucci2026concise,
+  title         = {Concise $(\varepsilon, r)$-representations of a path},
+  author        = {Ferrucci, Emilio and Perr{\'e}e, Oliver and Lyons, Terry},
+  year          = {2026},
+  eprint        = {2607.26281},
+  archivePrefix = {arXiv},
+  primaryClass  = {math.NA},
+  note          = {Remark 2.2 on the cost of computing p-variation. PDF: papers/2607.26281v1.pdf}
+}
+
+% ---------------------------------------------------------------- quadrature / numerical integration
+@article{trefethen2014exponentially,
+  title   = {The exponentially convergent trapezoidal rule},
+  author  = {Trefethen, Lloyd N. and Weideman, J. A. C.},
+  journal = {SIAM Review},
+  volume  = {56},
+  number  = {3},
+  pages   = {385--458},
+  year    = {2014},
+  doi     = {10.1137/130932132},
+  note    = {Why the trapezoid rule is spectrally accurate on periodic integrands
+             -- the Euler--Maclaurin cancellation behind notebook 01 §2}
+}
+
+@book{davis1984methods,
+  title     = {Methods of Numerical Integration},
+  author    = {Davis, Philip J. and Rabinowitz, Philip},
+  edition   = {2nd},
+  publisher = {Academic Press},
+  year      = {1984},
+  note      = {Standard reference for quadrature error terms and Gauss--Legendre}
+}
+
+@misc{daoudi2024efficient,
+  title  = {Efficient algorithms computing p-variation},
+  author = {Daoudi, Aimen and Junca, St{\'e}phane},
+  year   = {2024},
+  note   = {Preprint, \url{https://hal.science/hal-04393579v1/document}}
+}
+
+% ---------------------------------------------------------------- signatures / rough paths
+@article{chevyrev2016primer,
+  title   = {A primer on the signature method in machine learning},
+  author  = {Chevyrev, Ilya and Kormilitzin, Andrey},
+  journal = {arXiv preprint arXiv:1603.03788},
+  year    = {2016}
+}
+
+@article{chevyrev2016characteristic,
+  title   = {Characteristic functions of measures on geometric rough paths},
+  author  = {Chevyrev, Ilya and Lyons, Terry},
+  journal = {The Annals of Probability},
+  volume  = {44},
+  number  = {6},
+  pages   = {4049--4082},
+  year    = {2016},
+  eprint  = {1307.3580},
+  archivePrefix = {arXiv},
+  note    = {PDF: papers/1307.3580v6.pdf}
+}
+
+@article{salvi2021signature,
+  title   = {The signature kernel is the solution of a Goursat PDE},
+  author  = {Salvi, Cristopher and Cass, Thomas and Foster, James and Lyons, Terry and Yang, Weixin},
+  journal = {SIAM Journal on Mathematics of Data Science},
+  volume  = {3},
+  number  = {3},
+  pages   = {873--899},
+  year    = {2021},
+  eprint  = {2006.14794},
+  archivePrefix = {arXiv},
+  note    = {PDF: papers/2006.14794v9.pdf}
+}
+
+% ---------------------------------------------------------------- kernels, MMD, two-sample tests
+@article{gretton2012kernel,
+  title   = {A kernel two-sample test},
+  author  = {Gretton, Arthur and Borgwardt, Karsten M. and Rasch, Malte J. and
+             Sch{\"o}lkopf, Bernhard and Smola, Alexander},
+  journal = {Journal of Machine Learning Research},
+  volume  = {13},
+  pages   = {723--773},
+  year    = {2012}
+}
+
+@article{wynne2022kernel,
+  title   = {A kernel two-sample test for functional data},
+  author  = {Wynne, George and Duncan, Andrew B.},
+  journal = {Journal of Machine Learning Research},
+  volume  = {23},
+  number  = {1},
+  year    = {2022}
+}
+
+@article{mikalsen2018time,
+  title   = {Time series cluster kernel for learning similarities between
+             multivariate time series with missing values},
+  author  = {Mikalsen, Karl {\O}yvind and Bianchi, Filippo Maria and
+             Soguero-Ruiz, Cristina and Jenssen, Robert},
+  journal = {Pattern Recognition},
+  volume  = {76},
+  pages   = {569--581},
+  year    = {2018},
+  eprint  = {1704.00794},
+  archivePrefix = {arXiv},
+  note    = {PDF: papers/1704.00794v2.pdf}
+}
+
+% ---------------------------------------------------------------- neural differential equations
+@inproceedings{kidger2020neural,
+  title     = {Neural controlled differential equations for irregular time series},
+  author    = {Kidger, Patrick and Morrill, James and Foster, James and Lyons, Terry},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2020}
+}
+
+@phdthesis{kidger2022neural,
+  title  = {On Neural Differential Equations},
+  author = {Kidger, Patrick},
+  school = {University of Oxford},
+  year   = {2022}
+}
+
+% ---------------------------------------------------------------- scoring rules
+@article{gneiting2007strictly,
+  title   = {Strictly proper scoring rules, prediction, and estimation},
+  author  = {Gneiting, Tilmann and Raftery, Adrian E.},
+  journal = {Journal of the American Statistical Association},
+  volume  = {102},
+  number  = {477},
+  pages   = {359--378},
+  year    = {2007}
+}
+
+@inproceedings{issa2023nonadversarial,
+  title     = {Non-adversarial training of neural {SDE}s with signature kernel scores},
+  author    = {Issa, Zacharia and Horvath, Blanka and Lemercier, Maud and Salvi, Cristopher},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  volume    = {36},
+  year      = {2023}
+}
+
+% ---------------------------------------------------------------- losses for time series
+@inproceedings{kudrat2025patchwise,
+  title     = {Patch-wise structural loss for time series forecasting},
+  author    = {Kudrat, Dilfira and Xie, Zongxia and Sun, Yanru and Jia, Tianyu and Hu, Qinghua},
+  booktitle = {Proceedings of the 42nd International Conference on Machine Learning (ICML)},
+  year      = {2025}
+}
+
+% ---------------------------------------------------------------- survey sampling / weighting
+@article{horvitz1952generalization,
+  title   = {A generalization of sampling without replacement from a finite universe},
+  author  = {Horvitz, Daniel G. and Thompson, Donovan J.},
+  journal = {Journal of the American Statistical Association},
+  volume  = {47},
+  number  = {260},
+  pages   = {663--685},
+  year    = {1952},
+  note    = {Inverse-probability weighting. Notebook 01 §4: the quadrature-weighted
+             L2 distance is the Horvitz--Thompson estimator of the same integral
+             that plain MSE estimates without weights}
+}
+
+% ---------------------------------------------------------------- functional data analysis
+@article{wang2016functional,
+  title   = {Functional data analysis},
+  author  = {Wang, Jane-Ling and Chiou, Jeng-Min and M{\"u}ller, Hans-Georg},
+  journal = {Annual Review of Statistics and Its Application},
+  volume  = {3},
+  pages   = {257--295},
+  year    = {2016},
+  eprint  = {1507.05135},
+  archivePrefix = {arXiv}
+}
+
+@article{zhang2016sparse,
+  title   = {From sparse to dense functional data and beyond},
+  author  = {Zhang, Xiaoke and Wang, Jane-Ling},
+  journal = {The Annals of Statistics},
+  volume  = {44},
+  number  = {5},
+  pages   = {2281--2322},
+  year    = {2016},
+  doi     = {10.1214/16-AOS1446},
+  note    = {Equal-weight-per-observation vs equal-weight-per-subject efficiency
+             reverses with sampling density -- the weighting question is a
+             bias--variance tradeoff, not a correctness question}
+}
+
+% ---------------------------------------------------------------- non-pointwise losses for time series
+@inproceedings{cuturi2017soft,
+  title     = {Soft-{DTW}: a differentiable loss function for time-series},
+  author    = {Cuturi, Marco and Blondel, Mathieu},
+  booktitle = {Proceedings of the 34th International Conference on Machine Learning (ICML)},
+  series    = {PMLR},
+  volume    = {70},
+  pages     = {894--903},
+  year      = {2017},
+  eprint    = {1703.01541},
+  archivePrefix = {arXiv}
+}
+
+@inproceedings{leguen2019shape,
+  title     = {Shape and time distortion loss for training deep time series forecasting models},
+  author    = {Le Guen, Vincent and Thome, Nicolas},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2019},
+  eprint    = {1909.09020},
+  archivePrefix = {arXiv},
+  note      = {DILATE}
+}
+
+% ---------------------------------------------------------------- irregular sampling in ML
+@article{shukla2021survey,
+  title   = {A survey on principles, models and methods for learning from
+             irregularly sampled time series},
+  author  = {Shukla, Satya Narayan and Marlin, Benjamin M.},
+  journal = {arXiv preprint arXiv:2012.00168},
+  year    = {2021},
+  note    = {Note: surveys model-side fixes; the loss stays pointwise throughout}
+}
+
+@inproceedings{shukla2021multi,
+  title     = {Multi-time attention networks for irregularly sampled time series},
+  author    = {Shukla, Satya Narayan and Marlin, Benjamin M.},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2021},
+  note      = {mTAN}
+}
+
+@inproceedings{rubanova2019latent,
+  title     = {Latent {ODE}s for irregularly-sampled time series},
+  author    = {Rubanova, Yulia and Chen, Ricky T. Q. and Duvenaud, David},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2019},
+  eprint    = {1907.03907},
+  archivePrefix = {arXiv}
+}
+
+@article{che2018recurrent,
+  title   = {Recurrent neural networks for multivariate time series with missing values},
+  author  = {Che, Zhengping and Purushotham, Sanjay and Cho, Kyunghyun and
+             Sontag, David and Liu, Yan},
+  journal = {Scientific Reports},
+  volume  = {8},
+  pages   = {6085},
+  year    = {2018},
+  note    = {GRU-D}
+}
