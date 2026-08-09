@@ -11,9 +11,9 @@ can be unit-tested cheaply; the torch versions live in `losses.py`.
 
 References
 ----------
-Ramsay & Silverman (2005), Functional Data Analysis, ch. 3-5 -- basis
+Ramsay & Silverman (2005), Functional Data Analysis, ch. 3 to 5: basis
     representation and the roughness penalty.
-Ferraty & Vieu (2006) -- semi-metrics on functional data; the discretised
+Ferraty & Vieu (2006): semi-metrics on functional data; the discretised
     L2 semi-metric with quadrature weights w_j = t_j - t_{j-1}.
 """
 
@@ -164,7 +164,7 @@ def integral_distance(
 
 
 def pointwise_mse(x: np.ndarray, y: np.ndarray) -> np.ndarray:
-    """Plain MSE over the time axis -- the baseline the project compares to.
+    """Plain MSE over the time axis: the baseline the project compares to.
 
     Deliberately ignores `t`: this is exactly the pathology under study. On a
     uniform grid this equals integral_distance(..., p=2, normalise=True)**2 up
@@ -225,7 +225,7 @@ def integral_norm_callable(
 
     Uses scipy.integrate.quad (adaptive Gauss-Kronrod, QUADPACK). Near machine
     precision on smooth f, and the right tool when you *can* evaluate f
-    anywhere -- i.e. for an analytic ground truth or a fitted spline/basis
+    anywhere, i.e. for an analytic ground truth or a fitted spline/basis
     representation, as opposed to raw samples.
 
     This is the reference value that `integral_norm` is checked against in
@@ -288,7 +288,7 @@ def p_variation_exact(x: np.ndarray, p: float = 2.0) -> float:
 
     Compare `p_variation_dyadic`, which restricts to nested dyadic partitions:
     O(n log n) but a strictly weaker lower bound. Use this one to check how
-    much the dyadic shortcut costs you -- for n <~ 4000 it is fast enough, and
+    much the dyadic shortcut costs you. For n <~ 4000 it is fast enough, and
     the gap is worth measuring once rather than assuming.
 
     Note (Ferrucci, Perree & Lyons 2026, Remark 2.2): for p = 1 the optimal

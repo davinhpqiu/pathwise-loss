@@ -11,12 +11,12 @@ logbook.
 
 ---
 
-## Setup — first time
+## Setup: first time
 
 ```bash
 cd "path/to/Pathwise Loss/pathwise-loss"
 
-python3 -m venv .venv                # note: python3, not python — see below
+python3 -m venv .venv                # note: python3, not python; see below
 source .venv/bin/activate            # Windows: .venv\Scripts\activate
 
 pip install -e .                     # installs pathloss + numpy/scipy/matplotlib
@@ -41,7 +41,7 @@ pytest -q                            # expect: 19 passed
 ```bash
 pytest -q                  # all
 pytest -q -k p_variation   # one group
-pytest -q -v               # see the names — the names are documentation
+pytest -q -v               # see the names: the names are documentation
 ```
 
 Run these before trusting any notebook output. If the 19 pass, every formula the
@@ -53,7 +53,7 @@ notebooks rely on is doing what it claims.
 jupyter lab notebooks/01_integral_norms.ipynb
 ```
 
-Then *Run All* — a few seconds, no GPU, nothing external. Notebooks are
+Then *Run All*: a few seconds, no GPU, nothing external. Notebooks are
 committed **with outputs**, so they can be read without being run.
 
 Headless re-run, for checking nothing broke after editing the library:
@@ -64,7 +64,7 @@ jupyter nbconvert --to notebook --execute --inplace notebooks/01_integral_norms.
 
 ### Training experiments
 
-Not yet possible — `scripts/run_experiment.py` is a stub. It parses the config,
+Not yet possible: `scripts/run_experiment.py` is a stub. It parses the config,
 writes provenance to `meta.json`, and prints what it *would* do:
 
 ```bash
@@ -125,7 +125,7 @@ pathwise-loss/
 ├── configs/                 # one YAML per experiment; never hardcode in scripts
 ├── data/{raw,synthetic}/    # gitignored. Regenerate, don't commit.
 ├── results/{runs,logs,figures}/
-├── papers/                  # PDFs + references.bib + reading index
+├── papers/                  # PDFs + references.bib
 └── docs/
     ├── arc_guide.md         # Oxford ARC: accounts, SLURM, storage
     └── logbook/             # dated notes and findings. Append-only.
@@ -155,15 +155,15 @@ drift apart quickly if the second is left until the write-up.
 
 | | status |
 |---|---|
-| Quadrature, $L^p$ norms, convergence studies | done — notebook 01 |
-| $p$-variation, dyadic + exact DP | done — notebook 01 §6 |
-| MSE vs integral norm under irregular sampling | done — notebook 01 §4 |
+| Quadrature, $L^p$ norms, convergence studies | done: notebook 01 |
+| $p$-variation, dyadic + exact DP | done: notebook 01 §6 |
+| MSE vs integral norm under irregular sampling | done: notebook 01 §4 |
 | `src/pathloss/losses.py` (torch, differentiable) | not written |
 | Models (LSTM / Transformer / Linear NCDE) | not written |
 | `scripts/run_experiment.py` training loop | stub |
 | Signature features / signature kernel | not started |
 | Real dataset | not obtained |
-| Anything on ARC | not run — account not yet requested |
+| Anything on ARC | not run: account not yet requested |
 
 Next: torch versions of `integral_distance` and `pointwise_mse` in `losses.py`,
 with a test that they match the NumPy versions to floating-point tolerance. That
@@ -174,7 +174,7 @@ is the bridge from "we can measure this" to "we can train against it".
 ## Conventions
 
 A path is a pair `(t, x)` with `t` of shape `(T,)` and `x` of shape
-`(..., T, d)` — time is the second-to-last axis, matching `torchcde` and
+`(..., T, d)`: time is the second-to-last axis, matching `torchcde` and
 `signatory`'s `(batch, time, channel)`.
 
 Synthetic data is always generated on a **fine grid** treated as ground truth,
@@ -185,7 +185,7 @@ separate is what makes the robustness experiments well-defined.
 
 ## References
 
-`papers/` holds the PDFs and `papers/references.bib` — one list, used for the
+`papers/` holds the PDFs and `papers/references.bib`: one list, used for the
 report.
 
 **Citations go at the point of use**, in the notebook cell or logbook entry

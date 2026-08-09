@@ -72,8 +72,8 @@ def subsample_irregular(
     """Subsample a fine path onto an irregular grid.
 
     mode:
-      "bernoulli" -- keep each interior point independently w.p. `keep`.
-      "clustered" -- keep probability ramps across [0, T], controlled by
+      "bernoulli": keep each interior point independently w.p. `keep`.
+      "clustered": keep probability ramps across [0, T], controlled by
                      `density_bias` (0 = uniform, larger = more points late).
                      This is the setting where plain MSE and the integral norm
                      disagree most, so it is the interesting stress test.

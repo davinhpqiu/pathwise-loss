@@ -1,4 +1,4 @@
-"""pathloss — loss functions for path-to-path learning.
+"""pathloss : loss functions for path-to-path learning.
 
 Layout
 ------
