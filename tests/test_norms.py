@@ -120,7 +120,9 @@ def test_l2_of_sine():
     At p = 2, B(3/2, 1/2) = pi/2, so ||f||_{L^2} = 1/sqrt(2).
     """
     t, x = smooth_test_path(n=1025, T=1.0, freq=3.0)
-    assert float(integral_norm(t, x, p=2)) == pytest.approx(1 / np.sqrt(2), rel=1e-9)
+    # sin^2 is periodic on [0,1], so by Euler-Maclaurin the trapezoid rule is
+    # exact to rounding. The tolerance is machine precision, not a fitted value.
+    assert abs(float(integral_norm(t, x, p=2)) - 1 / np.sqrt(2)) < 1e-14
 
 
 def test_sampled_vs_adaptive_quadrature():
@@ -157,8 +159,13 @@ def test_gauss_on_kinked_integrand():
 
 
 def test_sup_norm():
-    t, x = smooth_test_path(n=4097, T=1.0, freq=1.0)
-    assert float(integral_norm(t, x, p=np.inf)) == pytest.approx(1.0, abs=1e-6)
+    n = 4097
+    t, x = smooth_test_path(n=n, T=1.0, freq=1.0)
+    # The grid misses the peak by at most h/2, and near the peak
+    # f = 1 - (2 pi)^2 d^2 / 2, so the shortfall is at most (2 pi h / 2)^2 / 2.
+    h = 1.0 / (n - 1)
+    bound = (2 * np.pi * h / 2) ** 2 / 2
+    assert 1.0 - float(integral_norm(t, x, p=np.inf)) < bound
 
 
 def test_lp_monotonicity_in_p():
@@ -209,7 +216,9 @@ def test_mse_vs_integral_norm_on_uniform_grid():
     y = x + 0.1 * rng.normal(size=(2001, 1))
     l2 = float(integral_distance(t, x, y, p=2, normalise=True))
     mse = float(pointwise_mse(x, y))
-    assert l2**2 == pytest.approx(mse, rel=2e-3)
+    # The two rules differ only in the endpoint half-weights, a relative
+    # difference of order 1/n. Allow a factor 4 for the sampling of x, y.
+    assert abs(l2**2 - mse) / mse < 4 / t.size
 
 
 def test_integral_norm_under_irregular_subsampling():
