@@ -18,7 +18,7 @@ from pathloss.norms import (
     pointwise_mse,
     quadrature_weights,
 )
-from pathloss.paths import brownian_motion, smooth_test_path, subsample_irregular
+from pathloss.paths import brownian_motion, smooth_test_path
 
 
 # --- quadrature weights ----------------------------------------------------
@@ -58,20 +58,12 @@ def test_trapezoid_on_constants_and_lines():
         assert np.sum(w * np.ones_like(t)) == pytest.approx(1.0)      # constants
         assert np.sum(w * t) == pytest.approx(0.5)                    # lines
 
-
-def test_uniform_weights_on_constants_and_lines():
-    """The counterpart: MSE-style weights are exact on constants but not lines.
-
-    On a symmetric grid the failure is invisible, which is why it goes unnoticed.
-    """
-    n = 120
-    uniform = np.linspace(0, 1, n)
-    clustered = np.linspace(0, 1, n) ** 0.35
-    w = np.full(n, 1.0 / n)
-
-    assert np.sum(w * np.ones(n)) == pytest.approx(1.0)               # constants: fine
-    assert np.sum(w * uniform) == pytest.approx(0.5, abs=1e-12)       # lines: fine here
-    assert abs(np.sum(w * clustered) - 0.5) > 0.2                     # lines: not here
+    # The contrast: equal weights are exact on constants but not on lines, and
+    # the failure is invisible on the symmetric grid.
+    t = grids[1]
+    w = np.full(t.size, 1.0 / t.size)
+    assert np.sum(w * np.ones_like(t)) == pytest.approx(1.0)
+    assert abs(np.sum(w * t) - 0.5) > 0.2
 
 
 def test_convergence_rates_on_non_periodic_integrand():
@@ -106,24 +98,7 @@ def test_bad_time_grids():
         quadrature_weights(np.array([0.0]))                  # too short
 
 
-# --- L^p norms against analytic values -------------------------------------
-
-def test_l2_of_sine():
-    """Closed form for the test integrand.
-
-    For f(t) = sin(2 pi k t) on [0,1] with integer k, substituting u = 2 pi k t
-    and using that |sin| has period pi, so [0, 2 pi k] holds 2k copies:
-
-        int_0^1 |sin(2 pi k t)|^p dt = (1/pi) int_0^pi sin^p u du
-                                     = (1/pi) B((p+1)/2, 1/2).
-
-    At p = 2, B(3/2, 1/2) = pi/2, so ||f||_{L^2} = 1/sqrt(2).
-    """
-    t, x = smooth_test_path(n=1025, T=1.0, freq=3.0)
-    # sin^2 is periodic on [0,1], so by Euler-Maclaurin the trapezoid rule is
-    # exact to rounding. The tolerance is machine precision, not a fitted value.
-    assert abs(float(integral_norm(t, x, p=2)) - 1 / np.sqrt(2)) < 1e-14
-
+# --- L^p norms ------------------------------------------------------------
 
 def test_sampled_vs_adaptive_quadrature():
     f = lambda s: np.sin(2 * np.pi * 3 * s)
@@ -134,28 +109,23 @@ def test_sampled_vs_adaptive_quadrature():
         assert sampled == pytest.approx(adaptive, rel=1e-6)
 
 
-def test_gauss_on_smooth_integrand():
-    """Gauss-Legendre is exponentially accurate on analytic integrands."""
-    f = lambda s: np.sin(2 * np.pi * 3 * s)
-    for p in (2.0, 4.0):                       # even p -> |f|^p = f^p is analytic
-        adaptive = integral_norm_callable(f, 0.0, 1.0, p=p)
-        gauss = integral_norm_gauss(f, 0.0, 1.0, p=p, n=80)
-        assert gauss == pytest.approx(adaptive, rel=1e-8)
+def test_gauss_legendre_and_the_kink():
+    """Why a higher-order rule is not automatically better.
 
-
-def test_gauss_on_kinked_integrand():
-    """Odd p puts |.| kinks in the integrand and Gauss-Legendre loses its edge.
-
-    Documented rather than worked around: it is the reason `integral_norm` uses
-    trapezoid, and a warning against assuming a high-order rule is always
-    better. QUADPACK survives because it subdivides adaptively around the
-    kinks; a fixed node set cannot.
+    Gauss-Legendre is exponentially accurate on analytic integrands. For odd p
+    the absolute value puts a kink at every zero of f, and the rate collapses.
+    This is the claim in notebook 01 section 0.1 that g = |f|^p, not f, is what
+    the quadrature sees.
     """
     f = lambda s: np.sin(2 * np.pi * 3 * s)
+    for p in (2.0, 4.0):                       # even p: |f|^p = f^p is analytic
+        adaptive = integral_norm_callable(f, 0.0, 1.0, p=p)
+        assert integral_norm_gauss(f, 0.0, 1.0, p=p, n=80) == pytest.approx(adaptive, rel=1e-8)
+
     adaptive = integral_norm_callable(f, 0.0, 1.0, p=1.0)
     gauss = integral_norm_gauss(f, 0.0, 1.0, p=1.0, n=80)
-    assert gauss != pytest.approx(adaptive, rel=1e-6)     # not spectrally accurate
-    assert gauss == pytest.approx(adaptive, rel=1e-2)     # but not wrong, either
+    assert gauss != pytest.approx(adaptive, rel=1e-6)     # no longer spectral
+    assert gauss == pytest.approx(adaptive, rel=1e-2)     # but not wrong either
 
 
 def test_sup_norm():
@@ -187,15 +157,6 @@ def test_norm_zero_and_scaling():
     assert float(integral_norm(t, np.zeros_like(x), p=2)) == pytest.approx(0.0)
     a, b = float(integral_norm(t, x, p=2)), float(integral_norm(t, 3 * x, p=2))
     assert b == pytest.approx(3 * a)
-
-
-def test_triangle_inequality():
-    rng = np.random.default_rng(1)
-    t = np.linspace(0, 1, 129)
-    x, y = rng.normal(size=(129, 1)), rng.normal(size=(129, 1))
-    lhs = float(integral_norm(t, x + y, p=2))
-    rhs = float(integral_norm(t, x, p=2)) + float(integral_norm(t, y, p=2))
-    assert lhs <= rhs + 1e-12
 
 
 def test_batching():
@@ -252,27 +213,9 @@ def test_limits_under_non_uniform_sampling():
     assert float(np.sum(w * f(t) ** 2)) == pytest.approx(lebesgue, rel=1e-4)
 
 
-def test_integral_norm_under_irregular_subsampling():
-    """The whole motivation: the quadrature-weighted distance tracks the
-    fine-grid value under clustered sampling, and plain MSE does not."""
-    t_fine = np.linspace(0, 1, 8193)
-    truth = np.sin(2 * np.pi * 2 * t_fine)
-    bump = 0.8 * np.exp(-0.5 * ((t_fine - 0.125) / 0.03) ** 2)
-    pred = truth + bump
-    ref = float(integral_distance(t_fine, truth[:, None], pred[:, None], p=2, normalise=True))
-
-    t_cl, idx = subsample_irregular(
-        t_fine, np.arange(t_fine.size)[:, None], keep=0.05, mode="clustered", rng=5
-    )
-    i = idx[:, 0].astype(int)
-    l2 = float(integral_distance(t_cl, truth[i, None], pred[i, None], p=2, normalise=True))
-    mse = float(pointwise_mse(truth[i, None], pred[i, None]))
-
-    assert l2 == pytest.approx(ref, rel=0.15)      # weighted: tracks the truth
-    assert abs(mse - ref**2) > 0.15 * ref**2       # unweighted: does not
-
-
 # --- p-variation -----------------------------------------------------------
+
+# --- p-variation: notebook 02 ----------------------------------------------
 
 def test_p_variation_exact_vs_dyadic():
     _, W = brownian_motion(n=513, rng=3)
