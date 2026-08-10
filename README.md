@@ -158,7 +158,7 @@ drift apart quickly if the second is left until the write-up.
 |---|---|
 | Quadrature, $L^p$ norms, convergence studies | done: notebook 01 |
 | $p$-variation, dyadic + exact DP | done: notebook 02 |
-| MSE vs integral norm under irregular sampling | done: notebook 01 §4 |
+| MSE vs integral norm under irregular sampling | done: notebook 01 §3 |
 | `src/pathloss/losses.py` (torch, differentiable) | not written |
 | Models (LSTM / Transformer / Linear NCDE) | not written |
 | `scripts/run_experiment.py` training loop | stub |
