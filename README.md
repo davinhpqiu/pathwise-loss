@@ -31,7 +31,7 @@ a git clone. The modelling stack (torch, neural CDEs, signatures) is in `require
 Check it worked:
 
 ```bash
-pytest -q                            # expect: 23 passed
+pytest -q                            # expect: 19 passed
 ```
 
 ## Running things
@@ -44,7 +44,7 @@ pytest -q -k p_variation   # one group
 pytest -q -v               # see the names: the names are documentation
 ```
 
-Run these before trusting any notebook output. If the 23 pass, every formula the
+Run these before trusting any notebook output. If the 19 pass, every formula the
 notebooks rely on is doing what it claims.
 
 ### Notebooks
