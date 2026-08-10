@@ -94,7 +94,7 @@ squeue -u $USER
 
 | notebook | what it covers | status |
 |---|---|---|
-| `01_integral_norms.ipynb` | Quadrature rules and $L^p$ integral norms; convergence rates on smooth and rough integrands; **MSE against the integral norm under non-uniform sampling**; choice of $p$ | complete |
+| `01_integral_norms.ipynb` | Quadrature rules and $L^p$ integral norms; convergence rates; **MSE against the integral norm under non-uniform sampling**; choice of $p$ | complete |
 | `02_p_variation.ipynb` | roughness of a path, dyadic against exact estimation | complete |
 | `03_losses_torch.ipynb` | differentiable losses, NumPy/torch agreement | not written |
 | `04_signatures.ipynb` | signature features, signature kernel | not written |
