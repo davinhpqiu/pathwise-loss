@@ -74,6 +74,31 @@ def test_uniform_weights_on_constants_and_lines():
     assert abs(np.sum(w * clustered) - 0.5) > 0.2                     # lines: not here
 
 
+def test_convergence_rates_on_non_periodic_integrand():
+    """Fitted log-log slopes against the analytic value, for f(t) = e^t."""
+    exact = np.sqrt((np.exp(2) - 1) / 2)
+    ns = np.array([2**k + 1 for k in range(6, 14)])
+    slopes = {}
+    for rule in ("riemann_left", "trapezoid"):
+        errs = []
+        for n in ns:
+            tt = np.linspace(0.0, 1.0, n)
+            errs.append(abs(float(integral_norm(tt, np.exp(tt)[:, None], p=2, rule=rule)) - exact))
+        e = np.array(errs)
+        m = e > 1e-14
+        slopes[rule] = np.polyfit(np.log(ns[m]), np.log(e[m]), 1)[0]
+    assert slopes["riemann_left"] == pytest.approx(-1.0, abs=0.05)
+    assert slopes["trapezoid"] == pytest.approx(-2.0, abs=0.05)
+
+
+def test_trapezoid_on_smooth_periodic_integrand():
+    """Euler-Maclaurin: boundary terms cancel, so error is beyond all orders."""
+    for n in (17, 33, 65):
+        t = np.linspace(0.0, 1.0, n)
+        x = np.sin(2 * np.pi * 3 * t)[:, None]
+        assert abs(float(integral_norm(t, x, p=2)) - 1 / np.sqrt(2)) < 1e-13
+
+
 def test_bad_time_grids():
     with pytest.raises(ValueError):
         quadrature_weights(np.array([0.0, 1.0, 0.5]))       # not increasing
