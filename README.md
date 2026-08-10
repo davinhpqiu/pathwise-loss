@@ -94,9 +94,10 @@ squeue -u $USER
 
 | notebook | what it covers | status |
 |---|---|---|
-| `01_integral_norms.ipynb` | Quadrature rules and $L^p$ integral norms; verification against closed forms; convergence rates on smooth and rough paths; **MSE vs integral norm under irregular sampling**; sensitivity to $p$; $p$-variation, dyadic vs exact | complete |
-| `02_losses_torch.ipynb` | differentiable losses, NumPy/torch agreement | not written |
-| `03_signatures.ipynb` | signature features, signature kernel | not written |
+| `01_integral_norms.ipynb` | Quadrature rules and $L^p$ integral norms; convergence rates on smooth and rough integrands; **MSE against the integral norm under non-uniform sampling**; choice of $p$ | complete |
+| `02_p_variation.ipynb` | roughness of a path, dyadic against exact estimation | complete |
+| `03_losses_torch.ipynb` | differentiable losses, NumPy/torch agreement | not written |
+| `04_signatures.ipynb` | signature features, signature kernel | not written |
 
 Each notebook states its own mathematics, runs its own experiments, and reads
 its own results. That is where to look for a derivation.
