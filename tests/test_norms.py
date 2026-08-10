@@ -221,6 +221,31 @@ def test_mse_vs_integral_norm_on_uniform_grid():
     assert abs(l2**2 - mse) / mse < 4 / t.size
 
 
+def test_limits_under_non_uniform_sampling():
+    """Proposition 1 and 2 of notebook 01 section 3, checked at 2^20 points.
+
+    rho(t) = (1/a) t^{1/a - 1} on [0,1], realised by the quantile grid t = u^a.
+    With f(t) = 0.4 t both limits are closed-form:
+
+        (1/T) int f^2      = 0.16 / 3
+        int f^2 rho        = 0.16 * (1/a) / (1/a + 2)
+    """
+    a = 0.35
+    f = lambda t: 0.4 * t
+    lebesgue = 0.16 / 3
+    density = 0.16 * (1 / a) / ((1 / a) + 2)
+
+    n = 2**20 + 1
+    t = np.linspace(0, 1, n) ** a                      # quantile grid for rho
+    z = np.zeros((n, 1))
+    quad = float(integral_distance(t, z, f(t)[:, None], p=2, normalise=True)) ** 2
+    mse = float(np.mean(f(t) ** 2))
+
+    assert quad == pytest.approx(lebesgue, rel=1e-4)   # Proposition 1
+    assert mse == pytest.approx(density, rel=1e-4)     # Proposition 2
+    assert abs(mse - lebesgue) > 0.7 * lebesgue        # and they do not agree
+
+
 def test_integral_norm_under_irregular_subsampling():
     """The whole motivation: the quadrature-weighted distance tracks the
     fine-grid value under clustered sampling, and plain MSE does not."""
