@@ -40,6 +40,40 @@ def test_trapezoid_is_uniform_rule_on_uniform_grid():
     assert np.allclose(w[1:-1], h)
 
 
+def test_trapezoid_is_exact_on_constants_and_lines_for_any_grid():
+    """Degree of exactness 1, with no assumption on node placement.
+
+    This is the whole argument for trapezoid: a rule that cannot integrate a
+    straight line is wrong even when the integrand is as simple as possible,
+    and trapezoid gets lines right wherever the samples happen to fall.
+    """
+    rng = np.random.default_rng(4)
+    grids = [
+        np.linspace(0, 1, 120),
+        np.linspace(0, 1, 120) ** 0.35,                 # clustered late
+        np.unique(np.concatenate([[0.0], rng.uniform(0, 1, 200), [1.0]])),
+    ]
+    for t in grids:
+        w = quadrature_weights(t, "trapezoid")
+        assert np.sum(w * np.ones_like(t)) == pytest.approx(1.0)      # constants
+        assert np.sum(w * t) == pytest.approx(0.5)                    # lines
+
+
+def test_uniform_weights_fail_on_lines_when_the_grid_is_not_symmetric():
+    """The counterpart: MSE-style weights are exact on constants but not lines.
+
+    On a symmetric grid the failure is invisible, which is why it goes unnoticed.
+    """
+    n = 120
+    uniform = np.linspace(0, 1, n)
+    clustered = np.linspace(0, 1, n) ** 0.35
+    w = np.full(n, 1.0 / n)
+
+    assert np.sum(w * np.ones(n)) == pytest.approx(1.0)               # constants: fine
+    assert np.sum(w * uniform) == pytest.approx(0.5, abs=1e-12)       # lines: fine here
+    assert abs(np.sum(w * clustered) - 0.5) > 0.2                     # lines: not here
+
+
 def test_rejects_bad_time_grids():
     with pytest.raises(ValueError):
         quadrature_weights(np.array([0.0, 1.0, 0.5]))       # not increasing
