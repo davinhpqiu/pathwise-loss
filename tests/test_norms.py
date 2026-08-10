@@ -109,6 +109,16 @@ def test_bad_time_grids():
 # --- L^p norms against analytic values -------------------------------------
 
 def test_l2_of_sine():
+    """Closed form for the test integrand.
+
+    For f(t) = sin(2 pi k t) on [0,1] with integer k, substituting u = 2 pi k t
+    and using that |sin| has period pi, so [0, 2 pi k] holds 2k copies:
+
+        int_0^1 |sin(2 pi k t)|^p dt = (1/pi) int_0^pi sin^p u du
+                                     = (1/pi) B((p+1)/2, 1/2).
+
+    At p = 2, B(3/2, 1/2) = pi/2, so ||f||_{L^2} = 1/sqrt(2).
+    """
     t, x = smooth_test_path(n=1025, T=1.0, freq=3.0)
     assert float(integral_norm(t, x, p=2)) == pytest.approx(1 / np.sqrt(2), rel=1e-9)
 
