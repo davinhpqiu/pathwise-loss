@@ -245,6 +245,12 @@ def test_limits_under_non_uniform_sampling():
     assert mse == pytest.approx(density, rel=1e-4)     # Proposition 2
     assert abs(mse - lebesgue) > 0.7 * lebesgue        # and they do not agree
 
+    # Left Riemann is first order and crude, but its weights are the spacings,
+    # so it is consistent here and MSE is not. The divide is whether the weights
+    # see the grid, not how accurate they are.
+    w = quadrature_weights(t, "riemann_left")
+    assert float(np.sum(w * f(t) ** 2)) == pytest.approx(lebesgue, rel=1e-4)
+
 
 def test_integral_norm_under_irregular_subsampling():
     """The whole motivation: the quadrature-weighted distance tracks the
