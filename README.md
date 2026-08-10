@@ -53,8 +53,8 @@ notebooks rely on is doing what it claims.
 jupyter lab notebooks/01_integral_norms.ipynb
 ```
 
-Then *Run All*: a few seconds, no GPU, nothing external. Notebooks are
-committed **with outputs**, so they can be read without being run.
+Then *Run All*: a few seconds, no GPU, nothing external. Notebook 01 has no
+code; everything it claims is proved in the text or asserted in `tests/`.
 
 Headless re-run, for checking nothing broke after editing the library:
 
@@ -94,7 +94,7 @@ squeue -u $USER
 
 | notebook | what it covers | status |
 |---|---|---|
-| `01_integral_norms.ipynb` | Quadrature rules and $L^p$ integral norms; convergence rates; **MSE against the integral norm under non-uniform sampling**; choice of $p$ | complete |
+| `01_integral_norms.ipynb` | The estimator and why: quadrature rules, convergence rates, **why MSE is inconsistent under non-uniform sampling**, choice of $p$. Exposition; verification is in `tests/` | complete |
 | `02_p_variation.ipynb` | roughness of a path, dyadic against exact estimation | complete |
 | `03_losses_torch.ipynb` | differentiable losses, NumPy/torch agreement | not written |
 | `04_signatures.ipynb` | signature features, signature kernel | not written |
