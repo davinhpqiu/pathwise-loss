@@ -23,7 +23,7 @@ from pathloss.paths import brownian_motion, smooth_test_path, subsample_irregula
 
 # --- quadrature weights ----------------------------------------------------
 
-def test_weights_sum_to_horizon():
+def test_weights_sum():
     """Any consistent rule integrates the constant 1 exactly."""
     for t in (np.linspace(0, 3, 17), np.sort(np.random.default_rng(0).uniform(0, 3, 40))):
         t = np.unique(np.concatenate([[0.0], t, [3.0]]))
@@ -31,7 +31,7 @@ def test_weights_sum_to_horizon():
             assert quadrature_weights(t, rule).sum() == pytest.approx(3.0)
 
 
-def test_trapezoid_is_uniform_rule_on_uniform_grid():
+def test_trapezoid_weights_on_uniform_grid():
     t = np.linspace(0, 1, 11)
     w = quadrature_weights(t, "trapezoid")
     h = 0.1
@@ -40,7 +40,7 @@ def test_trapezoid_is_uniform_rule_on_uniform_grid():
     assert np.allclose(w[1:-1], h)
 
 
-def test_trapezoid_is_exact_on_constants_and_lines_for_any_grid():
+def test_trapezoid_on_constants_and_lines():
     """Degree of exactness 1, with no assumption on node placement.
 
     This is the whole argument for trapezoid: a rule that cannot integrate a
@@ -59,7 +59,7 @@ def test_trapezoid_is_exact_on_constants_and_lines_for_any_grid():
         assert np.sum(w * t) == pytest.approx(0.5)                    # lines
 
 
-def test_uniform_weights_fail_on_lines_when_the_grid_is_not_symmetric():
+def test_uniform_weights_on_constants_and_lines():
     """The counterpart: MSE-style weights are exact on constants but not lines.
 
     On a symmetric grid the failure is invisible, which is why it goes unnoticed.
@@ -74,7 +74,7 @@ def test_uniform_weights_fail_on_lines_when_the_grid_is_not_symmetric():
     assert abs(np.sum(w * clustered) - 0.5) > 0.2                     # lines: not here
 
 
-def test_rejects_bad_time_grids():
+def test_bad_time_grids():
     with pytest.raises(ValueError):
         quadrature_weights(np.array([0.0, 1.0, 0.5]))       # not increasing
     with pytest.raises(ValueError):
@@ -83,12 +83,12 @@ def test_rejects_bad_time_grids():
 
 # --- L^p norms against analytic values -------------------------------------
 
-def test_l2_of_sine_matches_analytic():
+def test_l2_of_sine():
     t, x = smooth_test_path(n=1025, T=1.0, freq=3.0)
     assert float(integral_norm(t, x, p=2)) == pytest.approx(1 / np.sqrt(2), rel=1e-9)
 
 
-def test_sampled_matches_adaptive_quadrature():
+def test_sampled_vs_adaptive_quadrature():
     f = lambda s: np.sin(2 * np.pi * 3 * s)
     t, x = smooth_test_path(n=2049, T=1.0, freq=3.0)
     for p in (1.0, 2.0, 4.0):
@@ -97,7 +97,7 @@ def test_sampled_matches_adaptive_quadrature():
         assert sampled == pytest.approx(adaptive, rel=1e-6)
 
 
-def test_gauss_matches_when_integrand_is_smooth():
+def test_gauss_on_smooth_integrand():
     """Gauss-Legendre is exponentially accurate on analytic integrands."""
     f = lambda s: np.sin(2 * np.pi * 3 * s)
     for p in (2.0, 4.0):                       # even p -> |f|^p = f^p is analytic
@@ -106,7 +106,7 @@ def test_gauss_matches_when_integrand_is_smooth():
         assert gauss == pytest.approx(adaptive, rel=1e-8)
 
 
-def test_gauss_degrades_on_kinked_integrand():
+def test_gauss_on_kinked_integrand():
     """Odd p puts |.| kinks in the integrand and Gauss-Legendre loses its edge.
 
     Documented rather than worked around: it is the reason `integral_norm` uses
@@ -126,20 +126,20 @@ def test_sup_norm():
     assert float(integral_norm(t, x, p=np.inf)) == pytest.approx(1.0, abs=1e-6)
 
 
-def test_lp_increasing_in_p_on_unit_interval():
+def test_lp_monotonicity_in_p():
     """On a probability space (|[0,1]| = 1), ||f||_p is nondecreasing in p."""
     t, x = smooth_test_path(n=2049, T=1.0, freq=2.0)
     vals = [float(integral_norm(t, x, p=p)) for p in (1, 2, 3, 4, 8)]
     assert all(a <= b + 1e-12 for a, b in zip(vals, vals[1:]))
 
 
-def test_no_overflow_at_large_p():
+def test_large_p():
     t = np.linspace(0, 1, 501)
     x = (1e6 * np.ones_like(t))[:, None]
     assert np.isfinite(integral_norm(t, x, p=50.0))
 
 
-def test_norm_is_zero_iff_zero_and_scales():
+def test_norm_zero_and_scaling():
     t = np.linspace(0, 2, 257)
     x = np.cos(t)[:, None]
     assert float(integral_norm(t, np.zeros_like(x), p=2)) == pytest.approx(0.0)
@@ -166,7 +166,7 @@ def test_batching():
 
 # --- the claim the project rests on ---------------------------------------
 
-def test_mse_and_integral_norm_agree_on_uniform_grid():
+def test_mse_vs_integral_norm_on_uniform_grid():
     """On a uniform grid they coincide (up to endpoint half-weights)."""
     rng = np.random.default_rng(2)
     t = np.linspace(0, 1, 2001)
@@ -177,7 +177,7 @@ def test_mse_and_integral_norm_agree_on_uniform_grid():
     assert l2**2 == pytest.approx(mse, rel=2e-3)
 
 
-def test_integral_norm_is_stable_under_irregular_subsampling():
+def test_integral_norm_under_irregular_subsampling():
     """The whole motivation: the quadrature-weighted distance tracks the
     fine-grid value under clustered sampling, and plain MSE does not."""
     t_fine = np.linspace(0, 1, 8193)
@@ -199,26 +199,26 @@ def test_integral_norm_is_stable_under_irregular_subsampling():
 
 # --- p-variation -----------------------------------------------------------
 
-def test_p_variation_exact_dominates_dyadic():
+def test_p_variation_exact_vs_dyadic():
     _, W = brownian_motion(n=513, rng=3)
     for p in (1.0, 2.0, 3.0):
         assert p_variation_exact(W, p) >= p_variation_dyadic(W, p) - 1e-9
 
 
-def test_p_variation_of_monotone_path_is_total_increment():
+def test_p_variation_on_monotone_path():
     """For a monotone path, V_1 = |x(T) - x(0)| exactly, for any partition."""
     x = np.linspace(0, 5, 200)[:, None]
     assert p_variation_exact(x, 1.0) == pytest.approx(5.0)
     assert p_variation_dyadic(x, 1.0) == pytest.approx(5.0)
 
 
-def test_p_variation_decreasing_in_p():
+def test_p_variation_monotonicity_in_p():
     _, W = brownian_motion(n=257, rng=11)
     vals = [p_variation_exact(W, p) for p in (1.0, 1.5, 2.0, 3.0)]
     assert all(a >= b - 1e-9 for a, b in zip(vals, vals[1:]))
 
 
-def test_brownian_1_variation_grows_with_refinement():
+def test_brownian_1_variation_under_refinement():
     """BM is a.s. not of bounded variation: the estimate should keep growing."""
     _, W = brownian_motion(n=2**12 + 1, rng=13)
     coarse = p_variation_dyadic(W[::8], 1.0)
