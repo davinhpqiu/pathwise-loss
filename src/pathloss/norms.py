@@ -21,15 +21,26 @@ from __future__ import annotations
 
 import numpy as np
 
+# p-variation moved to pathloss.pvar on 12/08; re-exported so that
+# `from pathloss.norms import p_variation_exact` keeps working.
+from .pvar import (  # noqa: F401
+    p_variation_brute,
+    p_variation_dyadic,
+    p_variation_exact,
+    p_variation_pruned,
+)
+
 __all__ = [
     "quadrature_weights",
     "integral_norm",
     "integral_distance",
     "pointwise_mse",
-    "p_variation_dyadic",
     "integral_norm_callable",
     "integral_norm_gauss",
+    "p_variation_brute",
+    "p_variation_dyadic",
     "p_variation_exact",
+    "p_variation_pruned",
 ]
 
 
@@ -176,41 +187,6 @@ def pointwise_mse(x: np.ndarray, y: np.ndarray) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# p-variation
-# ---------------------------------------------------------------------------
-
-def p_variation_dyadic(x: np.ndarray, p: float = 2.0) -> float:
-    r"""Lower bound on the p-variation of a sampled path via dyadic partitions.
-
-        V_p(x) = ( sup_P sum_i |x_{t_{i+1}} - x_{t_i}|^p )^{1/p}
-
-    The true supremum is over *all* partitions, which is combinatorial. This
-    restricts to nested dyadic partitions and takes the max over levels, giving
-    a cheap lower bound that is the standard diagnostic in the rough-path
-    literature. Requires len(x) = 2^k + 1 for exact dyadic refinement; other
-    lengths are handled by taking every 2^j-th index.
-
-    Returns the max over dyadic levels of the level-wise p-variation sum,
-    raised to 1/p.
-    """
-    x = np.asarray(x, dtype=float)
-    if x.ndim == 1:
-        x = x[:, None]
-    n = x.shape[0]
-    best = 0.0
-    step = 1
-    while step < n:
-        idx = np.arange(0, n, step)
-        if idx[-1] != n - 1:
-            idx = np.append(idx, n - 1)
-        incr = np.diff(x[idx], axis=0)
-        total = float(np.sum(np.linalg.norm(incr, axis=-1) ** p))
-        best = max(best, total)
-        step *= 2
-    return best ** (1.0 / p)
-
-
-# ---------------------------------------------------------------------------
 # higher-accuracy estimators, for when the path is a *function* not a sample
 # ---------------------------------------------------------------------------
 
@@ -270,43 +246,3 @@ def integral_norm_gauss(
     ts = mid + half * nodes
     vals = np.array([abs(f(s)) ** p for s in ts])
     return float((half * np.sum(weights * vals)) ** (1.0 / p))
-
-
-def p_variation_exact(x: np.ndarray, p: float = 2.0) -> float:
-    r"""Exact p-variation over all sub-partitions of the sample grid, by DP.
-
-        V_p(x)^p = max over subsequences 0 = i_0 < ... < i_k = n-1
-                   of  sum_j |x_{i_{j+1}} - x_{i_j}|^p
-
-    The supremum over *all* partitions of [0,T] is not computable from samples;
-    this computes the supremum over subsequences of the *observed* grid, which
-    is the best any finite algorithm can do, and is a lower bound on the truth.
-
-    Complexity O(n^2) in time and O(n) in memory via
-
-        D[j] = max_{i < j} ( D[i] + |x_j - x_i|^p ),   D[0] = 0.
-
-    Compare `p_variation_dyadic`, which restricts to nested dyadic partitions:
-    O(n log n) but a strictly weaker lower bound. Use this one to check how
-    much the dyadic shortcut costs you. For n <~ 4000 it is fast enough, and
-    the gap is worth measuring once rather than assuming.
-
-    Note (Ferrucci, Perree & Lyons 2026, Remark 2.2): for p = 1 the optimal
-    split is a cumulative-sum problem and hence linear; for p > 1 the analogous
-    task "is computationally harder, since even computing the ordinary
-    p-variation requires an optimisation over partitions". This function is
-    that optimisation, done exactly on the sampled grid.
-    """
-    x = np.asarray(x, dtype=float)
-    if x.ndim == 1:
-        x = x[:, None]
-    n = x.shape[0]
-    if n < 2:
-        return 0.0
-
-    best = np.full(n, -np.inf)
-    best[0] = 0.0
-    for j in range(1, n):
-        incr = np.linalg.norm(x[j] - x[:j], axis=-1) ** p   # (j,)
-        best[j] = np.max(best[:j] + incr)
-    return float(best[-1] ** (1.0 / p))

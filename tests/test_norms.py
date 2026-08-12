@@ -1,4 +1,4 @@
-"""Correctness checks for norms.py.
+"""Correctness checks for norms.py. p-variation is in test_pvar.py.
 
 These are cheap and should stay cheap: they run on every commit. The point is
 that the *library* is trustworthy, so a surprising result in a notebook is a
@@ -13,12 +13,10 @@ from pathloss.norms import (
     integral_norm,
     integral_norm_callable,
     integral_norm_gauss,
-    p_variation_dyadic,
-    p_variation_exact,
     pointwise_mse,
     quadrature_weights,
 )
-from pathloss.paths import brownian_motion, smooth_test_path
+from pathloss.paths import smooth_test_path
 
 
 # --- quadrature weights ----------------------------------------------------
@@ -211,34 +209,3 @@ def test_limits_under_non_uniform_sampling():
     # see the grid, not how accurate they are.
     w = quadrature_weights(t, "riemann_left")
     assert float(np.sum(w * f(t) ** 2)) == pytest.approx(lebesgue, rel=1e-4)
-
-
-# --- p-variation -----------------------------------------------------------
-
-# --- p-variation: notebook 02 ----------------------------------------------
-
-def test_p_variation_exact_vs_dyadic():
-    _, W = brownian_motion(n=513, rng=3)
-    for p in (1.0, 2.0, 3.0):
-        assert p_variation_exact(W, p) >= p_variation_dyadic(W, p) - 1e-9
-
-
-def test_p_variation_on_monotone_path():
-    """For a monotone path, V_1 = |x(T) - x(0)| exactly, for any partition."""
-    x = np.linspace(0, 5, 200)[:, None]
-    assert p_variation_exact(x, 1.0) == pytest.approx(5.0)
-    assert p_variation_dyadic(x, 1.0) == pytest.approx(5.0)
-
-
-def test_p_variation_monotonicity_in_p():
-    _, W = brownian_motion(n=257, rng=11)
-    vals = [p_variation_exact(W, p) for p in (1.0, 1.5, 2.0, 3.0)]
-    assert all(a >= b - 1e-9 for a, b in zip(vals, vals[1:]))
-
-
-def test_brownian_1_variation_under_refinement():
-    """BM is a.s. not of bounded variation: the estimate should keep growing."""
-    _, W = brownian_motion(n=2**12 + 1, rng=13)
-    coarse = p_variation_dyadic(W[::8], 1.0)
-    fine = p_variation_dyadic(W, 1.0)
-    assert fine > 1.8 * coarse

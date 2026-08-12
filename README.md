@@ -115,7 +115,8 @@ pathwise-loss/
 │
 ├── src/pathloss/            # THE LIBRARY. Everything that must be correct.
 │   ├── paths.py             # synthetic generators, irregular sampling, missingness
-│   ├── norms.py             # quadrature, L^p integral norms, p-variation (NumPy)
+│   ├── norms.py             # quadrature, L^p integral norms (NumPy)
+│   ├── pvar.py              # p-variation: brute force, O(N^2) DP, pruned
 │   └── losses.py            # differentiable torch losses (week 3+, not written)
 │
 ├── tests/                   # pytest. Run before trusting notebook output.
@@ -158,6 +159,7 @@ drift apart quickly if the second is left until the write-up.
 |---|---|
 | Quadrature, $L^p$ norms, convergence studies | done: notebook 01 |
 | $p$-variation, dyadic + exact DP | done: notebook 02 |
+| $p$-variation, pruned $O(N\log N)$ + brute-force oracle | written 12/08, **not yet run** |
 | MSE vs integral norm under irregular sampling | done: notebook 01 §3 |
 | Top-down segmentation (adequacy + similarity) | designed, not written: `docs/logbook/2026-08-12.md` |
 | `src/pathloss/losses.py` (torch, differentiable) | not written |
