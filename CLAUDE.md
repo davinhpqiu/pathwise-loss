@@ -2,30 +2,32 @@
 
 ## Writing
 
-Applies to notebooks, logbook entries, README, docstrings and commit messages.
+Applies to markdown files and notebooks.
 
-1. **As few words as possible.** If a sentence survives deletion of a phrase, delete it.
-2. **No add-on clauses for emphasis.** Not "what it does, and what it does not", not "X, and this is good news", not "not just a measurement". State the thing once.
-3. **Define at the point of use**, not in a preamble. A symbol or term appears with its definition the first time it is needed.
-4. **No vague words standing in for undefined concepts.** "The claim", "the fix", "the finding" are not names. Either name the object or state it.
-5. **Few hyphens and dashes.** Use colons or brackets. A dash next to mathematics reads as a minus sign.
-6. **Quote standard results, do not demonstrate them.** A citation and a test, not a table of numbers. Anything provable analytically is stated analytically.
-7. **No numbers that a test already asserts.** Closed forms are preferred to measured values: they do not go stale.
-8. **Say what a piece is for.** Each section states its role in the project, not only its content.
-9. **No assumptions about the data.** It is not necessarily SDE trajectories, or smooth, or uniformly sampled. Say what is assumed where it is assumed.
-10. **Cite at the point of use.** `papers/references.bib` is the single list. No separate reading index.
+Keep all text written (in markdown files / notebooks) concise and well-defined. That means generally as few words as suffices. Never use the positive, negative sentence structure for emphasis (e.g. This is sth, it is not sth.), i.e. do not add an extra clause just to emphasise the previous point that does not add additional information. Do not use sentence structures such as "this is the important one" or "The one that matters" these are pointless emphasis that clutters reading and affects interpretation. Any non-objective claim can only be presented if it is backed by rigorous reasoning. Define all relevant mathematical formulae and notation. Use fewer definite articles e.g. "the" or "an". Grammatical rules can be suspended to make way for conciseness.
+
+Also:
+
+- Few hyphens and dashes. Colons or brackets instead. Dash beside mathematics reads as minus.
+- Define at point of use, not in preamble.
+- Quote standard results, do not demonstrate them: citation plus test, not table of numbers.
+- No number a test already asserts. Closed forms preferred: they do not go stale.
+- No assumption about data. Not necessarily SDE trajectories, smooth, or uniformly sampled. State assumption where used.
+- Cite at point of use. `papers/references.bib` is single list.
 
 ## Structure
 
 | | goes in |
 |---|---|
-| mathematics, experiments, results | the relevant **notebook** |
-| a function used more than once | **`src/pathloss/`**, with a test |
-| decisions, findings, interpretations | **`docs/logbook/`**, dated |
+| mathematics, experiments, results | relevant **notebook** |
+| function used more than once | **`src/pathloss/`**, with test |
+| decisions, changes, findings | **`docs/logbook/`**, dated |
 | how to run something | **`README.md`** |
 
-Anything that must be correct lives in `src/pathloss/` and has a test. A notebook cell is never the only copy of a function.
+Anything that must be correct lives in `src/pathloss/` with a test. Notebook cell is never sole copy of a function.
 
 ## Logbook
 
-Dated, and a record rather than a document: entries are not rewritten to reflect later opinion. Two things are corrected in place, because they are pointers and not history: cross-references into notebooks that have since been renumbered, and counts (word counts, test counts) that have since changed. A superseded claim gets a dated line saying so, not a deletion.
+Records decisions and changes, dated. Not word counts, code cell counts, test counts, or editorial edits to notebooks: rewording a notebook is not a project event.
+
+Entries are not rewritten to reflect later opinion. Corrected in place: cross-references into notebooks since renumbered. Superseded claim gets dated line, not deletion.
