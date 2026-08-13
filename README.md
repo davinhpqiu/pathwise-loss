@@ -95,7 +95,7 @@ squeue -u $USER
 | notebook | what it covers | status |
 |---|---|---|
 | `01_integral_norms.ipynb` | The estimator and why: quadrature rules, convergence rates, **why MSE is inconsistent under non-uniform sampling**, choice of $p$. Exposition; verification is in `tests/` | complete |
-| `02_p_variation.ipynb` | roughness of a path, dyadic against exact estimation | complete |
+| `02_p_variation.ipynb` | roughness of a path: definition, standard facts, how it is computed | complete |
 | `03_losses_torch.ipynb` | differentiable losses, NumPy/torch agreement | not written |
 | `04_signatures.ipynb` | signature features, signature kernel | not written |
 
@@ -158,8 +158,7 @@ drift apart quickly if the second is left until the write-up.
 | | status |
 |---|---|
 | Quadrature, $L^p$ norms, convergence studies | done: notebook 01 |
-| $p$-variation, dyadic + exact DP | done: notebook 02 |
-| $p$-variation, pruned $O(N\log N)$ + brute-force oracle | written 12/08, **not yet run** |
+| $p$-variation: brute force, $O(N^2)$ DP, pruned $O(N\log N)$ | written 12/08, **not yet run** |
 | MSE vs integral norm under irregular sampling | done: notebook 01 §3 |
 | Top-down segmentation (adequacy + similarity) | designed, not written: `docs/logbook/2026-08-12.md` |
 | `src/pathloss/losses.py` (torch, differentiable) | not written |

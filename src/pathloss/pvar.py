@@ -23,13 +23,10 @@ All three take the supremum over subsequences of the **observed** grid, so all
 three are lower bounds on the p-variation of the underlying continuous path.
 No finite sample determines that quantity.
 
-``p_variation_dyadic`` computes a different object: the supremum over nested
-dyadic partitions only, which is a strictly weaker lower bound again.
-
-.. warning::
-   "Dyadic" carries two unrelated meanings here. In ``p_variation_dyadic`` it
-   restricts which partitions are considered, and so changes the answer. In
-   ``p_variation_pruned`` it indexes a search tree, and changes no answer.
+"Dyadic" appears in ``p_variation_pruned`` only as the shape of a search tree.
+It changes no answer. An earlier ``p_variation_dyadic``, which restricted the
+partitions considered and so returned a weaker lower bound, was removed on
+13/08: a second, worse estimator of the same quantity earns nothing.
 
 Convention: these return the p-th root, unlike the reference C++ below.
 
@@ -50,7 +47,6 @@ __all__ = [
     "p_variation_brute",
     "p_variation_exact",
     "p_variation_pruned",
-    "p_variation_dyadic",
 ]
 
 
@@ -346,32 +342,3 @@ def p_variation_pruned(x, p: float = 2.0, dist=None, return_points: bool = False
     if not return_points:
         return value
     return value, _walk_links(link, n)
-
-
-# ---------------------------------------------------------------------------
-# dyadic: a weaker lower bound, cheaply
-# ---------------------------------------------------------------------------
-
-def p_variation_dyadic(x, p: float = 2.0) -> float:
-    r"""Supremum restricted to nested dyadic partitions.
-
-    Scores the partitions "every point", "every 2nd", "every 4th", and so on,
-    and keeps the best. Cost :math:`O(N\log N)` with a small constant, but the
-    maximising subsequence is rarely one of those, so the result understates
-    `p_variation_exact`. Kept as the cheap diagnostic it is; quote the exact or
-    pruned value.
-    """
-    p = _check_p(p)
-    x = _as_points(x)
-    n = x.shape[0]
-    best = 0.0
-    step = 1
-    while step < n:
-        idx = np.arange(0, n, step)
-        if idx[-1] != n - 1:
-            idx = np.append(idx, n - 1)
-        incr = np.diff(x[idx], axis=0)
-        total = float(np.sum(np.linalg.norm(incr, axis=-1) ** p))
-        best = max(best, total)
-        step *= 2
-    return float(best ** (1.0 / p))

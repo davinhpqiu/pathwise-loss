@@ -17,7 +17,6 @@ import pytest
 from pathloss.paths import brownian_motion
 from pathloss.pvar import (
     p_variation_brute,
-    p_variation_dyadic,
     p_variation_exact,
     p_variation_pruned,
 )
@@ -177,7 +176,6 @@ def test_monotone_path_is_its_displacement():
     for p in PS:
         assert p_variation_exact(x, p) == pytest.approx(5.0)
         assert p_variation_pruned(x, p) == pytest.approx(5.0)
-        assert p_variation_dyadic(x, p) == pytest.approx(5.0)
 
 
 def test_zigzag_at_p_equals_one_is_total_distance():
@@ -194,16 +192,10 @@ def test_decreasing_in_p():
         assert all(a >= b - 1e-9 for a, b in zip(vals, vals[1:]))
 
 
-def test_dyadic_is_a_weaker_lower_bound():
-    _, w = brownian_motion(n=513, rng=3)
-    for p in PS:
-        assert p_variation_exact(w, p) >= p_variation_dyadic(w, p) - 1e-9
-
-
 def test_brownian_1_variation_grows_under_refinement():
     """Brownian motion is a.s. of unbounded variation, so the estimate must climb."""
     _, w = brownian_motion(n=2**12 + 1, rng=13)
-    assert p_variation_dyadic(w, 1.0) > 1.8 * p_variation_dyadic(w[::8], 1.0)
+    assert p_variation_pruned(w, 1.0) > 1.8 * p_variation_pruned(w[::8], 1.0)
 
 
 def test_translation_invariance_and_scaling():
@@ -234,7 +226,7 @@ def test_single_point_and_single_step():
 
 def test_constant_path_is_zero():
     x = np.full((50, 3), 2.5)
-    for fn in (p_variation_exact, p_variation_pruned, p_variation_dyadic):
+    for fn in (p_variation_exact, p_variation_pruned):
         assert fn(x, 2.0) == pytest.approx(0.0)
 
 

@@ -25,7 +25,6 @@ import numpy as np
 # `from pathloss.norms import p_variation_exact` keeps working.
 from .pvar import (  # noqa: F401
     p_variation_brute,
-    p_variation_dyadic,
     p_variation_exact,
     p_variation_pruned,
 )
@@ -38,7 +37,6 @@ __all__ = [
     "integral_norm_callable",
     "integral_norm_gauss",
     "p_variation_brute",
-    "p_variation_dyadic",
     "p_variation_exact",
     "p_variation_pruned",
 ]
