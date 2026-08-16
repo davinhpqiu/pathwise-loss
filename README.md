@@ -47,6 +47,16 @@ pytest -q -v               # see the names: the names are documentation
 Run before trusting notebook output. If they pass, every formula the notebooks
 rely on does what it claims.
 
+### Maths rendering
+
+```bash
+npm install katex && node scripts/check_math.js
+```
+
+Renders every `$...$` and `$$...$$` in the logbook, README and notebooks through
+KaTeX. KaTeX implements a subset of LaTeX, so expressions that are valid TeX can
+still fail to display.
+
 ### Notebooks
 
 ```bash
