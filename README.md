@@ -140,6 +140,7 @@ pathwise-loss/
 ├── papers/                  # PDFs + references.bib
 └── docs/
     ├── arc_guide.md         # Oxford ARC: accounts, SLURM, storage
+    ├── open_questions.md    # register of what is undecided
     ├── protocol_*.md        # experiment designs, written before running them
     └── logbook/             # dated notes and findings. Append-only.
 ```
@@ -152,6 +153,7 @@ pathwise-loss/
 | A function used more than once | **`src/pathloss/`**, with a test |
 | What was decided, results, interpretations | **`docs/logbook/`**, dated |
 | An experiment's design, before running it | **`docs/protocol_*.md`** |
+| Something undecided, with its definitions | **`docs/open_questions.md`** |
 | How to run something | **this README** |
 
 **The one structural rule:** anything that must be correct lives in
@@ -170,7 +172,8 @@ drift apart quickly if the second is left until the write-up.
 | | status |
 |---|---|
 | Quadrature, $L^p$ norms, convergence studies | done: notebook 01 |
-| $p$-variation: brute force, $O(N^2)$ DP, pruned $O(N\log N)$ | written 12/08, **not yet run** |
+| $p$-variation: brute force, $O(N^2)$ DP, pruned $O(N\log N)$ | done, tests pass 16/08 |
+| $p$-variation index estimator | designed, not written: `docs/open_questions.md` Q6 |
 | MSE vs integral norm under irregular sampling | done: notebook 01 §3 |
 | Top-down segmentation (adequacy + similarity) | designed, not written: `docs/logbook/2026-08-12.md` |
 | `src/pathloss/losses.py` (torch, differentiable) | not written |
