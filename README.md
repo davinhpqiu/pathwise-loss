@@ -105,8 +105,9 @@ squeue -u $USER
 |---|---|---|
 | `01_integral_norms.ipynb` | The estimator and why: quadrature rules, convergence rates, **why MSE is inconsistent under non-uniform sampling**, choice of $p$. Exposition; verification is in `tests/` | complete |
 | `02_p_variation.ipynb` | roughness of a path: definition, and the three implementations, one section each | complete |
-| `03_losses_torch.ipynb` | differentiable losses, NumPy/torch agreement | not written |
-| `04_signatures.ipynb` | signature features, signature kernel | not written |
+| `03_similarity.ipynb` | do the discrepancies rank paths better than MSE (`docs/protocol_01_similarity.md`) | not written |
+| `04_losses_torch.ipynb` | differentiable losses, NumPy/torch agreement | not written |
+| `05_signatures.ipynb` | signature features, signature kernel | not written |
 
 Each notebook states its own mathematics, runs its own experiments, and reads
 its own results. That is where to look for a derivation.
@@ -139,6 +140,7 @@ pathwise-loss/
 ├── papers/                  # PDFs + references.bib
 └── docs/
     ├── arc_guide.md         # Oxford ARC: accounts, SLURM, storage
+    ├── protocol_*.md        # experiment designs, written before running them
     └── logbook/             # dated notes and findings. Append-only.
 ```
 
@@ -149,6 +151,7 @@ pathwise-loss/
 | A derivation, an experiment, a plot, the reading of a result | the relevant **notebook** |
 | A function used more than once | **`src/pathloss/`**, with a test |
 | What was decided, results, interpretations | **`docs/logbook/`**, dated |
+| An experiment's design, before running it | **`docs/protocol_*.md`** |
 | How to run something | **this README** |
 
 **The one structural rule:** anything that must be correct lives in

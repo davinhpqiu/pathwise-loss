@@ -22,9 +22,18 @@ Also:
 | mathematics, experiments, results | relevant **notebook** |
 | function used more than once | **`src/pathloss/`**, with test |
 | decisions, changes, findings | **`docs/logbook/`**, dated |
+| an experiment's design, before it is run | **`docs/protocol_*.md`**, pre-registered |
 | how to run something | **`README.md`** |
 
 Anything that must be correct lives in `src/pathloss/` with a test. Notebook cell is never sole copy of a function.
+
+## Protocols
+
+An experiment's design is written and committed **before** the data is
+downloaded: question, selection rule, scoring, predictions, and what each
+outcome would mean. Departures are recorded in the logbook with a date and a
+reason. Without this the difference between a prediction and a post-hoc
+rationalisation is not recoverable.
 
 ## Logbook
 
