@@ -39,4 +39,6 @@ rationalisation is not recoverable.
 
 Records decisions and changes, dated. Not word counts, code cell counts, test counts, or editorial edits to notebooks: rewording a notebook is not a project event.
 
-Entries are not rewritten to reflect later opinion. Corrected in place: cross-references into notebooks since renumbered. Superseded claim gets dated line, not deletion.
+Entries are not rewritten to reflect later opinion. Corrected in place: cross-references into notebooks since renumbered.
+
+A claim later **superseded** gets a dated line saying so. A claim that was simply **wrong** is removed, with no trace and no narration of the error: a note is for what is true, not a record of drafting.
