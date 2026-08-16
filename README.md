@@ -1,6 +1,6 @@
 # Principled loss functions for continuous-time learning
 
-Summer project, 6 weeks. Design and evaluate loss functions for **path-to-path**
+Summer project. Design and evaluate loss functions for **path-to-path**
 learning, and compare them against pointwise MSE.
 
 Supervision: Monday (informal) / Thursday 13:00 (formal).
@@ -71,8 +71,7 @@ writes provenance to `meta.json`, and prints what it *would* do:
 python scripts/run_experiment.py --config configs/baseline_mse.yaml --out results/runs/test
 ```
 
-The harness exists so that when the model arrives in week 2 there is somewhere
-for it to go.
+The harness exists so that there is somewhere for a model to go when one arrives.
 
 ### On ARC
 
@@ -117,7 +116,7 @@ pathwise-loss/
 │   ├── paths.py             # synthetic generators, irregular sampling, missingness
 │   ├── norms.py             # quadrature, L^p integral norms (NumPy)
 │   ├── pvar.py              # p-variation: brute force, O(N^2) DP, pruned
-│   └── losses.py            # differentiable torch losses (week 3+, not written)
+│   └── losses.py            # differentiable torch losses (not written)
 │
 ├── tests/                   # pytest. Run before trusting notebook output.
 ├── notebooks/               # THE EXPERIMENTS: maths, code, results, together
@@ -193,8 +192,8 @@ report.
 
 **Citations go at the point of use**, in the notebook cell or logbook entry
 where the paper actually changed a decision, not in a separate index. Notebook
-01 ends with the works it cites and the section each one bears on; the reading
-order for the weeks ahead is in `docs/logbook/2026-08-09.md`.
+01 ends with the works it cites and the section each one bears on; a reading
+order is in `docs/logbook/2026-08-09.md`.
 
 When adding a paper: drop the PDF in `papers/`, add the BibTeX entry with a
 `note` giving the filename, and cite it where it mattered.
