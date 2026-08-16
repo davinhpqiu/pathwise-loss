@@ -74,7 +74,7 @@ jupyter nbconvert --to notebook --execute --inplace notebooks/01_integral_norms.
 
 ### Training experiments
 
-Not yet possible: `scripts/run_experiment.py` is a stub. It parses the config,
+Blocked: `scripts/run_experiment.py` is a stub. It parses the config,
 writes provenance to `meta.json`, and prints what it *would* do:
 
 ```bash
@@ -85,7 +85,7 @@ The harness exists so that there is somewhere for a model to go when one arrives
 
 ### On ARC
 
-Nothing here needs ARC yet. When it does, see [`docs/arc_guide.md`](docs/arc_guide.md).
+ARC becomes relevant once model training starts. See [`docs/arc_guide.md`](docs/arc_guide.md).
 Short version:
 
 ```bash
