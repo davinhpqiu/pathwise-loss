@@ -144,7 +144,7 @@ pathwise-loss/
     └── logbook/             # dated notes and findings. Append-only.
 ```
 
-### Where things go
+### Placement
 
 | | goes in |
 |---|---|
