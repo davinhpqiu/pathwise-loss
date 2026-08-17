@@ -22,18 +22,21 @@ Also:
 | mathematics, experiments, results | relevant **notebook** |
 | function used more than once | **`src/pathloss/`**, with test |
 | decisions, changes, findings | **`docs/logbook/`**, dated |
-| an experiment's design, before it is run | **`docs/protocol_*.md`**, pre-registered |
 | how to run something | **`README.md`** |
 
 Anything that must be correct lives in `src/pathloss/` with a test. Notebook cell is never sole copy of a function.
 
-## Protocols
+## Experiment design
 
-An experiment's design is written and committed **before** the data is
-downloaded: question, selection rule, scoring, predictions, and what each
-outcome would mean. Departures are recorded in the logbook with a date and a
-reason. Without this the difference between a prediction and a post-hoc
-rationalisation is not recoverable.
+An experiment's design is written down **before** the run: question, what varies,
+what is held fixed, and what each outcome would mean. For a comparison that
+produces a claim, that goes in the notebook that will report it, committed ahead
+of the numbers. Departures are recorded in the logbook with a date and a reason,
+so a prediction stays distinguishable from a post-hoc rationalisation.
+
+Pre-registration in a separate file was tried (`docs/protocol_01_*.md`, 16/08)
+and dropped on 17/08: it suited a confirmatory comparison the project turned out
+not to need yet, and a standalone file drifted from the code it described.
 
 ## Logbook
 

@@ -106,7 +106,6 @@ squeue -u $USER
 | `01_integral_norms.ipynb` | The estimator and why: quadrature rules, convergence rates, **why MSE is inconsistent under non-uniform sampling**, choice of $p$. Exposition; verification is in `tests/` | complete |
 | `02_p_variation.ipynb` | roughness of a path: definition, and the three implementations, one section each | complete |
 | `03_first_pass.ipynb` | exploratory: implementations on archive data, axioms, magnitude, spread, cost | rough draft |
-| `04_similarity.ipynb` | confirmatory: do the discrepancies rank paths better than MSE (`docs/protocol_01_similarity.md`, not active) | not written |
 | `05_losses_torch.ipynb` | differentiable losses, NumPy/torch agreement | not written |
 | `06_signatures.ipynb` | signature features, signature kernel | not written |
 
@@ -142,7 +141,6 @@ pathwise-loss/
 └── docs/
     ├── arc_guide.md         # Oxford ARC: accounts, SLURM, storage
     ├── open_questions.md    # register of what is undecided
-    ├── protocol_*.md        # experiment designs, written before running them
     └── logbook/             # dated notes and findings. Append-only.
 ```
 
@@ -153,7 +151,6 @@ pathwise-loss/
 | A derivation, an experiment, a plot, the reading of a result | the relevant **notebook** |
 | A function used more than once | **`src/pathloss/`**, with a test |
 | What was decided, results, interpretations | **`docs/logbook/`**, dated |
-| An experiment's design, before running it | **`docs/protocol_*.md`** |
 | Something undecided, with its definitions | **`docs/open_questions.md`** |
 | How to run something | **this README** |
 
