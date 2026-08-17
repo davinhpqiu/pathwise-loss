@@ -28,6 +28,7 @@ model:
   hidden: 64
   layers: 2
   width: 128
+  n_fourier: 8                    # Fourier features on the query time; 0 = raw scalar
 
 loss:
   kind: mse                       # {mse, integral_l1, integral_l2, integral_l4, integral_linf}

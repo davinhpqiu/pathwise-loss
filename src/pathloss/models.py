@@ -31,12 +31,24 @@ class GRUQuery(nn.Module):
     discrete-time recurrent net see irregular spacing at all; without it the
     sequence carries no information about when observations happened.
 
+    Query times enter the decoder through Fourier features,
+
+        gamma(t) = [t, sin(2^0 pi t), cos(2^0 pi t), ..., sin(2^{K-1} pi t), cos(2^{K-1} pi t)],
+
+    rather than as a raw scalar. An MLP on a raw scalar input fits low
+    frequencies far faster than high ones (spectral bias), so it resists exactly
+    the wiggle a sample path consists of. Fourier features supply the high
+    frequencies directly and are the standard remedy. `n_fourier=0` recovers the
+    raw-scalar decoder, which is what `test_fourier_features_help` compares
+    against.
+
     Parameters
     ----------
     d : channels of the path.
     hidden : GRU hidden width.
     layers : GRU depth.
     width : decoder hidden width.
+    n_fourier : number of octaves K above. 0 disables the feature map.
     """
 
     def __init__(
@@ -45,19 +57,29 @@ class GRUQuery(nn.Module):
         hidden: int = 64,
         layers: int = 2,
         width: int = 128,
+        n_fourier: int = 8,
     ) -> None:
         super().__init__()
         self.d = d
+        self.n_fourier = int(n_fourier)
         self.encoder = nn.GRU(
             input_size=d + 2, hidden_size=hidden, num_layers=layers, batch_first=True
         )
         self.decoder = nn.Sequential(
-            nn.Linear(hidden + 1, width),
+            nn.Linear(hidden + 1 + 2 * self.n_fourier, width),
             nn.Tanh(),
             nn.Linear(width, width),
             nn.Tanh(),
             nn.Linear(width, d),
         )
+
+    def time_features(self, t: torch.Tensor) -> torch.Tensor:
+        """gamma(t) of the class docstring. Shape (..., 1 + 2 * n_fourier)."""
+        feats = [t.unsqueeze(-1)]
+        for k in range(self.n_fourier):
+            w = (2.0**k) * torch.pi
+            feats += [torch.sin(w * t).unsqueeze(-1), torch.cos(w * t).unsqueeze(-1)]
+        return torch.cat(feats, dim=-1)
 
     def forward(
         self, t_ctx: torch.Tensor, x_ctx: torch.Tensor, t_query: torch.Tensor
@@ -74,7 +96,7 @@ class GRUQuery(nn.Module):
 
         q = t_query.shape[1]
         summary = summary.unsqueeze(1).expand(b, q, summary.shape[-1])
-        dec_in = torch.cat([summary, t_query.unsqueeze(-1)], dim=-1)
+        dec_in = torch.cat([summary, self.time_features(t_query)], dim=-1)
         return self.decoder(dec_in)
 
 

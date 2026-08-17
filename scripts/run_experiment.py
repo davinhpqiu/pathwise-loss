@@ -79,7 +79,8 @@ def main() -> int:
         d=data.get("d", 1),
         model=model_cfg.get("kind", "gru_query"),
         model_kwargs={
-            k: v for k, v in model_cfg.items() if k in {"hidden", "layers", "width"}
+            k: v for k, v in model_cfg.items()
+            if k in {"hidden", "layers", "width", "n_fourier"}
         },
         loss=loss_cfg.get("kind", "mse"),
         epochs=tr.get("epochs", 200),

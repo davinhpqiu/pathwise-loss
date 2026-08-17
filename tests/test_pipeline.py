@@ -135,27 +135,54 @@ def test_model_rejects_wrong_channel_count():
 def test_overfits_one_batch(loss):
     """Acceptance criterion for the pipeline.
 
-    One batch, shown 300 times, under a model with enough capacity to memorise
-    it. The loss must fall by at least two orders of magnitude. Failure means a
-    wiring fault: detached gradients, a shuffled target, or a model ignoring its
-    query times.
+    One batch, shown until the optimiser has had 2000 steps, under a model with
+    capacity to memorise it. The loss must fall by two orders of magnitude.
+    Failure means a wiring fault: detached gradients, a shuffled target, or a
+    model ignoring its query times.
+
+    The step budget is the point, and an earlier version of this test got it
+    wrong: 16 samples at batch size 16 gives one optimiser step per epoch, so
+    300 epochs was 300 steps, far too few to memorise anything. Loosening the
+    threshold would have hidden that; raising the budget is the honest fix.
     """
     cfg = TrainConfig(
-        n_train=16,
-        n_val=16,
+        n_train=8,
+        n_val=8,
         n_fine=129,
         n_ctx=32,
         n_tgt=32,
-        batch_size=16,
-        epochs=300,
+        batch_size=8,
+        epochs=2000,
         lr=3e-3,
         loss=loss,
-        model_kwargs={"hidden": 64, "layers": 1, "width": 128},
+        model_kwargs={"hidden": 64, "layers": 1, "width": 128, "n_fourier": 8},
     )
     out = train(cfg, verbose=False)
     first = out["history"][0]["train_loss"]
     last = out["history"][-1]["train_loss"]
     assert last < first / 100.0, f"{loss}: {first:.4g} -> {last:.4g}"
+
+
+def test_fourier_features_help():
+    """Justification for the Fourier feature map, rather than an assertion of it.
+
+    Same budget, same data, same seed; the only difference is whether the
+    decoder sees gamma(t) or the raw scalar t. If the raw-scalar model were as
+    good, the feature map would be unearned complexity and should go.
+    """
+    common = dict(
+        n_train=8, n_val=8, n_fine=129, n_ctx=32, n_tgt=32,
+        batch_size=8, epochs=800, lr=3e-3, loss="mse", seed=0,
+    )
+    plain = train(
+        TrainConfig(model_kwargs={"hidden": 64, "layers": 1, "width": 128,
+                                  "n_fourier": 0}, **common), verbose=False)
+    fourier = train(
+        TrainConfig(model_kwargs={"hidden": 64, "layers": 1, "width": 128,
+                                  "n_fourier": 8}, **common), verbose=False)
+    assert (
+        fourier["history"][-1]["train_loss"] < plain["history"][-1]["train_loss"]
+    ), f"plain {plain['history'][-1]['train_loss']:.4g} vs fourier {fourier['history'][-1]['train_loss']:.4g}"
 
 
 def test_training_reduces_held_out_error():

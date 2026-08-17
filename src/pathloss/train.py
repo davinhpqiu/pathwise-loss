@@ -1,7 +1,7 @@
 """Training loop for the baseline. Config in, metrics and predictions out.
 
 Kept separate from `scripts/run_experiment.py` so it can be imported by tests.
-The overfit test in `tests/test_train.py` is the acceptance criterion for the
+The overfit test in `tests/test_pipeline.py` is the acceptance criterion for the
 pipeline: a model that cannot drive the loss near zero on a single batch it sees
 repeatedly is miswired, and no result computed on top of it means anything.
 """
@@ -111,7 +111,7 @@ def train(cfg: TrainConfig, verbose: bool = True) -> dict:
             opt.zero_grad(set_to_none=True)
             loss.backward()
             opt.step()
-            running += float(loss)
+            running += float(loss.detach())
             nb += 1
 
         row = {"epoch": epoch, "train_loss": running / nb}
