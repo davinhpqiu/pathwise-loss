@@ -29,3 +29,7 @@ slurm-*.out
 # R
 .Rhistory
 .RData
+
+# node (scripts/check_math.js)
+node_modules/
+package-lock.json

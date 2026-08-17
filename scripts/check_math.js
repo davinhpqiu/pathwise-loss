@@ -6,9 +6,9 @@
 // Exists because KaTeX implements a subset of LaTeX: \unicode, \shuffle,
 // \mathscr and \DeclareMathOperator all parse in TeX and fail here.
 
-const katex = require('/tmp/node_modules/katex');
 const fs = require('fs'), path = require('path');
-const root = '/sessions/focused-modest-carson/mnt/Pathwise Loss/pathwise-loss';
+const katex = require('katex');            // resolved from ./node_modules
+const root = path.resolve(__dirname, '..');
 function extract(text) {
   const out = [];
   text.replace(/\$\$([\s\S]*?)\$\$/g, (m,g) => { out.push([g,true]); return ' '; })
