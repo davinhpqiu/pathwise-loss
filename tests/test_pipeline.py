@@ -1,0 +1,171 @@
+"""Tests for the baseline pipeline: losses, model, training loop.
+
+Needs torch, an optional dependency (`requirements-ml.txt`), so the whole module
+skips without it. Dataset tests live in `test_datasets.py` and need NumPy only.
+
+The acceptance criterion is `test_overfits_one_batch`: one batch shown
+repeatedly must drive the loss near zero. Failure means a wiring fault, and
+every number computed on top of the pipeline is then meaningless.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pytest
+
+from pathloss.norms import integral_distance, quadrature_weights
+
+torch = pytest.importorskip("torch", reason="torch is in requirements-ml.txt")
+
+from pathloss.losses import (  # noqa: E402
+    integral_lp,
+    pointwise_mse,
+    trapezoid_weights,
+)
+from pathloss.models import build_model  # noqa: E402
+from pathloss.train import TrainConfig, train  # noqa: E402
+
+
+# --- losses: agreement with the NumPy definitions --------------------------
+
+
+def test_trapezoid_weights_match_numpy():
+    rng = np.random.default_rng(0)
+    t = np.sort(rng.uniform(0, 1, 40))
+    t[0], t[-1] = 0.0, 1.0
+    want = quadrature_weights(t)                       # unnormalised, horizon 1
+    got = trapezoid_weights(torch.tensor(t)[None]).numpy()[0]
+    assert np.allclose(got, want, atol=1e-12)
+
+
+def test_integral_l2_matches_numpy_integral_distance():
+    rng = np.random.default_rng(1)
+    t = np.sort(rng.uniform(0, 1, 64))
+    t[0], t[-1] = 0.0, 1.0
+    a, b = rng.normal(size=(64, 1)), rng.normal(size=(64, 1))
+    want = float(integral_distance(t, a, b, p=2.0, normalise=True)) ** 2
+    got = float(
+        integral_lp(
+            torch.tensor(t)[None], torch.tensor(a)[None], torch.tensor(b)[None], p=2.0
+        )
+    )
+    assert got == pytest.approx(want, rel=1e-6)
+
+
+def test_mse_and_integral_l2_agree_on_an_even_grid():
+    """The 13/08 claim: on an even grid the two differ by O(1/T)."""
+    rng = np.random.default_rng(2)
+    for n in (64, 256, 1024):
+        t = torch.linspace(0, 1, n)[None]
+        a = torch.tensor(rng.normal(size=(1, n, 1)), dtype=torch.float32)
+        b = torch.zeros_like(a)
+        mse = float(pointwise_mse(t, a, b))
+        l2 = float(integral_lp(t, a, b, p=2.0))
+        assert abs(mse - l2) / mse < 5.0 / n
+
+
+def test_mse_and_integral_l2_disagree_on_an_uneven_grid():
+    """And the converse, which is why target times are irregular by design."""
+    n = 256
+    t = torch.cat([torch.linspace(0, 0.1, n // 2), torch.linspace(0.11, 1.0, n // 2)])[None]
+    a = torch.zeros(1, n, 1)
+    a[:, : n // 2] = 1.0                    # error confined to the dense stretch
+    b = torch.zeros_like(a)
+    mse = float(pointwise_mse(t, a, b))
+    l2 = float(integral_lp(t, a, b, p=2.0))
+    assert mse == pytest.approx(0.5, abs=1e-6)   # half the samples carry error
+    assert l2 < 0.2                              # but only a tenth of the horizon
+
+
+def test_losses_are_zero_on_exact_predictions_and_positive_otherwise():
+    t = torch.linspace(0, 1, 32)[None]
+    y = torch.randn(1, 32, 2)
+    for p in (1.0, 2.0, 4.0, float("inf")):
+        assert float(integral_lp(t, y, y, p=p)) == pytest.approx(0.0, abs=1e-8)
+        assert float(integral_lp(t, y + 0.3, y, p=p)) > 0
+
+
+def test_unsorted_times_raise():
+    t = torch.tensor([[0.0, 0.5, 0.4, 1.0]])
+    y = torch.zeros(1, 4, 1)
+    with pytest.raises(ValueError, match="strictly increasing"):
+        integral_lp(t, y, y, p=2.0)
+
+
+def test_losses_are_differentiable():
+    t = torch.linspace(0, 1, 16)[None]
+    y = torch.randn(1, 16, 1)
+    for name, fn in (("mse", pointwise_mse), ("l2", integral_lp)):
+        pred = torch.zeros_like(y, requires_grad=True)
+        fn(t, pred, y).backward()
+        assert pred.grad is not None and torch.isfinite(pred.grad).all(), name
+        assert float(pred.grad.abs().sum()) > 0, name
+
+
+# --- model -----------------------------------------------------------------
+
+
+def test_model_output_shape_and_arbitrary_query_times():
+    model = build_model("gru_query", d=2, hidden=16, layers=1, width=32)
+    t_ctx, x_ctx = torch.rand(4, 10).sort(dim=-1).values, torch.randn(4, 10, 2)
+    for q in (1, 7, 33):
+        t_q = torch.rand(4, q).sort(dim=-1).values
+        assert model(t_ctx, x_ctx, t_q).shape == (4, q, 2)
+
+
+def test_model_response_depends_on_query_time():
+    """A model ignoring t_query would make every path-shaped loss meaningless."""
+    torch.manual_seed(0)
+    model = build_model("gru_query", d=1, hidden=16, layers=1, width=32)
+    t_ctx, x_ctx = torch.rand(2, 10).sort(dim=-1).values, torch.randn(2, 10, 1)
+    out = model(t_ctx, x_ctx, torch.tensor([[0.1, 0.9], [0.1, 0.9]]))
+    assert not torch.allclose(out[:, 0], out[:, 1], atol=1e-4)
+
+
+def test_model_rejects_wrong_channel_count():
+    model = build_model("gru_query", d=1, hidden=8, layers=1, width=16)
+    with pytest.raises(ValueError, match="built for d = 1"):
+        model(torch.rand(2, 5).sort(dim=-1).values, torch.randn(2, 5, 3), torch.rand(2, 4))
+
+
+# --- training --------------------------------------------------------------
+
+
+@pytest.mark.parametrize("loss", ["mse", "integral_l2"])
+def test_overfits_one_batch(loss):
+    """Acceptance criterion for the pipeline.
+
+    One batch, shown 300 times, under a model with enough capacity to memorise
+    it. The loss must fall by at least two orders of magnitude. Failure means a
+    wiring fault: detached gradients, a shuffled target, or a model ignoring its
+    query times.
+    """
+    cfg = TrainConfig(
+        n_train=16,
+        n_val=16,
+        n_fine=129,
+        n_ctx=32,
+        n_tgt=32,
+        batch_size=16,
+        epochs=300,
+        lr=3e-3,
+        loss=loss,
+        model_kwargs={"hidden": 64, "layers": 1, "width": 128},
+    )
+    out = train(cfg, verbose=False)
+    first = out["history"][0]["train_loss"]
+    last = out["history"][-1]["train_loss"]
+    assert last < first / 100.0, f"{loss}: {first:.4g} -> {last:.4g}"
+
+
+def test_training_reduces_held_out_error():
+    cfg = TrainConfig(n_train=256, n_val=64, n_fine=257, epochs=60, seed=0)
+    out = train(cfg, verbose=False)
+    assert out["history"][-1]["val_mse"] < out["history"][0]["val_mse"]
+
+
+def test_evaluate_reports_every_metric():
+    cfg = TrainConfig(n_train=32, n_val=32, n_fine=129, epochs=1)
+    out = train(cfg, verbose=False)
+    assert set(out["final"]) == {"mse", "integral_l2", "integral_l1", "integral_linf"}
+    assert all(np.isfinite(v) for v in out["final"].values())

@@ -1,39 +1,42 @@
-# Baseline: pointwise MSE on a seq2seq model. Everything else is measured
-# against this. One YAML per experiment;
+# Baseline: pointwise MSE on a path-to-path model. Everything else is measured
+# against this. One YAML per experiment.
+#
+#     python scripts/run_experiment.py --config configs/baseline_mse.yaml \
+#            --out results/runs/baseline_mse
 
 name: baseline_mse
 seed: 0
 
 data:
   generator: ornstein_uhlenbeck   # {ornstein_uhlenbeck, brownian_motion, smooth_test_path}
-  n_paths: 2048
-  n_fine: 4097                    # ground-truth "continuous" grid
-  T: 1.0
-  theta: 2.0
-  sigma: 0.5
+  n_train: 512
+  n_val: 128
+  n_fine: 513                     # ground-truth "continuous" grid
+  n_ctx: 64                       # points the model sees
+  n_tgt: 64                       # points the loss is evaluated on
+  d: 1
+  noise: 0.0                      # observation noise on context only
   sampling:
-    mode: bernoulli               # {none, bernoulli, clustered}
-    keep: 0.25
-    missingness: 0.0
+    # Target times are irregular by design: on an even grid the weighted L^2
+    # loss equals MSE up to O(1/n_tgt), so no loss comparison could show
+    # anything. See notebook 01 section 3 and logbook 2026-08-13.
+    mode: clustered               # {uniform, clustered}
+    density_bias: 3.0             # 0 recovers uniform
 
 model:
-  kind: lstm                      # {lstm, transformer, linear_ncde}
+  kind: gru_query                 # GRU encoder + MLP decoder at query times
   hidden: 64
   layers: 2
-  interpolation: cubic_hermite    # control path for the CDE models
+  width: 128
 
 loss:
-  kind: mse                       # {mse, integral_lp, sig_mmd, kernel_score}
-  p: 2
+  kind: mse                       # {mse, integral_l1, integral_l2, integral_l4, integral_linf}
 
 train:
   epochs: 200
   batch_size: 64
   lr: 1.0e-3
-  device: cuda
+  device: cpu
 
-eval:
-  # Always report these together -- see logbook 2026-08-06: a loss value is
-  # uninterpretable without the sampling density that produced it.
-  metrics: [mse, integral_l2, integral_linf, sampling_density]
-  bootstrap_resamples: 500
+# Every metric is reported every run, whatever was trained against: a loss value
+# is uninterpretable without the others beside it (logbook 2026-08-06).

@@ -177,9 +177,10 @@ drift apart quickly if the second is left until the write-up.
 | $p$-variation index estimator | designed, not written: `docs/open_questions.md` Q6 |
 | MSE vs integral norm under irregular sampling | done: notebook 01 §3 |
 | Top-down segmentation (adequacy + similarity) | designed, not written: `docs/logbook/2026-08-12.md` |
-| `src/pathloss/losses.py` (torch, differentiable) | not written |
-| Models (LSTM / Transformer / Linear NCDE) | not written |
-| `scripts/run_experiment.py` training loop | stub |
+| `src/pathloss/losses.py` (torch, differentiable) | done: MSE + weighted $L^p$ |
+| Baseline model (GRU encoder + query-time decoder) | done: `src/pathloss/models.py` |
+| Linear NCDE / Transformer baselines | not written |
+| `scripts/run_experiment.py` training loop | done, needs torch installed |
 | Signature features / signature kernel | not started |
 | Real dataset | not obtained |
 | Anything on ARC | not run: account not yet requested |
