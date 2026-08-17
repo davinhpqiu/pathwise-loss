@@ -7,10 +7,17 @@
 # The torch + signature stack is deliberately NOT here: see requirements-ml.txt.
 
 # Numerics
-numpy>=1.26
-scipy>=1.11
+# Upper bounds come from aeon 1.5.0, which pins numpy<2.5, scipy<1.18,
+# pandas<2.4. Stated here so a fresh install resolves once instead of
+# installing newer versions and then downgrading them.
+numpy>=1.26,<2.5.0
+scipy>=1.11,<1.18.0
 matplotlib>=3.8
-pandas>=2.1
+pandas>=2.1,<2.4.0
+
+# Data archives (Multiverse + UCR/UEA loaders, per docs/logbook/2026-08-13.md)
+aeon>=1.5.0
+aeon-multiverse>=0.0.1
 
 # Interactive work
 jupyterlab>=4.0

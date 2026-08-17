@@ -105,9 +105,10 @@ squeue -u $USER
 |---|---|---|
 | `01_integral_norms.ipynb` | The estimator and why: quadrature rules, convergence rates, **why MSE is inconsistent under non-uniform sampling**, choice of $p$. Exposition; verification is in `tests/` | complete |
 | `02_p_variation.ipynb` | roughness of a path: definition, and the three implementations, one section each | complete |
-| `03_similarity.ipynb` | do the discrepancies rank paths better than MSE (`docs/protocol_01_similarity.md`) | not written |
-| `04_losses_torch.ipynb` | differentiable losses, NumPy/torch agreement | not written |
-| `05_signatures.ipynb` | signature features, signature kernel | not written |
+| `03_first_pass.ipynb` | exploratory: implementations on archive data, axioms, magnitude, spread, cost | rough draft |
+| `04_similarity.ipynb` | confirmatory: do the discrepancies rank paths better than MSE (`docs/protocol_01_similarity.md`, not active) | not written |
+| `05_losses_torch.ipynb` | differentiable losses, NumPy/torch agreement | not written |
+| `06_signatures.ipynb` | signature features, signature kernel | not written |
 
 Each notebook states its own mathematics, runs its own experiments, and reads
 its own results. That is where to look for a derivation.
