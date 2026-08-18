@@ -11,6 +11,16 @@ logbook.
 
 ---
 
+## Start here
+
+New to the project: read `CLAUDE.md` first (aim, conventions, reading order),
+then the newest entry in `docs/logbook/` for what is currently in force, then
+`docs/open_questions.md` for what is undecided.
+
+Current state, 17/08: baseline pipeline trains end to end under MSE on synthetic
+paths. $p$-variation is a diagnostic rather than a candidate loss. Integral norms
+are live through `open_questions.md` Q4, smoothing being unimplemented.
+
 ## Setup: first time
 
 ```bash

@@ -1,5 +1,80 @@
 # Conventions for this repo
 
+## Orientation
+
+**Aim.** Design and evaluate loss functions for path-to-path learning, against
+pointwise MSE. Oxford summer project, six weeks, one student (Davin). Original
+specification is `papers/` project proposal: sequence-to-sequence and neural CDE
+baselines, synthetic trajectories with controllable irregular sampling, one small
+real dataset at the end.
+
+**Reading order for anyone arriving cold.**
+
+1. This file.
+2. `README.md`: layout, how to run.
+3. Newest file in `docs/logbook/`: current state, decisions in force.
+4. `docs/open_questions.md`: what is undecided, with definitions attached. Every
+   entry is resumable without reading its source.
+5. Notebooks in order, as needed. Each states its own mathematics.
+
+**State of play is the newest logbook entry, not this file.** Directions change:
+$p$-variation was central for a week and is now a diagnostic (17/08); a
+pre-registered protocol was written and deleted inside two days. Check the date
+on a claim before acting on it. Length of a notebook indicates effort spent, not
+current priority.
+
+## Working practice
+
+- **Davin runs tests and training.** Write them, leave execution to him, and say
+  plainly which parts are unverified.
+- **Davin decides what to raise with supervisors.** Record open items in
+  `docs/open_questions.md`; do not draft agendas or supervisor questions unasked.
+- **Ask before adding a dependency.** `requirements.txt` stays installable
+  without a compiler, GPU, or git clone. Modelling stack is separate, in
+  `requirements-ml.txt`.
+- **Correct rather than narrate.** A wrong claim is removed. Saying so once in
+  chat suffices.
+
+## Verification
+
+**Anchor against something independent.** A test comparing one implementation
+against another written by the same author checks consistency and nothing else.
+Use a closed form, a published number, a brute-force enumerator, or a second
+route to the same quantity. `p_variation_brute` anchors `pvar.py`;
+`tests/test_pipeline.py` anchors the torch losses against the NumPy ones in
+`norms.py`; Corollary 1 of `2026-08-16.md` would anchor a signature
+implementation against `integral_norm`.
+
+**Suspect the harness first.** Recorded failures in this repo were, in order: an
+adequacy test that held for every path and so tested nothing; a test suite that
+compared code against its own second implementation; an acceptance test granting
+300 optimiser steps where thousands were needed. In each the code was sound and
+the check was not.
+
+**A threshold met by lowering the threshold measures nothing.** When an
+acceptance test fails, fix the cause or raise the budget. Loosening the criterion
+hides whatever else was wrong.
+
+**Justify additions with a test that could remove them.** Fourier features in
+`models.py` are kept because `test_fourier_features_help` shows the raw-scalar
+decoder losing under an equal budget and seed. Complexity without such a test
+gets deleted.
+
+## Environment
+
+Run from repo root; `pyproject.toml` sets `pythonpath = ["src"]`, so no install
+step.
+
+- `pytest -q` for everything. `tests/test_pipeline.py` needs torch and skips
+  without it.
+- `python scripts/run_experiment.py --config configs/<name>.yaml --out results/runs/<name>`
+- `npm install katex && node scripts/check_math.js` renders every formula in the
+  repo through KaTeX. Run after editing mathematics: KaTeX implements a subset of
+  LaTeX and `\unicode`, `\shuffle` and `\mathscr` fail silently in a notebook.
+- `aeon` pins `numpy<2.5`, `scipy<1.18`, `pandas<2.4`, and installing it
+  downgrades all three. Bounds are in `requirements.txt` so a fresh install
+  resolves once.
+
 ## Writing
 
 Applies to markdown files and notebooks.
