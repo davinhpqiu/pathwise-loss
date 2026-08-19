@@ -17,9 +17,11 @@ New to the project: read `CLAUDE.md` first (aim, conventions, reading order),
 then the newest entry in `docs/logbook/` for what is currently in force, then
 `docs/open_questions.md` for what is undecided.
 
-Current state, 17/08: baseline pipeline trains end to end under MSE on synthetic
-paths. $p$-variation is a diagnostic rather than a candidate loss. Integral norms
-are live through `open_questions.md` Q4, smoothing being unimplemented.
+Current state, 19/08: project week 2 of a 3 August to 11 September project.
+Baseline pipeline trains end to end on synthetic paths under MSE or time-weighted
+$L^p$ losses. Fine-grid evaluation, a three-seed matched loss comparison,
+controlled missingness, and an initial Linear Neural CDE baseline are working.
+$p$-variation is a diagnostic.
 
 ## Setup: first time
 
@@ -84,14 +86,30 @@ jupyter nbconvert --to notebook --execute --inplace notebooks/01_integral_norms.
 
 ### Training experiments
 
-Blocked: `scripts/run_experiment.py` is a stub. It parses the config,
-writes provenance to `meta.json`, and prints what it *would* do:
+The experiment script generates data, trains, evaluates, and writes configuration,
+history, metrics, and provenance:
 
 ```bash
 python scripts/run_experiment.py --config configs/baseline_mse.yaml --out results/runs/test
 ```
 
-The harness exists so that there is somewhere for a model to go when one arrives.
+Use a new output directory for each run.
+
+Core paired study, locally for one seed:
+
+```bash
+python scripts/run_integral_study.py \
+  --config configs/integral_core_study.yaml \
+  --out results/runs/integral_core \
+  --seed 0
+```
+
+Supervisor-provided BasicMotions classification:
+
+```bash
+python scripts/run_classification.py \
+  --config configs/classification_basicmotions.yaml
+```
 
 ### On ARC
 
@@ -115,12 +133,12 @@ squeue -u $USER
 |---|---|---|
 | `01_integral_norms.ipynb` | The estimator and why: quadrature rules, convergence rates, **why MSE is inconsistent under non-uniform sampling**, choice of $p$. Exposition; verification is in `tests/` | complete |
 | `02_p_variation.ipynb` | roughness of a path: definition, and the three implementations, one section each | complete |
-| `03_first_pass.ipynb` | exploratory: implementations on archive data, axioms, magnitude, spread, cost | rough draft |
-| `05_losses_torch.ipynb` | differentiable losses, NumPy/torch agreement | not written |
-| `06_signatures.ipynb` | signature features, signature kernel | not written |
+| `03_loss_comparison.ipynb` | matched MSE against weighted-$J_2$ experiment: GRU and Linear NCDE, uniform and clustered targets, pilot and held-out seed-0 results | in progress |
+| `04_classification.ipynb` | fixed 1-NN path-distance benchmark on BasicMotions: Euclidean and DTW baselines, with signature extension defined | in progress |
 
 Each notebook states its own mathematics, runs its own experiments, and reads
-its own results. That is where to look for a derivation.
+its own results. The preliminary missingness check is part of notebook 03 rather
+than a separate experiment. That is where to look for a derivation.
 
 ---
 
@@ -134,15 +152,17 @@ pathwise-loss/
 ├── .gitignore
 │
 ├── src/pathloss/            # THE LIBRARY. Everything that must be correct.
-│   ├── paths.py             # synthetic generators, irregular sampling, missingness
+│   ├── datasets.py          # synthetic generators and irregular sampling
+│   ├── models.py            # sequence and continuous-time baselines
+│   ├── train.py             # training and evaluation
 │   ├── norms.py             # quadrature, L^p integral norms (NumPy)
 │   ├── pvar.py              # p-variation: brute force, O(N^2) DP, pruned
-│   └── losses.py            # differentiable torch losses (not written)
+│   └── losses.py            # differentiable MSE and weighted L^p losses
 │
 ├── tests/                   # pytest. Run before trusting notebook output.
 ├── notebooks/               # THE EXPERIMENTS: maths, code, results, together
 ├── scripts/
-│   ├── run_experiment.py    # config -> data -> model -> loss -> results (stub)
+│   ├── run_experiment.py    # config -> data -> model -> loss -> results
 │   └── arc/                 # SLURM submission scripts
 ├── configs/                 # one YAML per experiment; never hardcode in scripts
 ├── data/{raw,synthetic}/    # gitignored. Regenerate, don't commit.
@@ -181,20 +201,26 @@ drift apart quickly if the second is left until the write-up.
 |---|---|
 | Quadrature, $L^p$ norms, convergence studies | done: notebook 01 |
 | $p$-variation: brute force, $O(N^2)$ DP, pruned $O(N\log N)$ | done, tests pass 16/08 |
-| $p$-variation index estimator | designed, not written: `docs/open_questions.md` Q6 |
-| MSE vs integral norm under irregular sampling | done: notebook 01 §3 |
+| $p$-variation index estimator | deferred: diagnostic only |
+| MSE vs integral norm estimator under irregular sampling | done: notebook 01 §3 |
+| Learned effect of target sampling mechanism | seed 0 complete for GRU and matched Linear NCDE; two seeds remain |
+| Effect of exponent $p$ | implementation available; application-specific experiments deferred |
 | Top-down segmentation (adequacy + similarity) | designed, not written: `docs/logbook/2026-08-12.md` |
 | `src/pathloss/losses.py` (torch, differentiable) | done: MSE + weighted $L^p$ |
 | Baseline model (GRU encoder + query-time decoder) | done: `src/pathloss/models.py` |
-| Linear NCDE / Transformer baselines | not written |
+| Linear NCDE baseline | parameter matched core study implemented; seed 0 complete |
 | `scripts/run_experiment.py` training loop | done, needs torch installed |
-| Signature features / signature kernel | not started |
+| 1-NN path-distance classification benchmark | BasicMotions complete: Euclidean 57.5%, DTW 90.0% |
+| Signatures | intended main later direction: fixed features first, training loss second |
+| Controlled missingness | evaluator implemented; one-seed pipeline check only |
 | Real dataset | not obtained |
-| Anything on ARC | not run: account not yet requested |
+| ARC | 24-job core-study array prepared; submission remains |
 
-Next: torch versions of `integral_distance` and `pointwise_mse` in `losses.py`,
-with a test that they match the NumPy versions to floating-point tolerance. That
-is the bridge from "we can measure this" to "we can train against it".
+Next: run seeds 1 and 2 of the core MSE against weighted-$J_2$ study through the
+ARC array, then introduce time-augmented signatures in the working
+classification benchmark. Exponent-specific integral-norm studies remain
+deferred.
+`docs/open_questions.md` contains the remaining decisions.
 
 ---
 

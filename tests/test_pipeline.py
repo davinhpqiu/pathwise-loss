@@ -23,7 +23,8 @@ from pathloss.losses import (  # noqa: E402
     trapezoid_weights,
 )
 from pathloss.models import build_model  # noqa: E402
-from pathloss.train import TrainConfig, train  # noqa: E402
+from pathloss.train import TrainConfig, evaluate_missingness, to_tensors, train  # noqa: E402
+from pathloss.datasets import make_dataset  # noqa: E402
 
 
 # --- losses: agreement with the NumPy definitions --------------------------
@@ -53,7 +54,7 @@ def test_integral_l2_matches_numpy_integral_distance():
 
 
 def test_mse_and_integral_l2_agree_on_an_even_grid():
-    """The 13/08 claim: on an even grid the two differ by O(1/T)."""
+    """For diffuse bounded residuals, endpoint reweighting vanishes with N."""
     rng = np.random.default_rng(2)
     for n in (64, 256, 1024):
         t = torch.linspace(0, 1, n)[None]
@@ -122,10 +123,36 @@ def test_model_response_depends_on_query_time():
     assert not torch.allclose(out[:, 0], out[:, 1], atol=1e-4)
 
 
+def test_linear_cde_model_shape_and_gradients():
+    pytest.importorskip("torchcde")
+    model = build_model(
+        "linear_cde_query", d=1, hidden=8, width=16, n_fourier=2
+    )
+    t_ctx = torch.rand(3, 8).sort(dim=-1).values
+    x_ctx = torch.randn(3, 8, 1)
+    t_query = torch.rand(3, 5).sort(dim=-1).values
+    out = model(t_ctx, x_ctx, t_query)
+    assert out.shape == (3, 5, 1)
+    out.square().mean().backward()
+    assert model.func.weight.grad is not None
+    assert torch.isfinite(model.func.weight.grad).all()
+
+
 def test_model_rejects_wrong_channel_count():
     model = build_model("gru_query", d=1, hidden=8, layers=1, width=16)
     with pytest.raises(ValueError, match="built for d = 1"):
         model(torch.rand(2, 5).sort(dim=-1).values, torch.randn(2, 5, 3), torch.rand(2, 4))
+
+
+def test_model_uses_missingness_mask():
+    torch.manual_seed(0)
+    model = build_model("gru_query", d=1, hidden=8, layers=1, width=16)
+    t = torch.linspace(0, 1, 5)[None]
+    x = torch.ones(1, 5, 1)
+    q = torch.tensor([[0.25, 0.75]])
+    observed = model(t, x, q, torch.ones_like(x))
+    missing = model(t, x, q, torch.zeros_like(x))
+    assert not torch.allclose(observed, missing)
 
 
 # --- training --------------------------------------------------------------
@@ -194,5 +221,42 @@ def test_training_reduces_held_out_error():
 def test_evaluate_reports_every_metric():
     cfg = TrainConfig(n_train=32, n_val=32, n_fine=129, epochs=1)
     out = train(cfg, verbose=False)
-    assert set(out["final"]) == {"mse", "integral_l2", "integral_l1", "integral_linf"}
+    assert set(out["final"]) == {
+        "mse",
+        "integral_l2",
+        "integral_l1",
+        "integral_l4",
+        "integral_linf",
+        "fine_mse",
+        "fine_integral_l2",
+        "fine_integral_l1",
+        "fine_integral_l4",
+        "fine_integral_linf",
+    }
     assert all(np.isfinite(v) for v in out["final"].values())
+
+
+def test_optional_test_split_is_reported_separately():
+    cfg = TrainConfig(
+        n_train=16,
+        n_val=8,
+        n_test=8,
+        n_fine=65,
+        n_ctx=16,
+        n_tgt=16,
+        epochs=1,
+    )
+    out = train(cfg, verbose=False)
+    assert "test" in out
+    assert set(out["test"]) == set(out["final"])
+
+
+def test_missingness_sweep_keeps_truth_fixed_and_reports_fine_grid():
+    data = to_tensors(
+        make_dataset(8, n_fine=65, n_ctx=12, n_tgt=12, missing_rate=0.0, rng=0)
+    )
+    model = build_model("gru_query", d=1, hidden=8, layers=1, width=16)
+    out = evaluate_missingness(model, data, (0.0, 0.5), seed=0)
+    assert set(out) == {"0.0", "0.5"}
+    assert "fine_integral_l2" in out["0.5"]
+    assert all(np.isfinite(v) for row in out.values() for v in row.values())

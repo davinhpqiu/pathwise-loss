@@ -16,6 +16,7 @@ data:
   n_tgt: 64                       # points the loss is evaluated on
   d: 1
   noise: 0.0                      # observation noise on context only
+  missing_rate: 0.0               # hidden context channels, accompanied by mask
   sampling:
     # Target times are irregular by design: on an even grid the weighted L^2
     # loss equals MSE up to O(1/n_tgt), so no loss comparison could show
@@ -38,6 +39,9 @@ train:
   batch_size: 64
   lr: 1.0e-3
   device: cpu
+
+evaluation:
+  missingness_rates: [0.0, 0.1, 0.3, 0.5]
 
 # Every metric is reported every run, whatever was trained against: a loss value
 # is uninterpretable without the others beside it (logbook 2026-08-06).

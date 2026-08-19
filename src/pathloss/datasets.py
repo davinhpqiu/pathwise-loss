@@ -11,8 +11,8 @@ trapezoid-weighted L^2 loss equals MSE up to two endpoint half-weights, order
 even grid cannot show anything. Irregular target times are what makes the
 weighting do work.
 
-Every array has a fixed length per split, drawn without replacement, so no
-padding or masking is needed. Times are sorted within each split.
+Every array has a fixed length per split and times are sorted. Missing context
+channels are zero-filled and accompanied by an observation mask.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ import numpy as np
 
 from .paths import brownian_motion, ornstein_uhlenbeck, smooth_test_path
 
-__all__ = ["GENERATORS", "sample_times", "make_dataset"]
+__all__ = ["GENERATORS", "make_dataset", "sample_times"]
 
 GENERATORS = {
     "ornstein_uhlenbeck": ornstein_uhlenbeck,
@@ -37,45 +37,84 @@ def sample_times(
     mode: str = "clustered",
     density_bias: float = 3.0,
     rng=None,
+    context_mode: str | None = None,
+    target_mode: str | None = None,
+    context_density_bias: float | None = None,
+    target_density_bias: float | None = None,
+    context_rng=None,
+    target_rng=None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Draw disjoint context and target index sets from range(n_fine).
 
     Parameters
     ----------
     mode : {"uniform", "clustered"}
-        "uniform" draws indices with equal probability, giving an irregular grid
-        with no systematic bias. "clustered" draws with probability ramping
-        across the interval, so sample density varies with t; `density_bias` is
-        the exponential rate, 0 recovering "uniform".
+        Legacy common mode used when separate context and target modes are
+        omitted.
+    context_mode, target_mode : {"uniform", "clustered"}, optional
+        Separate controls. This permits target sampling to vary while model
+        input stays fixed.
 
     Returns
     -------
-    (idx_ctx, idx_tgt), each sorted, disjoint, and excluding neither endpoint
-    from consideration.
+    (idx_ctx, idx_tgt), each sorted and disjoint. Target indices include both
+    endpoints, so every target loss spans the same full interval.
 
     Notes
     -----
-    Disjoint by construction: context is drawn first, target from what is left.
+    Disjoint by construction: endpoints are reserved for target, context is
+    drawn from the interior, then remaining target points from what is left.
     Overlap would let a model score well by copying, which would make the loss
     comparison a test of memorisation.
     """
     rng = np.random.default_rng(rng)
+    if context_rng is None:
+        context_rng = np.random.default_rng(rng.integers(0, 2**63, dtype=np.int64))
+    else:
+        context_rng = np.random.default_rng(context_rng)
+    if target_rng is None:
+        target_rng = np.random.default_rng(rng.integers(0, 2**63, dtype=np.int64))
+    else:
+        target_rng = np.random.default_rng(target_rng)
+    if n_fine < 2:
+        raise ValueError("n_fine must be at least 2")
+    if n_tgt < 2:
+        raise ValueError("n_tgt must be at least 2 to include both endpoints")
     if n_ctx + n_tgt > n_fine:
         raise ValueError(f"n_ctx + n_tgt = {n_ctx + n_tgt} exceeds n_fine = {n_fine}")
 
-    if mode == "uniform":
-        prob = np.ones(n_fine)
-    elif mode == "clustered":
-        u = np.linspace(0.0, 1.0, n_fine)
-        prob = np.exp(float(density_bias) * (u - 0.5))
-    else:
-        raise ValueError(f"unknown mode {mode!r}")
-    prob = prob / prob.sum()
+    context_mode = mode if context_mode is None else context_mode
+    target_mode = mode if target_mode is None else target_mode
+    context_density_bias = (
+        density_bias if context_density_bias is None else context_density_bias
+    )
+    target_density_bias = (
+        density_bias if target_density_bias is None else target_density_bias
+    )
 
-    idx_ctx = rng.choice(n_fine, size=n_ctx, replace=False, p=prob)
-    left = np.setdiff1d(np.arange(n_fine), idx_ctx, assume_unique=False)
-    p_left = prob[left] / prob[left].sum()
-    idx_tgt = rng.choice(left, size=n_tgt, replace=False, p=p_left)
+    def probabilities(selected_mode: str, selected_bias: float) -> np.ndarray:
+        if selected_mode == "uniform":
+            out = np.ones(n_fine)
+        elif selected_mode == "clustered":
+            u = np.linspace(0.0, 1.0, n_fine)
+            out = np.exp(float(selected_bias) * (u - 0.5))
+        else:
+            raise ValueError(f"unknown sampling mode {selected_mode!r}")
+        return out / out.sum()
+
+    context_prob = probabilities(context_mode, context_density_bias)
+    target_prob = probabilities(target_mode, target_density_bias)
+
+    interior = np.arange(1, n_fine - 1)
+    p_interior = context_prob[interior] / context_prob[interior].sum()
+    idx_ctx = context_rng.choice(interior, size=n_ctx, replace=False, p=p_interior)
+    left = np.setdiff1d(interior, idx_ctx, assume_unique=False)
+    if n_tgt == 2:
+        sampled_tgt = np.empty(0, dtype=int)
+    else:
+        p_left = target_prob[left] / target_prob[left].sum()
+        sampled_tgt = target_rng.choice(left, size=n_tgt - 2, replace=False, p=p_left)
+    idx_tgt = np.concatenate(([0, n_fine - 1], sampled_tgt))
     return np.sort(idx_ctx), np.sort(idx_tgt)
 
 
@@ -87,7 +126,12 @@ def make_dataset(
     n_tgt: int = 64,
     mode: str = "clustered",
     density_bias: float = 3.0,
+    context_mode: str | None = None,
+    target_mode: str | None = None,
+    context_density_bias: float | None = None,
+    target_density_bias: float | None = None,
     noise: float = 0.0,
+    missing_rate: float = 0.0,
     T: float = 1.0,
     d: int = 1,
     rng=None,
@@ -100,11 +144,13 @@ def make_dataset(
     noise : standard deviation of observation noise added to context values
         only. Targets stay clean, so the loss measures recovery of the path
         rather than of the noise.
+    missing_rate : independent probability that a context channel is hidden.
+        Hidden values are set to zero and identified by `m_ctx`.
 
     Returns
     -------
     dict with
-        t_ctx  (n_samples, n_ctx)        x_ctx  (n_samples, n_ctx, d)
+        t_ctx  (n_samples, n_ctx)        x_ctx, m_ctx  (n_samples, n_ctx, d)
         t_tgt  (n_samples, n_tgt)        x_tgt  (n_samples, n_tgt, d)
         t_fine (n_fine,)                 x_fine (n_samples, n_fine, d)
 
@@ -112,6 +158,8 @@ def make_dataset(
     the path rather than against the sampled targets.
     """
     rng = np.random.default_rng(rng)
+    if not 0.0 <= missing_rate <= 1.0:
+        raise ValueError(f"missing_rate must lie in [0, 1], got {missing_rate}")
     if generator not in GENERATORS:
         raise ValueError(f"unknown generator {generator!r}; have {sorted(GENERATORS)}")
     gen = GENERATORS[generator]
@@ -126,28 +174,43 @@ def make_dataset(
     t_tgt = np.empty((n_samples, n_tgt))
     x_tgt = np.empty((n_samples, n_tgt, d))
 
+    seeds = rng.integers(0, 2**63, size=(n_samples, 3), dtype=np.int64)
     for i in range(n_samples):
+        path_rng = np.random.default_rng(seeds[i, 0])
         if generator == "smooth_test_path":
             t, x = gen(n=n_fine, T=T, **gen_kwargs)
             x = np.repeat(x, d, axis=-1)
         else:
-            t, x = gen(n=n_fine, T=T, d=d, rng=rng, **gen_kwargs)
+            t, x = gen(n=n_fine, T=T, d=d, rng=path_rng, **gen_kwargs)
         if t_fine is None:
             t_fine = t
         x_fine[i] = x
 
         i_ctx, i_tgt = sample_times(
-            n_fine, n_ctx, n_tgt, mode=mode, density_bias=density_bias, rng=rng
+            n_fine,
+            n_ctx,
+            n_tgt,
+            mode=mode,
+            density_bias=density_bias,
+            context_mode=context_mode,
+            target_mode=target_mode,
+            context_density_bias=context_density_bias,
+            target_density_bias=target_density_bias,
+            context_rng=seeds[i, 1],
+            target_rng=seeds[i, 2],
         )
         t_ctx[i], x_ctx[i] = t[i_ctx], x[i_ctx]
         t_tgt[i], x_tgt[i] = t[i_tgt], x[i_tgt]
 
     if noise > 0:
         x_ctx = x_ctx + rng.normal(scale=noise, size=x_ctx.shape)
+    m_ctx = (rng.random(x_ctx.shape) >= missing_rate).astype(x_ctx.dtype)
+    x_ctx = x_ctx * m_ctx
 
     return {
         "t_ctx": t_ctx,
         "x_ctx": x_ctx,
+        "m_ctx": m_ctx,
         "t_tgt": t_tgt,
         "x_tgt": x_tgt,
         "t_fine": t_fine,

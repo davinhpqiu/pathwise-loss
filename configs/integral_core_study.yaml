@@ -1,0 +1,46 @@
+name: integral_core_study
+seeds: [0, 1, 2]
+
+data:
+  generator: ornstein_uhlenbeck
+  n_train: 512
+  n_val: 128
+  n_test: 256
+  n_fine: 513
+  n_ctx: 64
+  n_tgt: 64
+  d: 1
+  noise: 0.0
+  missing_rate: 0.0
+  context_sampling:
+    mode: uniform
+    density_bias: 0.0
+  target_mechanisms:
+    - name: uniform
+      mode: uniform
+      density_bias: 0.0
+    - name: clustered
+      mode: clustered
+      density_bias: 3.0
+
+models:
+  - name: gru
+    kind: gru_query
+    hidden: 64
+    layers: 2
+    width: 128
+    n_fourier: 8
+  - name: linear_cde
+    kind: linear_cde_query
+    hidden: 104
+    width: 128
+    n_fourier: 8
+    step_size: 1.0
+
+losses: [mse, integral_l2]
+
+train:
+  epochs: 200
+  batch_size: 64
+  lr: 1.0e-3
+  device: cpu

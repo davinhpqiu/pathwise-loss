@@ -3,8 +3,8 @@
 ## Orientation
 
 **Aim.** Design and evaluate loss functions for path-to-path learning, against
-pointwise MSE. Oxford summer project, six weeks, one student (Davin). Original
-specification is `papers/` project proposal: sequence-to-sequence and neural CDE
+pointwise MSE. Oxford summer project, 3 August to 11 September 2026, one student
+(Davin). Original specification is `../Project proposal .docx`: sequence-to-sequence and neural CDE
 baselines, synthetic trajectories with controllable irregular sampling, one small
 real dataset at the end.
 

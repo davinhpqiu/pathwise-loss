@@ -1,0 +1,34 @@
+# Matched partner to baseline_mse.yaml. Training loss is the only difference.
+
+name: baseline_integral_l2
+seed: 0
+
+data:
+  generator: ornstein_uhlenbeck
+  n_train: 512
+  n_val: 128
+  n_fine: 513
+  n_ctx: 64
+  n_tgt: 64
+  d: 1
+  noise: 0.0
+  missing_rate: 0.0
+  sampling:
+    mode: clustered
+    density_bias: 3.0
+
+model:
+  kind: gru_query
+  hidden: 64
+  layers: 2
+  width: 128
+  n_fourier: 8
+
+loss:
+  kind: integral_l2
+
+train:
+  epochs: 200
+  batch_size: 64
+  lr: 1.0e-3
+  device: cpu
