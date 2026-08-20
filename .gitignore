@@ -33,3 +33,6 @@ slurm-*.out
 # node (scripts/check_math.js)
 node_modules/
 package-lock.json
+
+# Working notes: kept locally, deliberately untracked (20/08)
+docs/
