@@ -10,6 +10,8 @@ __all__ = [
     "classification_scores",
     "classify_1nn",
     "load_ts_split",
+    "preprocess_classification",
+    "standardise_per_series",
     "standardise_from_training",
 ]
 
@@ -46,6 +48,49 @@ def standardise_from_training(
     return (train - mean) / scale, (test - mean) / scale, metadata
 
 
+def standardise_per_series(values: np.ndarray) -> np.ndarray:
+    """Standardise each channel of each series over its own time axis."""
+    values = np.asarray(values, dtype=float)
+    if values.ndim != 3:
+        raise ValueError("values must have shape (cases, channels, time)")
+    mean = values.mean(axis=2, keepdims=True)
+    scale = values.std(axis=2, keepdims=True)
+    scale = np.where(scale > 0, scale, 1.0)
+    return (values - mean) / scale
+
+
+def preprocess_classification(
+    train: np.ndarray,
+    test: np.ndarray,
+    method: str,
+) -> tuple[np.ndarray, np.ndarray, dict]:
+    """Apply one explicit preprocessing rule to archive splits."""
+    train = np.asarray(train, dtype=float)
+    test = np.asarray(test, dtype=float)
+    if train.ndim != 3 or test.ndim != 3:
+        raise ValueError("train and test must have shape (cases, channels, time)")
+    if train.shape[1] != test.shape[1]:
+        raise ValueError("train and test channel counts differ")
+
+    if method == "none":
+        return train.copy(), test.copy(), {"kind": "none"}
+    if method == "training_channel":
+        train_scaled, test_scaled, statistics = standardise_from_training(train, test)
+        return train_scaled, test_scaled, {
+            "kind": "training_channel",
+            **statistics,
+        }
+    if method == "per_series":
+        return (
+            standardise_per_series(train),
+            standardise_per_series(test),
+            {"kind": "per_series", "axis": "time"},
+        )
+    raise ValueError(
+        "normalisation must be one of: none, training_channel, per_series"
+    )
+
+
 def classification_scores(truth: np.ndarray, prediction: np.ndarray) -> dict[str, float]:
     """Accuracy and macro-averaged class recall."""
     truth = np.asarray(truth)
@@ -70,14 +115,36 @@ def classify_1nn(
     **distance_kwargs,
 ) -> dict:
     """Classify official test cases using a fixed 1-NN rule."""
-    distances = pairwise_distance(
-        test_x,
-        train_x,
-        method=distance,
-        symmetric=False,
-        n_jobs=n_jobs,
-        **distance_kwargs,
-    )
+    if distance == "dtw_dependent":
+        distances = pairwise_distance(
+            test_x,
+            train_x,
+            method="dtw",
+            symmetric=False,
+            n_jobs=n_jobs,
+            **distance_kwargs,
+        )
+    elif distance == "dtw_independent":
+        distances = sum(
+            pairwise_distance(
+                test_x[:, channel, :],
+                train_x[:, channel, :],
+                method="dtw",
+                symmetric=False,
+                n_jobs=n_jobs,
+                **distance_kwargs,
+            )
+            for channel in range(train_x.shape[1])
+        )
+    else:
+        distances = pairwise_distance(
+            test_x,
+            train_x,
+            method=distance,
+            symmetric=False,
+            n_jobs=n_jobs,
+            **distance_kwargs,
+        )
     nearest = np.argmin(distances, axis=1)
     prediction = np.asarray(train_y)[nearest]
     return {

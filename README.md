@@ -104,11 +104,16 @@ python scripts/run_integral_study.py \
   --seed 0
 ```
 
-Supervisor-provided BasicMotions classification:
+Supervisor-provided BasicMotions classification. Raw data provide the archive
+anchor; alternative preprocessing has a separate configuration:
 
 ```bash
 python scripts/run_classification.py \
   --config configs/classification_basicmotions.yaml
+python scripts/run_classification.py \
+  --config configs/classification_basicmotions_training_channel.yaml
+python scripts/run_classification.py \
+  --config configs/classification_basicmotions_per_series.yaml
 ```
 
 ### On ARC
@@ -134,7 +139,7 @@ squeue -u $USER
 | `01_integral_norms.ipynb` | The estimator and why: quadrature rules, convergence rates, **why MSE is inconsistent under non-uniform sampling**, choice of $p$. Exposition; verification is in `tests/` | complete |
 | `02_p_variation.ipynb` | roughness of a path: definition, and the three implementations, one section each | complete |
 | `03_loss_comparison.ipynb` | matched MSE against weighted-$J_2$ experiment: GRU and Linear NCDE, uniform and clustered targets, pilot and held-out seed-0 results | in progress |
-| `04_classification.ipynb` | fixed 1-NN path-distance benchmark on BasicMotions: Euclidean and DTW baselines, with signature extension defined | in progress |
+| `04_classification.ipynb` | fixed 1-NN path-distance benchmark: explicit preprocessing and dependent/independent DTW controls, with signature extension defined | in progress |
 
 Each notebook states its own mathematics, runs its own experiments, and reads
 its own results. The preliminary missingness check is part of notebook 03 rather
@@ -210,14 +215,14 @@ drift apart quickly if the second is left until the write-up.
 | Baseline model (GRU encoder + query-time decoder) | done: `src/pathloss/models.py` |
 | Linear NCDE baseline | parameter matched core study implemented; seed 0 complete |
 | `scripts/run_experiment.py` training loop | done, needs torch installed |
-| 1-NN path-distance classification benchmark | BasicMotions complete: Euclidean 57.5%, DTW 90.0% |
+| 1-NN path-distance classification benchmark | corrected BasicMotions configurations written; fresh raw and preprocessing runs remain |
 | Signatures | intended main later direction: fixed features first, training loss second |
 | Controlled missingness | evaluator implemented; one-seed pipeline check only |
 | Real dataset | not obtained |
 | ARC | 24-job core-study array prepared; submission remains |
 
 Next: run seeds 1 and 2 of the core MSE against weighted-$J_2$ study through the
-ARC array, then introduce time-augmented signatures in the working
+ARC array, run corrected BasicMotions controls, then introduce signatures in the
 classification benchmark. Exponent-specific integral-norm studies remain
 deferred.
 `docs/open_questions.md` contains the remaining decisions.

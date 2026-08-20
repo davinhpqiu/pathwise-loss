@@ -1,9 +1,9 @@
-name: classification_basicmotions_raw
+name: classification_basicmotions_training_channel
 
 data:
   train: data/raw/BasicMotions/BasicMotions_TRAIN.ts
   test: data/raw/BasicMotions/BasicMotions_TEST.ts
-  normalisation: none
+  normalisation: training_channel
 
 classifier:
   neighbours: 1
@@ -13,4 +13,4 @@ classifier:
     - name: dtw_dependent
     - name: dtw_independent
 
-output: results/runs/classification_basicmotions_raw
+output: results/runs/classification_basicmotions_training_channel

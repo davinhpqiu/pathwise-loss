@@ -13,7 +13,7 @@ import yaml
 from pathloss.classification import (
     classify_1nn,
     load_ts_split,
-    standardise_from_training,
+    preprocess_classification,
 )
 
 
@@ -28,7 +28,11 @@ def main() -> int:
     destination.mkdir(parents=True, exist_ok=True)
     train_x, train_y = load_ts_split(cfg["data"]["train"])
     test_x, test_y = load_ts_split(cfg["data"]["test"])
-    train_x, test_x, normalisation = standardise_from_training(train_x, test_x)
+    train_x, test_x, normalisation = preprocess_classification(
+        train_x,
+        test_x,
+        method=cfg["data"].get("normalisation", "none"),
+    )
 
     results = []
     for specification in cfg["classifier"]["distances"]:
