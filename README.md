@@ -17,11 +17,12 @@ New to the project: read `CLAUDE.md` first (aim, conventions, reading order),
 then the newest entry in `docs/logbook/` for what is currently in force, then
 `docs/open_questions.md` for what is undecided.
 
-Current state, 19/08: project week 2 of a 3 August to 11 September project.
-Baseline pipeline trains end to end on synthetic paths under MSE or time-weighted
-$L^p$ losses. Fine-grid evaluation, a three-seed matched loss comparison,
-controlled missingness, and an initial Linear Neural CDE baseline are working.
-$p$-variation is a diagnostic.
+Current state, 22/08: short-term focus is continuous path parameterisation by a
+Neural ODE, followed by Brownian-driver to OU-response stream learning with a
+Neural CDE. Detailed procedure is
+[`docs/neural_ode_operator_experiments.md`](docs/neural_ode_operator_experiments.md).
+Existing reconstruction, classification and ARC work supplies supporting
+calibration. $p$-variation is a diagnostic.
 
 ## Setup: first time
 
@@ -104,6 +105,31 @@ python scripts/run_integral_study.py \
   --seed 0
 ```
 
+Fixed-path Neural ODE adequacy check:
+
+```bash
+python scripts/run_fixed_path.py \
+  --config configs/neural_ode_fixed_path.yaml \
+  --out results/runs/neural_ode_fixed_path/adequacy \
+  --adequacy
+```
+
+Run one paired comparison member after adequacy passes:
+
+```bash
+python scripts/run_fixed_path.py \
+  --config configs/neural_ode_fixed_path.yaml \
+  --out results/runs/neural_ode_fixed_path/restricted/seed0/clustered/j2 \
+  --seed 0 \
+  --capacity restricted \
+  --condition clustered \
+  --loss j2
+```
+
+Every run saves initial-state fingerprint, history, dense metrics, fitted path,
+derivatives, model state and diagnostic plot. Equal seed and capacity must give
+the same fingerprint across losses.
+
 Supervisor-provided BasicMotions classification. Raw data provide the archive
 anchor; alternative preprocessing has a separate configuration:
 
@@ -140,10 +166,15 @@ squeue -u $USER
 | `02_p_variation.ipynb` | roughness of a path: definition, and the three implementations, one section each | complete |
 | `03_loss_comparison.ipynb` | matched MSE against weighted-$J_2$ experiment: GRU and Linear NCDE, uniform and clustered targets, pilot and held-out seed-0 results | in progress |
 | `04_classification.ipynb` | fixed 1-NN path-distance benchmark: explicit preprocessing and dependent/independent DTW controls, with signature extension defined | in progress |
+| `05_neural_ode_path.ipynb` | fixed-target Neural ODE loss comparison: design, acceptance criteria and result loader | implementation written; unrun |
 
 Each notebook states its own mathematics, runs its own experiments, and reads
 its own results. The preliminary missingness check is part of notebook 03 rather
 than a separate experiment. That is where to look for a derivation.
+
+Neural ODE and stream-to-stream experiments are specified in
+[`docs/neural_ode_operator_experiments.md`](docs/neural_ode_operator_experiments.md).
+Fixed-path implementation and future results use notebook 05.
 
 ---
 
@@ -159,6 +190,7 @@ pathwise-loss/
 ├── src/pathloss/            # THE LIBRARY. Everything that must be correct.
 │   ├── datasets.py          # synthetic generators and irregular sampling
 │   ├── models.py            # sequence and continuous-time baselines
+│   ├── fixed_path.py        # fixed-target Neural ODE model and training
 │   ├── train.py             # training and evaluation
 │   ├── norms.py             # quadrature, L^p integral norms (NumPy)
 │   ├── pvar.py              # p-variation: brute force, O(N^2) DP, pruned
@@ -175,6 +207,7 @@ pathwise-loss/
 ├── papers/                  # PDFs + references.bib
 └── docs/
     ├── arc_guide.md         # Oxford ARC: accounts, SLURM, storage
+    ├── neural_ode_operator_experiments.md # next experiment procedure
     ├── open_questions.md    # register of what is undecided
     └── logbook/             # dated notes and findings. Append-only.
 ```
@@ -217,14 +250,16 @@ drift apart quickly if the second is left until the write-up.
 | `scripts/run_experiment.py` training loop | done, needs torch installed |
 | 1-NN path-distance classification benchmark | corrected BasicMotions configurations written; fresh raw and preprocessing runs remain |
 | Signatures | intended main later direction: fixed features first, training loss second |
+| Fixed-path Neural ODE | implementation tests pass; ARC adequacy and training remain |
 | Controlled missingness | evaluator implemented; one-seed pipeline check only |
 | Real dataset | not obtained |
-| ARC | 24-job core-study array prepared; submission remains |
+| ARC | 24-job integral array and 50-job fixed-path Neural ODE array prepared; submission remains |
 
-Next: run seeds 1 and 2 of the core MSE against weighted-$J_2$ study through the
-ARC array, run corrected BasicMotions controls, then introduce signatures in the
-classification benchmark. Exponent-specific integral-norm studies remain
-deferred.
+Next: run fixed-path Neural ODE adequacy, compare MSE with $J_2$, and then add
+global and local signature losses. Brownian-to-OU stream learning
+follows with a path-output Neural CDE. Remaining reconstruction and
+classification runs are supporting tasks. Exponent-specific integral-norm
+studies remain deferred.
 `docs/open_questions.md` contains the remaining decisions.
 
 ---

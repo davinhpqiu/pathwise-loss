@@ -20,6 +20,7 @@ __all__ = [
     "trapezoid_weights",
     "pointwise_mse",
     "integral_lp",
+    "sobolev_h1",
     "LOSSES",
     "get_loss",
 ]
@@ -95,14 +96,52 @@ def integral_lp(
     """
     if p < 1:
         raise ValueError(f"need p >= 1, got {p}")
-    w = trapezoid_weights(t)                            # (B, T)
-    mag = torch.linalg.vector_norm(pred - target, dim=-1)   # (B, T)
+    w = trapezoid_weights(t)  # (B, T)
+    mag = torch.linalg.vector_norm(pred - target, dim=-1)  # (B, T)
     if p == float("inf"):
         return mag.max(dim=-1).values.mean()
-    total = (w * mag.clamp_min(1e-12) ** p).sum(-1)     # (B,)
+    total = (w * mag.clamp_min(1e-12) ** p).sum(-1)  # (B,)
     if not squared:
         total = total ** (1.0 / p)
     return total.mean()
+
+
+def sobolev_h1(
+    t: torch.Tensor,
+    pred: torch.Tensor,
+    target: torch.Tensor,
+    pred_derivative: torch.Tensor,
+    target_derivative: torch.Tensor,
+    rho: float | torch.Tensor,
+) -> torch.Tensor:
+    """Elapsed-time value error plus elapsed-time derivative error.
+
+    This discrete quadrature approximates
+
+        T^{-1} integral (|pred - target|^2
+                         + rho |pred' - target'|^2) dt.
+
+    It is valid when both paths have square-integrable time derivatives.
+    Three-argument loss registry cannot supply derivatives, and diffusion paths
+    do not have an H1 derivative in continuous time, so this function is kept
+    outside that registry.
+    """
+    if pred_derivative.shape != pred.shape:
+        raise ValueError(
+            "pred_derivative must match pred shape "
+            f"{tuple(pred.shape)}, got {tuple(pred_derivative.shape)}"
+        )
+    if target_derivative.shape != target.shape:
+        raise ValueError(
+            "target_derivative must match target shape "
+            f"{tuple(target.shape)}, got {tuple(target_derivative.shape)}"
+        )
+    rho_tensor = torch.as_tensor(rho, dtype=pred.dtype, device=pred.device)
+    if torch.any(rho_tensor < 0):
+        raise ValueError(f"rho must be non-negative, got {rho}")
+    return integral_lp(t, pred, target, p=2.0) + rho_tensor * integral_lp(
+        t, pred_derivative, target_derivative, p=2.0
+    )
 
 
 LOSSES = {

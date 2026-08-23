@@ -1,0 +1,36 @@
+name: neural_ode_fixed_path
+
+data:
+  n_target: 64
+  n_fine: 513
+  conditions: [uniform, clustered]
+
+model:
+  n_fourier: 5
+  max_step: 0.001953125       # 1 / 512, fixed-step RK4
+
+capacities:
+  restricted:
+    hidden: 2
+    width: 16
+  expressive:
+    hidden: 8
+    width: 64
+
+losses:
+  primary: [mse, j2]
+  smooth_secondary: [h1]
+
+train:
+  seeds: [0, 1, 2, 3, 4]
+  updates: 5000
+  lr: 0.001
+  device: cpu
+
+# Run before comparative fits. Failure stops the comparison until model or
+# optimization, rather than an acceptance threshold, is repaired.
+adequacy:
+  seed: 991
+  capacity: expressive
+  updates: 5000
+  max_dense_mse: 0.001
