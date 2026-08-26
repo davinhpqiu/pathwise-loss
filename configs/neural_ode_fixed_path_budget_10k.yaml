@@ -1,0 +1,47 @@
+name: neural_ode_fixed_path_budget_10k
+
+# Budget-sensitivity diagnostic fixed on 26 August before running.
+# It changes only train.updates relative to neural_ode_fixed_path.yaml.
+data:
+  n_target: 64
+  n_fine: 513
+  conditions: [uniform, clustered]
+
+model:
+  n_fourier: 5
+  max_step: 0.001953125       # 1 / 512, fixed-step RK4
+
+capacities:
+  restricted:
+    hidden: 2
+    width: 16
+  expressive:
+    hidden: 8
+    width: 64
+
+losses:
+  primary: [mse, j2]
+  smooth_secondary: [h1]
+  signature_secondary: [sig_global, sig_local]
+
+signature:
+  output_scale: 1.0
+  audit_accepted: false
+  global_depth: 4
+  local_depth: 2
+  local_intervals: 10
+  audit:
+    seed: 991
+    capacity: expressive
+
+train:
+  seeds: [0]
+  updates: 10000
+  lr: 0.001
+  device: cpu
+
+adequacy:
+  seed: 991
+  capacity: expressive
+  updates: 5000
+  max_dense_mse: 0.001

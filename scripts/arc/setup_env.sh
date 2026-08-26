@@ -29,12 +29,18 @@ pip install -r requirements.txt
 pip install -e .
 
 # Torch: match the CUDA build to the module you loaded; check with nvidia-smi on a GPU node
-pip install torch --index-url https://download.pytorch.org/whl/cu121
-pip install -r requirements-ml.txt
+python -m pip install torch --index-url https://download.pytorch.org/whl/cu121
+
+# iisignature imports NumPy while building but does not declare NumPy in its
+# isolated build environment. Core requirements above already installed NumPy;
+# Cython must also be present before installing the modelling stack without
+# isolation.
+python -m pip install "cython>=3.0"
+python -m pip install --no-build-isolation -r requirements-ml.txt
 
 # sigkernel needs Cython at build time but does not declare it, so pip's isolated
 # build fails. cython came from requirements-ml.txt above; bypass isolation here.
-pip install --no-build-isolation \
+python -m pip install --no-build-isolation \
     git+https://github.com/crispitagorico/sigkernel.git || \
     echo "WARNING: sigkernel install failed -- continue without it for now"
 
