@@ -5,7 +5,39 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from pathloss.datasets import make_dataset, sample_times
+from pathloss.datasets import brownian_ou_pairs, make_dataset, sample_times
+
+
+def test_brownian_ou_pairs_satisfy_shared_increment_recurrence():
+    data = brownian_ou_pairs(
+        7,
+        n_steps=32,
+        T=1.0,
+        lambd=2.0,
+        sigma=0.5,
+        y0=0.0,
+        rng=17,
+    )
+    dt = 1.0 / 32
+    expected = (
+        data["target"][:, :-1]
+        - 2.0 * data["target"][:, :-1] * dt
+        + 0.5 * data["increments"]
+    )
+    assert np.array_equal(data["target"][:, 1:], expected)
+    assert np.allclose(
+        data["driver"][:, 1:] - data["driver"][:, :-1], data["increments"]
+    )
+
+
+def test_brownian_ou_pairs_are_deterministic_and_split_ready():
+    first = brownian_ou_pairs(5, n_steps=16, rng=42)
+    second = brownian_ou_pairs(5, n_steps=16, rng=42)
+    third = brownian_ou_pairs(5, n_steps=16, rng=43)
+    assert first["driver"].shape == (5, 17, 1)
+    assert first["target"].shape == (5, 17, 1)
+    assert all(np.array_equal(first[key], second[key]) for key in first)
+    assert not np.array_equal(first["driver"], third["driver"])
 
 
 def test_context_and_target_are_disjoint():
@@ -61,9 +93,7 @@ def test_target_mechanism_can_change_while_context_and_paths_stay_fixed():
         "rng": 12,
     }
     uniform = make_dataset(target_mode="uniform", **common)
-    clustered = make_dataset(
-        target_mode="clustered", target_density_bias=3.0, **common
-    )
+    clustered = make_dataset(target_mode="clustered", target_density_bias=3.0, **common)
     assert np.array_equal(uniform["t_ctx"], clustered["t_ctx"])
     assert np.array_equal(uniform["x_ctx"], clustered["x_ctx"])
     assert np.array_equal(uniform["x_fine"], clustered["x_fine"])
@@ -79,9 +109,7 @@ def test_noise_hits_context_only():
 
 
 def test_missingness_zero_fills_context_and_returns_mask():
-    d = make_dataset(
-        20, n_fine=129, n_ctx=16, n_tgt=16, d=2, missing_rate=0.4, rng=4
-    )
+    d = make_dataset(20, n_fine=129, n_ctx=16, n_tgt=16, d=2, missing_rate=0.4, rng=4)
     assert set(np.unique(d["m_ctx"])) <= {0.0, 1.0}
     assert np.all(d["x_ctx"][d["m_ctx"] == 0] == 0)
     assert 0.3 < 1.0 - d["m_ctx"].mean() < 0.5

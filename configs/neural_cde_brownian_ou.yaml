@@ -1,0 +1,50 @@
+name: neural_cde_brownian_ou
+
+data:
+  n_train: 512
+  n_val: 128
+  n_test: 256
+  n_steps: 256
+  n_target: 64
+  T: 1.0
+  lambda: 2.0
+  sigma: 0.5
+  y0: 0.0
+  split_seeds:
+    train: 12001
+    val: 12002
+    test: 12003
+  conditions: [uniform, clustered]
+
+model:
+  hidden: 16
+  width: 64
+
+losses:
+  primary: [mse, j2]
+  signature_optional: [sig_global, sig_local]
+
+signature:
+  scale_rule: training_target_std
+  audit_accepted: false
+  global_depth: 4
+  local_depth: 2
+  local_intervals: 5
+  audit_seed: 991
+
+train:
+  seeds: [0, 1, 2]
+  epochs: 500
+  batch_size: 64
+  lr: 0.001
+  device: cpu
+
+# Implementation gates run before comparative loss arrays. Thresholds are
+# fixed here before acceptance output exists.
+acceptance:
+  seed: 991
+  overfit_epochs: 300
+  overfit_max_ratio: 0.1
+  overfit_max_loss: 0.001
+  heldout_epochs: 120
+  heldout_max_ratio: 0.8

@@ -21,13 +21,65 @@ import numpy as np
 
 from .paths import brownian_motion, ornstein_uhlenbeck, smooth_test_path
 
-__all__ = ["GENERATORS", "make_dataset", "sample_times"]
+__all__ = [
+    "GENERATORS",
+    "brownian_ou_pairs",
+    "make_dataset",
+    "sample_times",
+]
 
 GENERATORS = {
     "ornstein_uhlenbeck": ornstein_uhlenbeck,
     "brownian_motion": brownian_motion,
     "smooth_test_path": smooth_test_path,
 }
+
+
+def brownian_ou_pairs(
+    n_paths: int,
+    *,
+    n_steps: int = 256,
+    T: float = 1.0,
+    lambd: float = 2.0,
+    sigma: float = 0.5,
+    y0: float = 0.0,
+    rng=None,
+) -> dict[str, np.ndarray]:
+    """Paired Brownian drivers and Euler OU responses on one uniform grid.
+
+    Returned driver and target arrays have shape ``(n_paths, n_steps + 1, 1)``.
+    One draw of standard-normal increments determines both paths, so each
+    example is a paired same-interval operator sample ``W -> Y``.
+    """
+    if n_paths < 1:
+        raise ValueError("n_paths must be positive")
+    if n_steps < 1:
+        raise ValueError("n_steps must be positive")
+    if T <= 0 or lambd < 0 or sigma < 0:
+        raise ValueError("T must be positive; lambd and sigma must be non-negative")
+
+    generator = np.random.default_rng(rng)
+    time = np.linspace(0.0, float(T), n_steps + 1, dtype=np.float64)
+    dt = float(T) / n_steps
+    increments = np.sqrt(dt) * generator.normal(size=(n_paths, n_steps, 1))
+    driver = np.concatenate(
+        (np.zeros((n_paths, 1, 1), dtype=np.float64), np.cumsum(increments, axis=1)),
+        axis=1,
+    )
+    target = np.empty_like(driver)
+    target[:, 0, 0] = float(y0)
+    for step in range(n_steps):
+        target[:, step + 1, 0] = (
+            target[:, step, 0]
+            - float(lambd) * target[:, step, 0] * dt
+            + float(sigma) * increments[:, step, 0]
+        )
+    return {
+        "time": time,
+        "driver": driver,
+        "target": target,
+        "increments": increments,
+    }
 
 
 def sample_times(
