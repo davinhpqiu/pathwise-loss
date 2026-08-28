@@ -17,6 +17,9 @@ real dataset at the end.
    entry is resumable without reading its source.
 5. Notebooks in order, as needed. Each states its own mathematics.
 
+Steps 3 and 4 need `docs/`, untracked since 20/08 and so absent from a fresh
+clone. Working from repository alone, read steps 1, 2, 5.
+
 **State of play is the newest logbook entry, not this file.** Directions change:
 $p$-variation was central for a week and is now a diagnostic (17/08); a
 pre-registered protocol was written and deleted inside two days. Check the date
@@ -67,7 +70,7 @@ step.
 
 - `pytest -q` for everything. `tests/test_pipeline.py` needs torch and skips
   without it.
-- `python scripts/run_experiment.py --config configs/<name>.yaml --out results/runs/<name>`
+- `python scripts/run_reconstruction.py --config configs/<name>.yaml --out results/runs/<name>`
 - `npm install katex && node scripts/check_math.js` renders every formula in the
   repo through KaTeX. Run after editing mathematics: KaTeX implements a subset of
   LaTeX and `\unicode`, `\shuffle` and `\mathscr` fail silently in a notebook.
@@ -98,6 +101,11 @@ Also:
 | function used more than once | **`src/pathloss/`**, with test |
 | decisions, changes, findings | **`docs/logbook/`**, dated |
 | how to run something | **`README.md`** |
+| commands producing one notebook's own results | that **notebook**, under "What to run" |
+
+Setup, environment and full runner list stay in `README.md`. Each notebook
+additionally opens with commands producing its own results and why those runs
+exist, so a notebook is readable without the README open beside it.
 
 Anything that must be correct lives in `src/pathloss/` with a test. Notebook cell is never sole copy of a function.
 

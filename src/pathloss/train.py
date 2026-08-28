@@ -1,6 +1,6 @@
 """Training loop for the baseline. Config in, metrics and predictions out.
 
-Kept separate from `scripts/run_experiment.py` so it can be imported by tests.
+Kept separate from `scripts/run_reconstruction.py` so it can be imported by tests.
 The overfit test in `tests/test_pipeline.py` is the acceptance criterion for the
 pipeline: a model that cannot drive the loss near zero on a single batch it sees
 repeatedly is miswired, and no result computed on top of it means anything.

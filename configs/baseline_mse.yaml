@@ -1,7 +1,7 @@
 # Baseline: pointwise MSE on a path-to-path model. Everything else is measured
 # against this. One YAML per experiment.
 #
-#     python scripts/run_experiment.py --config configs/baseline_mse.yaml \
+#     python scripts/run_reconstruction.py --config configs/baseline_mse.yaml \
 #            --out results/runs/baseline_mse
 
 name: baseline_mse

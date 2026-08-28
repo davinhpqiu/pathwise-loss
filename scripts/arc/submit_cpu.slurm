@@ -27,7 +27,7 @@ echo "job $SLURM_JOB_ID on $(hostname); config=$CONFIG"
 echo "git SHA: $(cd "$PROJECT_DIR" && git rev-parse --short HEAD 2>/dev/null || echo 'not a git repo')"
 
 # --- run -------------------------------------------------------------------
-PYTHONPATH=./src python scripts/run_experiment.py \
+PYTHONPATH=./src python scripts/run_reconstruction.py \
     --config "$CONFIG" \
     --out results/
 

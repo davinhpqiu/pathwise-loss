@@ -1,14 +1,21 @@
 #!/usr/bin/env python
-"""Run fixed 1-NN path-distance classification on official archive splits."""
+"""Classify labelled paths by 1-nearest neighbour under a fixed distance.
+
+No trained model: only representation and distance change, so accuracy
+differences are attributable to the distance itself. Notebook 04 reads the
+output and reports raw, training-channel and per-series preprocessing
+separately.
+
+    python scripts/run_classification.py --config configs/classification_basicmotions.yaml
+"""
 
 from __future__ import annotations
 
 import argparse
 import json
-from datetime import datetime, timezone
 from pathlib import Path
 
-import yaml
+from pathloss.provenance import git_sha, load_config, utc_now
 
 from pathloss.classification import (
     classify_1nn,
@@ -23,7 +30,7 @@ def main() -> int:
     parser.add_argument("--out", type=Path)
     args = parser.parse_args()
 
-    cfg = yaml.safe_load(args.config.read_text())
+    cfg = load_config(args.config)
     destination = args.out or Path(cfg["output"])
     destination.mkdir(parents=True, exist_ok=True)
     train_x, train_y = load_ts_split(cfg["data"]["train"])
@@ -52,7 +59,8 @@ def main() -> int:
 
     output = {
         "name": cfg["name"],
-        "completed": datetime.now(timezone.utc).isoformat(),
+        "completed": utc_now(),
+        "git_sha": git_sha(),
         "data": {
             "train": cfg["data"]["train"],
             "test": cfg["data"]["test"],

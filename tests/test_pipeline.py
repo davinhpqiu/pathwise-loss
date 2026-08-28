@@ -1,5 +1,10 @@
 """Tests for the baseline pipeline: losses, model, training loop.
 
+Sole test coverage of `losses.py`, `models.py` and `train.py`, which have no
+test module named for them: this file exercises them together because the
+property under test is that they compose. `paths.py` is likewise covered
+through `test_norms.py` and `test_pvar.py`.
+
 Needs torch, an optional dependency (`requirements-ml.txt`), so the whole module
 skips without it. Dataset tests live in `test_datasets.py` and need NumPy only.
 

@@ -1,31 +1,24 @@
 #!/usr/bin/env python
-"""Run one or all jobs in the core integral-loss study.
+"""Grid of paired reconstruction fits: does elapsed-time weighting beat MSE.
 
-The job grid crosses seed, architecture, target mechanism, and loss. Passing
-``--index`` runs one flattened job, which is the interface used by the ARC
-array script. Omitting it runs every job sequentially.
+Same task as `run_reconstruction.py`, run across a grid crossing seed,
+architecture, target mechanism and loss, so MSE and weighted J_2 can be
+compared within a shared seed and initialisation. Notebook 03 reads the output.
+
+    python scripts/run_integral_study.py --config configs/integral_core_study.yaml \
+           --out results/runs/integral_core --seed 0
+
+``--index`` runs one flattened job, the interface used by the ARC array script.
+``--list`` prints the grid. Omitting both runs every job sequentially.
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-import platform
-import subprocess
-import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
-import yaml
-
-
-def git_sha() -> str:
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"], text=True
-        ).strip()
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return "unknown"
+from pathloss.provenance import load_config, run_metadata, utc_now
 
 
 def jobs_from_config(cfg: dict) -> list[dict]:
@@ -52,7 +45,7 @@ def job_name(job: dict) -> str:
     )
 
 
-def run_job(cfg: dict, job: dict, root: Path) -> None:
+def run_job(cfg: dict, job: dict, root: Path, config_path: Path) -> None:
     from pathloss.models import build_model
     from pathloss.train import TrainConfig, train
 
@@ -97,22 +90,20 @@ def run_job(cfg: dict, job: dict, root: Path) -> None:
     parameters = sum(parameter.numel() for parameter in parameter_probe.parameters())
     del parameter_probe
 
-    meta = {
-        "study": cfg["name"],
-        "job": job,
-        "train_config": train_cfg.__dict__,
-        "parameters": parameters,
-        "git_sha": git_sha(),
-        "python": sys.version.split()[0],
-        "host": platform.node(),
-        "started": datetime.now(timezone.utc).isoformat(),
-    }
+    meta = run_metadata(
+        config_path,
+        cfg,
+        study=cfg["name"],
+        job=job,
+        train_config=train_cfg.__dict__,
+        parameters=parameters,
+    )
     (destination / "meta.json").write_text(json.dumps(meta, indent=2))
     result = train(train_cfg)
     (destination / "history.json").write_text(json.dumps(result["history"], indent=2))
     (destination / "validation.json").write_text(json.dumps(result["final"], indent=2))
     (destination / "test.json").write_text(json.dumps(result["test"], indent=2))
-    meta["finished"] = datetime.now(timezone.utc).isoformat()
+    meta["finished"] = utc_now()
     meta["validation"] = result["final"]
     meta["test"] = result["test"]
     (destination / "meta.json").write_text(json.dumps(meta, indent=2))
@@ -127,7 +118,7 @@ def main() -> int:
     parser.add_argument("--list", action="store_true")
     args = parser.parse_args()
 
-    cfg = yaml.safe_load(args.config.read_text())
+    cfg = load_config(args.config)
     jobs = jobs_from_config(cfg)
     if args.list:
         for index, job in enumerate(jobs):
@@ -138,7 +129,7 @@ def main() -> int:
         selected = [job for job in selected if job["seed"] == args.seed]
     for job in selected:
         print(f"running {job_name(job)}")
-        run_job(cfg, job, args.out)
+        run_job(cfg, job, args.out, args.config)
     return 0
 
 

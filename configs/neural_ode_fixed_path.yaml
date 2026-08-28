@@ -20,6 +20,19 @@ capacities:
 losses:
   primary: [mse, j2]
   smooth_secondary: [h1]
+  signature_secondary: [sig_global, sig_local]
+
+signature:
+  # Constructed target is dimensionless and all channels are order one.
+  # Freeze after levelwise value and gradient audit, before comparative fits.
+  output_scale: 1.0
+  audit_accepted: false
+  global_depth: 4
+  local_depth: 2
+  local_intervals: 10
+  audit:
+    seed: 991
+    capacity: expressive
 
 train:
   seeds: [0, 1, 2, 3, 4]

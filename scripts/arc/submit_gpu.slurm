@@ -33,7 +33,7 @@ mkdir -p results
 copy_back() { rsync -a --partial results/ "$PROJECT_DIR/results/runs/$RUN_ID/"; }
 trap 'echo "caught signal - saving"; copy_back; exit 2' SIGINT SIGTERM
 
-PYTHONPATH=./src python scripts/run_experiment.py --config "$CONFIG" --out results/ &
+PYTHONPATH=./src python scripts/run_reconstruction.py --config "$CONFIG" --out results/ &
 jobpid=$!
 while kill -0 $jobpid 2>/dev/null; do sleep 600; copy_back; done
 wait $jobpid
