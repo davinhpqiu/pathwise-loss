@@ -19,6 +19,11 @@ import torch
 import torch.nn as nn
 
 from .losses import integral_lp, pointwise_mse, sobolev_h1, trapezoid_weights
+from .signatures import (
+    anchored_coordinate_mean_components,
+    anchored_coordinate_mean_signature_loss,
+    signature_feature_count,
+)
 
 __all__ = [
     "FixedPathTrainConfig",
@@ -31,6 +36,7 @@ __all__ = [
     "state_fingerprint",
     "fixed_path_loss",
     "evaluate_fixed_path",
+    "signature_gradient_audit",
     "train_fixed_path",
 ]
 
@@ -51,6 +57,11 @@ class FixedPathTrainConfig:
     max_step: float = 1.0 / 512.0
     updates: int = 5000
     lr: float = 1.0e-3
+    signature_output_scale: float = 1.0
+    signature_global_depth: int = 4
+    signature_local_depth: int = 2
+    signature_local_intervals: int = 10
+    evaluation_checkpoints: tuple[int, ...] = ()
 
 
 def fixed_target(t: torch.Tensor) -> torch.Tensor:
@@ -254,8 +265,12 @@ def fixed_path_loss(
     prediction_derivative: torch.Tensor | None = None,
     target_derivative: torch.Tensor | None = None,
     rho: torch.Tensor | float | None = None,
+    signature_output_scale: float = 1.0,
+    signature_global_depth: int = 4,
+    signature_local_depth: int = 2,
+    signature_local_intervals: int = 10,
 ) -> torch.Tensor:
-    """One of the smooth Experiment A training losses."""
+    """One Experiment A training loss."""
     batch_t = t.unsqueeze(0)
     batch_prediction = prediction.unsqueeze(0)
     batch_target = target.unsqueeze(0)
@@ -274,6 +289,24 @@ def fixed_path_loss(
             target_derivative.unsqueeze(0),
             rho,
         )
+    if name == "sig_global":
+        return anchored_coordinate_mean_signature_loss(
+            t,
+            prediction,
+            target,
+            depth=signature_global_depth,
+            intervals=1,
+            output_scale=signature_output_scale,
+        )
+    if name == "sig_local":
+        return anchored_coordinate_mean_signature_loss(
+            t,
+            prediction,
+            target,
+            depth=signature_local_depth,
+            intervals=signature_local_intervals,
+            output_scale=signature_output_scale,
+        )
     raise ValueError(f"unknown fixed-path loss {name!r}")
 
 
@@ -283,6 +316,10 @@ def evaluate_fixed_path(
     *,
     n_fine: int = 513,
     rho: torch.Tensor | float | None = None,
+    signature_output_scale: float = 1.0,
+    signature_global_depth: int = 4,
+    signature_local_depth: int = 2,
+    signature_local_intervals: int = 10,
 ) -> tuple[dict[str, float], dict[str, torch.Tensor]]:
     """Dense metrics and paths for one fitted model."""
     if n_fine < 2:
@@ -312,6 +349,26 @@ def evaluate_fixed_path(
             )
         ),
         "linf": float(torch.linalg.vector_norm(prediction - target, dim=-1).max()),
+        "sig_global": float(
+            anchored_coordinate_mean_signature_loss(
+                t,
+                prediction,
+                target,
+                depth=signature_global_depth,
+                intervals=1,
+                output_scale=signature_output_scale,
+            )
+        ),
+        "sig_local": float(
+            anchored_coordinate_mean_signature_loss(
+                t,
+                prediction,
+                target,
+                depth=signature_local_depth,
+                intervals=signature_local_intervals,
+                output_scale=signature_output_scale,
+            )
+        ),
     }
 
     local_t = torch.linspace(
@@ -337,6 +394,91 @@ def evaluate_fixed_path(
     return metrics, paths
 
 
+def _component_gradient_norm(
+    value: torch.Tensor,
+    parameters: tuple[torch.nn.Parameter, ...],
+    *,
+    retain_graph: bool,
+) -> float:
+    gradients = torch.autograd.grad(
+        value,
+        parameters,
+        retain_graph=retain_graph,
+        allow_unused=True,
+    )
+    squared = value.new_zeros(())
+    for gradient in gradients:
+        if gradient is not None:
+            squared = squared + gradient.square().sum()
+    return float(torch.sqrt(squared).detach())
+
+
+def signature_gradient_audit(cfg: FixedPathTrainConfig) -> dict:
+    """Levelwise initial losses and parameter gradients before signature runs."""
+    if cfg.condition != "uniform":
+        raise ValueError("initial signature audit uses uniform observations")
+    model = make_paired_model(
+        cfg.seed,
+        hidden=cfg.hidden,
+        width=cfg.width,
+        n_fourier=cfg.n_fourier,
+        max_step=cfg.max_step,
+        device=cfg.device,
+    )
+    parameter = next(model.parameters())
+    parameters = tuple(model.parameters())
+    t = observation_times(
+        cfg.n_target,
+        "uniform",
+        device=cfg.device,
+        dtype=parameter.dtype,
+    )
+    target = fixed_target(t)
+    specifications = {
+        "global": (cfg.signature_global_depth, 1),
+        "local": (cfg.signature_local_depth, cfg.signature_local_intervals),
+    }
+    audit = {
+        "output_scale": cfg.signature_output_scale,
+        "representations": {},
+    }
+    for representation, (depth, intervals) in specifications.items():
+        prediction = model(t)
+        components = anchored_coordinate_mean_components(
+            t,
+            prediction,
+            target,
+            depth=depth,
+            intervals=intervals,
+            output_scale=cfg.signature_output_scale,
+        )
+        total = torch.stack(tuple(components.values()), dim=0).sum(dim=0).mean()
+        scalar_components = {name: value.mean() for name, value in components.items()}
+        scalar_components["total"] = total
+        records = {}
+        items = tuple(scalar_components.items())
+        for index, (name, value) in enumerate(items):
+            records[name] = {
+                "value": float(value.detach()),
+                "parameter_gradient_l2": _component_gradient_norm(
+                    value,
+                    parameters,
+                    retain_graph=index < len(items) - 1,
+                ),
+            }
+        audit["representations"][representation] = {
+            "depth": depth,
+            "intervals": intervals,
+            "feature_count": signature_feature_count(
+                target.shape[-1] + 1,
+                depth,
+                intervals=intervals,
+            ),
+            "components": records,
+        }
+    return audit
+
+
 def train_fixed_path(
     cfg: FixedPathTrainConfig,
     *,
@@ -346,10 +488,15 @@ def train_fixed_path(
     """Train one paired Experiment A run and return model, history and metrics."""
     if cfg.loss == "h1" and cfg.condition != "uniform":
         raise ValueError("h1 is a secondary uniform-observation comparator")
+    if cfg.loss in {"sig_global", "sig_local"} and cfg.condition != "uniform":
+        raise ValueError("initial signature comparison uses uniform observations")
     if cfg.updates < 1:
         raise ValueError("updates must be positive")
     if cfg.lr <= 0:
         raise ValueError("lr must be positive")
+    checkpoints = tuple(sorted(set(cfg.evaluation_checkpoints)))
+    if any(value < 0 or value > cfg.updates for value in checkpoints):
+        raise ValueError("evaluation checkpoints must lie between 0 and updates")
 
     model = (
         make_paired_model(
@@ -376,6 +523,38 @@ def train_fixed_path(
     rho = h1_balance(t, target)
     optimizer = torch.optim.Adam(model.parameters(), lr=cfg.lr)
 
+    checkpoint_records = []
+    checkpoint_predictions = {}
+    checkpoint_evaluations = {}
+
+    def record_checkpoint(updates_completed: int) -> None:
+        model.eval()
+        checkpoint_metrics, checkpoint_paths = evaluate_fixed_path(
+            model,
+            n_fine=cfg.n_fine,
+            rho=rho,
+            signature_output_scale=cfg.signature_output_scale,
+            signature_global_depth=cfg.signature_global_depth,
+            signature_local_depth=cfg.signature_local_depth,
+            signature_local_intervals=cfg.signature_local_intervals,
+        )
+        checkpoint_records.append(
+            {
+                "updates_completed": updates_completed,
+                "metrics": checkpoint_metrics,
+            }
+        )
+        checkpoint_predictions[updates_completed] = checkpoint_paths[
+            "prediction"
+        ]
+        checkpoint_evaluations[updates_completed] = (
+            checkpoint_metrics,
+            checkpoint_paths,
+        )
+
+    if 0 in checkpoints:
+        record_checkpoint(0)
+
     history = []
     for update in range(cfg.updates):
         model.train()
@@ -392,11 +571,18 @@ def train_fixed_path(
             prediction_derivative=prediction_derivative,
             target_derivative=target_derivative,
             rho=rho,
+            signature_output_scale=cfg.signature_output_scale,
+            signature_global_depth=cfg.signature_global_depth,
+            signature_local_depth=cfg.signature_local_depth,
+            signature_local_intervals=cfg.signature_local_intervals,
         )
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
         optimizer.step()
         history.append({"update": update, "train_loss": float(loss.detach())})
+        updates_completed = update + 1
+        if updates_completed in checkpoints:
+            record_checkpoint(updates_completed)
         if verbose and (
             update % max(1, cfg.updates // 10) == 0 or update == cfg.updates - 1
         ):
@@ -407,7 +593,18 @@ def train_fixed_path(
             )
 
     model.eval()
-    metrics, paths = evaluate_fixed_path(model, n_fine=cfg.n_fine, rho=rho)
+    if cfg.updates in checkpoint_evaluations:
+        metrics, paths = checkpoint_evaluations[cfg.updates]
+    else:
+        metrics, paths = evaluate_fixed_path(
+            model,
+            n_fine=cfg.n_fine,
+            rho=rho,
+            signature_output_scale=cfg.signature_output_scale,
+            signature_global_depth=cfg.signature_global_depth,
+            signature_local_depth=cfg.signature_local_depth,
+            signature_local_intervals=cfg.signature_local_intervals,
+        )
     return {
         "config": cfg,
         "initial_fingerprint": fingerprint,
@@ -415,5 +612,7 @@ def train_fixed_path(
         "history": history,
         "metrics": metrics,
         "paths": paths,
+        "checkpoints": checkpoint_records,
+        "checkpoint_predictions": checkpoint_predictions,
         "model": model,
     }

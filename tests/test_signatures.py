@@ -47,6 +47,19 @@ def test_chen_concatenation_matches_direct_piecewise_linear_signature():
         assert torch.allclose(got, want, atol=1e-12, rtol=1e-12)
 
 
+def test_signature_l1_obeys_bounded_variation_factorial_bound():
+    path = torch.tensor(
+        [[0.0, 0.0], [0.4, -0.2], [0.1, 0.8], [0.7, 0.3]],
+        dtype=torch.float64,
+    )
+    channelwise_l1_variation = (path[1:] - path[:-1]).abs().sum()
+    for level, signature_level in enumerate(
+        piecewise_linear_signature(path, depth=4), start=1
+    ):
+        bound = channelwise_l1_variation**level / math.factorial(level)
+        assert signature_level.abs().sum() <= bound + 1.0e-12
+
+
 def test_signature_matches_iisignature_reference_when_installed():
     iisignature = pytest.importorskip("iisignature")
     path = torch.tensor(

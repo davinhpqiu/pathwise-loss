@@ -1,0 +1,45 @@
+name: neural_ode_fixed_path_signature_10k
+
+data:
+  n_target: 64
+  n_fine: 513
+  conditions: [uniform]
+
+model:
+  n_fourier: 5
+  max_step: 0.001953125       # 1 / 512, fixed-step RK4
+
+capacities:
+  restricted:
+    hidden: 2
+    width: 16
+  expressive:
+    hidden: 8
+    width: 64
+
+losses:
+  pilot: [mse, j2, sig_global, sig_local]
+
+signature:
+  # Provisional. Review signature_audit.json before setting audit_accepted true.
+  output_scale: 1.0
+  audit_accepted: true
+  global_depth: 4
+  local_depth: 2
+  local_intervals: 10
+  audit:
+    seed: 991
+    capacity: expressive
+
+train:
+  seeds: [0]
+  updates: 10000
+  evaluation_checkpoints: [0, 100, 500, 1000, 2500, 5000, 7500, 10000]
+  lr: 0.001
+  device: cpu
+
+adequacy:
+  seed: 991
+  capacity: expressive
+  updates: 5000
+  max_dense_mse: 0.001

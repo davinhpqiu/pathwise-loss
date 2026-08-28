@@ -130,3 +130,47 @@ def test_h1_requires_derivatives_and_is_uniform_only():
                 max_step=1.0,
             )
         )
+
+
+@pytest.mark.parametrize("loss", ["sig_global", "sig_local"])
+def test_initial_signature_comparison_is_uniform_only(loss: str):
+    with pytest.raises(ValueError, match="uniform observations"):
+        train_fixed_path(
+            FixedPathTrainConfig(
+                condition="clustered",
+                loss=loss,
+                updates=1,
+                hidden=1,
+                width=1,
+                n_fourier=0,
+                max_step=1.0,
+            )
+        )
+
+
+def test_training_records_common_metrics_at_requested_checkpoints():
+    result = train_fixed_path(
+        FixedPathTrainConfig(
+            updates=2,
+            evaluation_checkpoints=(0, 1, 2),
+            n_target=4,
+            n_fine=5,
+            hidden=1,
+            width=2,
+            n_fourier=0,
+            max_step=1.0,
+        )
+    )
+    assert [row["updates_completed"] for row in result["checkpoints"]] == [0, 1, 2]
+    assert set(result["checkpoint_predictions"]) == {0, 1, 2}
+    for row in result["checkpoints"]:
+        assert set(row["metrics"]) == {
+            "mse",
+            "j2",
+            "h1",
+            "linf",
+            "sig_global",
+            "sig_local",
+            "local_j2",
+        }
+        assert all(math.isfinite(value) for value in row["metrics"].values())

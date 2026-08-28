@@ -17,6 +17,12 @@ New to the project: read `CLAUDE.md` first (aim, conventions, reading order),
 then the newest entry in `docs/logbook/` for what is currently in force, then
 `docs/open_questions.md` for what is undecided.
 
+> `docs/` is working notes, kept locally and deliberately untracked since
+> 20/08. A fresh clone has no `docs/` directory, so every reference to it below
+> resolves only in the author's working copy. Orientation available from the
+> repository alone: this file, `CLAUDE.md`, and the notebooks, each of which
+> states its own mathematics.
+
 Current state, 22/08: short-term focus is continuous path parameterisation by a
 Neural ODE, followed by Brownian-driver to OU-response stream learning with a
 Neural CDE. Detailed procedure is
@@ -87,11 +93,25 @@ jupyter nbconvert --to notebook --execute --inplace notebooks/01_integral_norms.
 
 ### Training experiments
 
-The experiment script generates data, trains, evaluates, and writes configuration,
-history, metrics, and provenance:
+Each runner has one task. Each notebook repeats the commands producing its
+own results, so the runs below are the reference list rather than the only
+place they appear.
+
+| script | task |
+|---|---|
+| `run_reconstruction.py` | one fit: reconstruct a path at query times from irregular context |
+| `run_integral_study.py` | grid of paired reconstruction fits: MSE against weighted $J_2$ |
+| `run_fixed_path.py` | fit a Neural ODE to one fixed target path under one loss |
+| `run_fixed_path_study.py` | run one fixed-path stage locally and stream progress |
+| `run_ou_operator.py` | Brownian-to-OU acceptance, audit or one Neural CDE fit |
+| `run_ou_operator_study.py` | run one Brownian-to-OU stage locally |
+| `run_classification.py` | 1-NN path-distance classification, no trained model |
+
+`run_reconstruction.py` generates data, trains, evaluates, and writes
+configuration, history, metrics, and provenance:
 
 ```bash
-python scripts/run_experiment.py --config configs/baseline_mse.yaml --out results/runs/test
+python scripts/run_reconstruction.py --config configs/baseline_mse.yaml --out results/runs/test
 ```
 
 Use a new output directory for each run.
@@ -127,8 +147,94 @@ python scripts/run_fixed_path.py \
 ```
 
 Every run saves initial-state fingerprint, history, dense metrics, fitted path,
-derivatives, model state and diagnostic plot. Equal seed and capacity must give
-the same fingerprint across losses.
+derivatives, model state and diagnostic plot. Configurations with
+`evaluation_checkpoints` also save common checkpoint metrics and fitted paths.
+Equal seed and capacity must give the same fingerprint across losses.
+
+Run a complete stage locally and watch each fit update in sequence:
+
+```bash
+caffeinate -i python scripts/run_fixed_path_study.py \
+  --config configs/neural_ode_fixed_path.yaml \
+  --out results/runs/neural_ode_fixed_path \
+  --stage primary
+```
+
+Stages are `primary`, `h1`, `signature` and `signature_pilot`. Add `--seed 0` or
+`--capacity restricted` for a smaller subset. Completed runs are skipped.
+
+Seed-zero 5,000-update pilot triggered budget check in notebook 05. Paired
+expressive clustered MSE and $J_2$ diagnostic ran at 10,000 updates:
+
+```bash
+sbatch scripts/arc/submit_fixed_path_budget_diagnostic.slurm
+```
+
+It writes under `results/runs/neural_ode_fixed_path_budget_10k/`. Ten thousand
+updates are now fixed as a finite compute budget; late-window ratios prevent
+describing terminal fits as converged. Extended primary and $H^1$ arrays remain
+deferred while signature pilot is run.
+
+Signature implementation must pass tests and levelwise audit before training:
+
+```bash
+python scripts/run_fixed_path.py \
+  --config configs/neural_ode_fixed_path_signature_10k.yaml \
+  --out results/runs/neural_ode_fixed_path_signature_10k/signature_audit \
+  --signature-audit
+```
+
+Audit passed on 28 August with unit output scaling. It records finite, nonzero
+gradients together with strong depth-dependent imbalance; checkpointed training
+tests whether structural terms become active. Run seed-zero uniform MSE, $J_2$,
+global depth-four signature and ten-block local depth-two fits in both
+capacities. ARC launches all eight members in parallel:
+
+```bash
+sbatch scripts/arc/submit_fixed_path_signature_pilot.slurm
+```
+
+Local sequential equivalent is:
+
+```bash
+caffeinate -i python scripts/run_fixed_path_study.py \
+  --config configs/neural_ode_fixed_path_signature_10k.yaml \
+  --out results/runs/neural_ode_fixed_path_signature_10k \
+  --stage signature_pilot
+```
+
+Brownian-to-OU stream operator begins with implementation gates:
+
+```bash
+python scripts/run_ou_operator.py \
+  --config configs/neural_cde_brownian_ou.yaml \
+  --out results/runs/neural_cde_brownian_ou/acceptance \
+  --acceptance
+```
+
+After `acceptance.json` reports `passed: true`, run paired MSE and $J_2$ fits
+locally or on ARC:
+
+```bash
+python scripts/run_ou_operator_study.py \
+  --config configs/neural_cde_brownian_ou.yaml \
+  --out results/runs/neural_cde_brownian_ou \
+  --stage primary \
+  --evaluate-test
+sbatch scripts/arc/submit_ou_primary_array.slurm
+```
+
+Optional OU signature calibration starts with its training-data scaling audit:
+
+```bash
+python scripts/run_ou_operator.py \
+  --config configs/neural_cde_brownian_ou.yaml \
+  --out results/runs/neural_cde_brownian_ou/signature_audit \
+  --signature-audit
+```
+
+Review audit, set `signature.audit_accepted: true`, then run signature stage or
+`scripts/arc/submit_ou_signature_array.slurm`.
 
 Supervisor-provided BasicMotions classification. Raw data provide the archive
 anchor; alternative preprocessing has a separate configuration:
@@ -166,15 +272,17 @@ squeue -u $USER
 | `02_p_variation.ipynb` | roughness of a path: definition, and the three implementations, one section each | complete |
 | `03_loss_comparison.ipynb` | matched MSE against weighted-$J_2$ experiment: GRU and Linear NCDE, uniform and clustered targets, pilot and held-out seed-0 results | in progress |
 | `04_classification.ipynb` | fixed 1-NN path-distance benchmark: explicit preprocessing and dependent/independent DTW controls, with signature extension defined | in progress |
-| `05_neural_ode_path.ipynb` | fixed-target Neural ODE loss comparison: design, acceptance criteria and result loader | implementation written; unrun |
+| `05_neural_ode_path.ipynb` | fixed-target Neural ODE loss comparison: design, target inspection, acceptance criteria and result analysis | adequacy complete; comparisons unrun |
+| `06_brownian_ou_operator.ipynb` | causal Brownian-driver to OU-response Neural CDE: algorithm, gates and paired loss analysis | implemented; runs absent |
 
-Each notebook states its own mathematics, runs its own experiments, and reads
-its own results. The preliminary missingness check is part of notebook 03 rather
-than a separate experiment. That is where to look for a derivation.
+Each notebook records experiment stages, mathematics and results. Launch
+commands live in this README. Preliminary missingness check is part of notebook
+03 rather than a separate experiment.
 
 Neural ODE and stream-to-stream experiments are specified in
 [`docs/neural_ode_operator_experiments.md`](docs/neural_ode_operator_experiments.md).
 Fixed-path implementation and future results use notebook 05.
+Brownian-to-OU implementation and future results use notebook 06.
 
 ---
 
@@ -188,24 +296,40 @@ pathwise-loss/
 ├── .gitignore
 │
 ├── src/pathloss/            # THE LIBRARY. Everything that must be correct.
-│   ├── datasets.py          # synthetic generators and irregular sampling
-│   ├── models.py            # sequence and continuous-time baselines
-│   ├── fixed_path.py        # fixed-target Neural ODE model and training
-│   ├── train.py             # training and evaluation
-│   ├── norms.py             # quadrature, L^p integral norms (NumPy)
+│   │                        # NumPy, no training dependency:
+│   ├── norms.py             # quadrature, L^p integral norms and distances
 │   ├── pvar.py              # p-variation: brute force, O(N^2) DP, pruned
-│   └── losses.py            # differentiable MSE and weighted L^p losses
+│   ├── classification.py    # fixed 1-NN evaluation on labelled archives
+│   │                        # data:
+│   ├── paths.py             # generators, irregular sampling, missingness
+│   ├── datasets.py          # context / target / fine-grid training examples
+│   │                        # torch:
+│   ├── losses.py            # differentiable MSE, weighted L^p, Sobolev H^1
+│   ├── models.py            # GRU query and Linear Neural CDE baselines
+│   ├── train.py             # training loop and evaluation
+│   ├── fixed_path.py        # fixed-target Neural ODE: target, model, fitting
+│   ├── operator.py          # path-output Neural CDE and Brownian-to-OU fitting
+│   ├── signatures.py        # differentiable piecewise-linear signatures
+│   │                        # bookkeeping:
+│   └── provenance.py        # git state, config loading, run metadata
 │
 ├── tests/                   # pytest. Run before trusting notebook output.
 ├── notebooks/               # THE EXPERIMENTS: maths, code, results, together
-├── scripts/
-│   ├── run_experiment.py    # config -> data -> model -> loss -> results
+├── scripts/                 # runners: argument parsing and file output only
+│   ├── run_reconstruction.py    # one config -> data -> model -> loss -> results
+│   ├── run_integral_study.py# job grid for the paired integral-loss study
+│   ├── run_fixed_path.py    # fixed-path fit, adequacy check or signature audit
+│   ├── run_fixed_path_study.py # staged local fixed-path runs
+│   ├── run_ou_operator.py   # OU acceptance, audit or one fit
+│   ├── run_ou_operator_study.py # staged local OU runs
+│   ├── run_classification.py# 1-NN path-distance benchmark
+│   ├── check_math.js        # render every formula through KaTeX
 │   └── arc/                 # SLURM submission scripts
 ├── configs/                 # one YAML per experiment; never hardcode in scripts
 ├── data/{raw,synthetic}/    # gitignored. Regenerate, don't commit.
 ├── results/{runs,logs,figures}/
 ├── papers/                  # PDFs + references.bib
-└── docs/
+└── docs/                    # untracked since 20/08: absent from a fresh clone
     ├── arc_guide.md         # Oxford ARC: accounts, SLURM, storage
     ├── neural_ode_operator_experiments.md # next experiment procedure
     ├── open_questions.md    # register of what is undecided
@@ -225,6 +349,12 @@ pathwise-loss/
 **The one structural rule:** anything that must be correct lives in
 `src/pathloss/` and has a test in `tests/`. Notebooks import it. A notebook cell
 must never be the only copy of a function.
+
+The same rule applies to `scripts/`. A runner parses arguments, loads a
+configuration and writes files; anything it computes belongs in the library. A
+helper needed by a second runner moves to `src/pathloss/` rather than being
+copied: `provenance.py` exists because `git_sha` had drifted into three
+versions, one of which caught a narrower set of exceptions than the others.
 
 **Working habit:** when a notebook produces something you didn't expect, write a
 dated paragraph in `docs/logbook/` the same day. The notebook records *what the
@@ -247,17 +377,18 @@ drift apart quickly if the second is left until the write-up.
 | `src/pathloss/losses.py` (torch, differentiable) | done: MSE + weighted $L^p$ |
 | Baseline model (GRU encoder + query-time decoder) | done: `src/pathloss/models.py` |
 | Linear NCDE baseline | parameter matched core study implemented; seed 0 complete |
-| `scripts/run_experiment.py` training loop | done, needs torch installed |
+| `scripts/run_reconstruction.py` training loop | done, needs torch installed |
 | 1-NN path-distance classification benchmark | corrected BasicMotions configurations written; fresh raw and preprocessing runs remain |
-| Signatures | intended main later direction: fixed features first, training loss second |
-| Fixed-path Neural ODE | implementation tests pass; ARC adequacy and training remain |
+| Signatures | differentiable global/local fixed-path losses and independent checks written; value and gradient audit is next |
+| Fixed-path Neural ODE | Fourier adequacy passes; 10,000-update finite-budget signature pilot prepared |
+| Brownian-to-OU path operator | data, causal Neural CDE and acceptance gates implemented; work deferred |
 | Controlled missingness | evaluator implemented; one-seed pipeline check only |
 | Real dataset | not obtained |
-| ARC | 24-job integral array and 50-job fixed-path Neural ODE array prepared; submission remains |
+| ARC | fixed-path eight-job signature pilot prepared; earlier integral and extended arrays retained |
 
-Next: run fixed-path Neural ODE adequacy, compare MSE with $J_2$, and then add
-global and local signature losses. Brownian-to-OU stream learning
-follows with a path-output Neural CDE. Remaining reconstruction and
+Next: run fixed-path signature value and gradient audit, then matched eight-fit
+signature pilot at 10,000 updates.
+Remaining reconstruction and
 classification runs are supporting tasks. Exponent-specific integral-norm
 studies remain deferred.
 `docs/open_questions.md` contains the remaining decisions.

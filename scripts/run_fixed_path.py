@@ -1,36 +1,31 @@
 #!/usr/bin/env python
-"""Run one paired fixed-path Neural ODE fit or its Fourier adequacy check."""
+"""Fit one Neural ODE to a single fixed target path under one loss.
+
+No dataset and no generalisation: one target, fitted repeatedly while seed,
+capacity, observation condition and loss vary, isolating which path each loss
+selects. Notebook 05 states the design and reads the output.
+
+    # adequacy first: can the expressive model reproduce the target at all
+    python scripts/run_fixed_path.py --config configs/neural_ode_fixed_path.yaml \
+           --out results/runs/neural_ode_fixed_path/adequacy --adequacy
+
+    # one comparison member, only after adequacy passes
+    python scripts/run_fixed_path.py --config configs/neural_ode_fixed_path.yaml \
+           --out results/runs/neural_ode_fixed_path/restricted/seed0/clustered/j2 \
+           --seed 0 --capacity restricted --condition clustered --loss j2
+"""
 
 from __future__ import annotations
 
 import argparse
 import json
 import os
-import platform
-import subprocess
-import sys
 from dataclasses import asdict
-from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
 
-
-def git_sha() -> str:
-    try:
-        return subprocess.check_output(
-            ["git", "rev-parse", "--short", "HEAD"], text=True
-        ).strip()
-    except Exception:
-        return "unknown"
-
-
-def load_config(path: Path) -> dict:
-    try:
-        import yaml
-    except ImportError:
-        raise SystemExit("pip install pyyaml")
-    return yaml.safe_load(path.read_text())
+from pathloss.provenance import load_config, run_metadata, utc_now
 
 
 def save_plot(path: Path, arrays: dict[str, np.ndarray], title: str) -> None:
@@ -99,6 +94,7 @@ def fit_config(
     data = config["data"]
     model = config["model"]
     train = config["train"]
+    signature = config.get("signature", {})
     return FixedPathTrainConfig(
         seed=seed,
         device=train.get("device", "cpu"),
@@ -112,6 +108,11 @@ def fit_config(
         max_step=model.get("max_step", 1.0 / 512.0),
         updates=train["updates"] if updates is None else updates,
         lr=train.get("lr", 1.0e-3),
+        signature_output_scale=signature.get("output_scale", 1.0),
+        signature_global_depth=signature.get("global_depth", 4),
+        signature_local_depth=signature.get("local_depth", 2),
+        signature_local_intervals=signature.get("local_intervals", 10),
+        evaluation_checkpoints=tuple(train.get("evaluation_checkpoints", ())),
     )
 
 
@@ -124,13 +125,30 @@ def write_result(out: Path, result: dict, meta: dict) -> None:
     torch.save(result["model"].state_dict(), out / "model.pt")
     (out / "history.json").write_text(json.dumps(result["history"], indent=2))
     (out / "metrics.json").write_text(json.dumps(result["metrics"], indent=2))
+    (out / "checkpoints.json").write_text(
+        json.dumps(result["checkpoints"], indent=2)
+    )
+    if result["checkpoint_predictions"]:
+        checkpoint_arrays = {
+            "time": arrays["time"],
+            "target": arrays["target"],
+        }
+        checkpoint_arrays.update(
+            {
+                f"prediction_updates_{updates_completed:05d}": prediction.numpy()
+                for updates_completed, prediction in result[
+                    "checkpoint_predictions"
+                ].items()
+            }
+        )
+        np.savez_compressed(out / "checkpoint_paths.npz", **checkpoint_arrays)
     meta.update(
         {
             "fit_config": asdict(result["config"]),
             "initial_fingerprint": result["initial_fingerprint"],
             "rho": result["rho"],
             "metrics": result["metrics"],
-            "finished": datetime.now(timezone.utc).isoformat(),
+            "finished": utc_now(),
         }
     )
     (out / "meta.json").write_text(json.dumps(meta, indent=2))
@@ -148,20 +166,11 @@ def existing_metrics(out: Path, cfg) -> dict[str, float] | None:
     if not meta_path.exists() or not metrics_path.exists():
         return None
     meta = json.loads(meta_path.read_text())
-    if meta.get("fit_config") != asdict(cfg):
+    stored_config = meta.get("fit_config", {})
+    current_config = json.loads(json.dumps(asdict(cfg)))
+    if any(current_config.get(key) != value for key, value in stored_config.items()):
         raise RuntimeError(f"existing result at {out} has a different configuration")
     return json.loads(metrics_path.read_text())
-
-
-def base_meta(config_path: Path, config: dict) -> dict:
-    return {
-        "config": str(config_path),
-        "config_contents": config,
-        "git_sha": git_sha(),
-        "started": datetime.now(timezone.utc).isoformat(),
-        "python": sys.version.split()[0],
-        "host": platform.node(),
-    }
 
 
 def run_adequacy(config_path: Path, config: dict, out: Path) -> int:
@@ -192,7 +201,7 @@ def run_adequacy(config_path: Path, config: dict, out: Path) -> int:
     fourier_out = out / "fourier_time"
     raw_metrics = existing_metrics(raw_out, raw_cfg)
     if raw_metrics is None:
-        raw_meta = base_meta(config_path, config)
+        raw_meta = run_metadata(config_path, config)
         print("adequacy: raw scalar time", flush=True)
         raw = train_fixed_path(raw_cfg, verbose=True)
         write_result(raw_out, raw, raw_meta)
@@ -202,7 +211,7 @@ def run_adequacy(config_path: Path, config: dict, out: Path) -> int:
 
     fourier_metrics = existing_metrics(fourier_out, fourier_cfg)
     if fourier_metrics is None:
-        fourier_meta = base_meta(config_path, config)
+        fourier_meta = run_metadata(config_path, config)
         print("adequacy: Fourier time features", flush=True)
         fourier = train_fixed_path(fourier_cfg, verbose=True)
         write_result(fourier_out, fourier, fourier_meta)
@@ -226,6 +235,33 @@ def run_adequacy(config_path: Path, config: dict, out: Path) -> int:
     return 0 if verdict["passed"] else 2
 
 
+def run_signature_audit(config_path: Path, config: dict, out: Path) -> int:
+    """Record levelwise signature values and parameter gradients before training."""
+    from pathloss.fixed_path import signature_gradient_audit
+
+    audit_config = config.get("signature", {}).get("audit", {})
+    cfg = fit_config(
+        config,
+        seed=audit_config.get("seed", config["adequacy"]["seed"]),
+        capacity=audit_config.get("capacity", "expressive"),
+        condition="uniform",
+        loss="sig_global",
+        updates=1,
+    )
+    report = run_metadata(config_path, config)
+    report.update(
+        {
+            "fit_config": asdict(cfg),
+            "audit": signature_gradient_audit(cfg),
+            "finished": utc_now(),
+        }
+    )
+    path = out / "signature_audit.json"
+    path.write_text(json.dumps(report, indent=2))
+    print(json.dumps(report["audit"], indent=2))
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, required=True)
@@ -233,13 +269,18 @@ def main() -> int:
     parser.add_argument("--seed", type=int)
     parser.add_argument("--capacity", choices=("restricted", "expressive"))
     parser.add_argument("--condition", choices=("uniform", "clustered"))
-    parser.add_argument("--loss", choices=("mse", "j2", "h1"))
+    parser.add_argument(
+        "--loss", choices=("mse", "j2", "h1", "sig_global", "sig_local")
+    )
     parser.add_argument("--adequacy", action="store_true")
+    parser.add_argument("--signature-audit", action="store_true")
     args = parser.parse_args()
     config = load_config(args.config)
     args.out.mkdir(parents=True, exist_ok=True)
     if args.adequacy:
         return run_adequacy(args.config, config, args.out)
+    if args.signature_audit:
+        return run_signature_audit(args.config, config, args.out)
     missing = [
         name
         for name in ("seed", "capacity", "condition", "loss")
@@ -249,6 +290,17 @@ def main() -> int:
         parser.error("run mode requires " + ", ".join(f"--{name}" for name in missing))
     if args.loss == "h1" and args.condition != "uniform":
         parser.error("h1 is restricted to the uniform smooth-path comparison")
+    if args.loss in {"sig_global", "sig_local"} and args.condition != "uniform":
+        parser.error(
+            "initial signature comparison is restricted to uniform observations"
+        )
+    if args.loss in {"sig_global", "sig_local"} and not config.get(
+        "signature", {}
+    ).get("audit_accepted", False):
+        parser.error(
+            "review signature_audit.json and set signature.audit_accepted=true "
+            "before signature training"
+        )
 
     from pathloss.fixed_path import train_fixed_path
 
@@ -259,7 +311,7 @@ def main() -> int:
         condition=args.condition,
         loss=args.loss,
     )
-    meta = base_meta(args.config, config)
+    meta = run_metadata(args.config, config)
     result = train_fixed_path(cfg, verbose=True)
     write_result(args.out, result, meta)
     print(json.dumps(result["metrics"], indent=2))
