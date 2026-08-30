@@ -15,6 +15,7 @@ from pathloss.norms import (
     integral_norm_gauss,
     pointwise_mse,
     quadrature_weights,
+    romberg_table,
 )
 from pathloss.paths import smooth_test_path
 
@@ -94,6 +95,24 @@ def test_bad_time_grids():
         quadrature_weights(np.array([0.0, 1.0, 0.5]))       # not increasing
     with pytest.raises(ValueError):
         quadrature_weights(np.array([0.0]))                  # too short
+
+
+def test_first_romberg_column_equals_composite_simpson():
+    t = np.linspace(0.0, 1.0, 17)
+    values = np.exp(t)
+    table = romberg_table(t, values)
+    simpson = float(np.sum(quadrature_weights(t, "simpson") * values))
+    assert table[-1][1] == pytest.approx(simpson, abs=1e-15)
+
+
+def test_romberg_integrates_quartic_exactly():
+    t = np.linspace(0.0, 1.0, 17)
+    assert romberg_table(t, t**4)[-1][-1] == pytest.approx(1.0 / 5.0, abs=1e-14)
+
+
+def test_romberg_rejects_non_nested_grid():
+    with pytest.raises(ValueError, match=r"2\*\*m"):
+        romberg_table(np.linspace(0.0, 1.0, 10), np.ones(10))
 
 
 # --- L^p norms ------------------------------------------------------------

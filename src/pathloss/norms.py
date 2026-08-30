@@ -36,6 +36,7 @@ __all__ = [
     "pointwise_mse",
     "integral_norm_callable",
     "integral_norm_gauss",
+    "romberg_table",
     "p_variation_brute",
     "p_variation_exact",
     "p_variation_pruned",
@@ -97,6 +98,46 @@ def quadrature_weights(t: np.ndarray, rule: str = "trapezoid") -> np.ndarray:
         w[2:-1:2] = 2.0
         return w * h / 3.0
     raise ValueError(f"unknown rule {rule!r}")
+
+
+def romberg_table(t: np.ndarray, values: np.ndarray) -> tuple[tuple[float, ...], ...]:
+    """Romberg table for one scalar integrand on a nested uniform grid.
+
+    ``t`` must contain ``2**m + 1`` points. Row ``k`` starts with trapezoid
+    estimate on ``2**k`` panels and applies Richardson extrapolation across
+    columns. Final entry is highest-order estimate using every supplied point.
+    """
+    t = np.asarray(t, dtype=float)
+    values = np.asarray(values, dtype=float)
+    if t.ndim != 1 or values.ndim != 1 or values.shape != t.shape:
+        raise ValueError("t and values must be one-dimensional arrays of equal size")
+    if t.size < 3:
+        raise ValueError("Romberg needs at least three points")
+    dt = np.diff(t)
+    if np.any(dt <= 0) or not np.allclose(dt, dt[0]):
+        raise ValueError("Romberg needs a strictly increasing uniform grid")
+    panels = t.size - 1
+    if panels & (panels - 1):
+        raise ValueError("Romberg needs 2**m + 1 points")
+
+    levels = panels.bit_length()
+    rows: list[tuple[float, ...]] = []
+    horizon = float(t[-1] - t[0])
+    for k in range(levels):
+        n_panels = 2**k
+        stride = panels // n_panels
+        sampled = values[::stride]
+        step = horizon / n_panels
+        row = [
+            float(
+                step
+                * (0.5 * sampled[0] + sampled[1:-1].sum() + 0.5 * sampled[-1])
+            )
+        ]
+        for j in range(1, k + 1):
+            row.append(row[j - 1] + (row[j - 1] - rows[k - 1][j - 1]) / (4**j - 1))
+        rows.append(tuple(row))
+    return tuple(rows)
 
 
 # ---------------------------------------------------------------------------

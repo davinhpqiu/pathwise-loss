@@ -12,6 +12,7 @@ from pathloss.fixed_path import (  # noqa: E402
     FixedPathTrainConfig,
     LatentNeuralODE,
     fixed_path_loss,
+    fixed_path_quadrature,
     fixed_target,
     fixed_target_derivative,
     h1_balance,
@@ -174,3 +175,21 @@ def test_training_records_common_metrics_at_requested_checkpoints():
             "local_j2",
         }
         assert all(math.isfinite(value) for value in row["metrics"].values())
+
+
+def test_refined_quadrature_matches_polynomial_integrals():
+    t = torch.linspace(0.0, 1.0, 17, dtype=torch.float64)
+    target = torch.zeros(17, 2, dtype=torch.float64)
+    prediction = torch.stack((t**2, torch.zeros_like(t)), dim=-1)
+    target_derivative = torch.zeros_like(target)
+    prediction_derivative = torch.stack((2.0 * t, torch.zeros_like(t)), dim=-1)
+    got = fixed_path_quadrature(
+        t,
+        prediction,
+        target,
+        prediction_derivative,
+        target_derivative,
+        rho=0.5,
+    )
+    assert got["j2_romberg"] == pytest.approx(1.0 / 5.0, abs=1e-14)
+    assert got["h1_romberg"] == pytest.approx(13.0 / 15.0, abs=1e-14)

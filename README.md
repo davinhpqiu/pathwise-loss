@@ -160,8 +160,9 @@ caffeinate -i python scripts/run_fixed_path_study.py \
   --stage primary
 ```
 
-Stages are `primary`, `h1`, `signature` and `signature_pilot`. Add `--seed 0` or
-`--capacity restricted` for a smaller subset. Completed runs are skipped.
+Stages are `primary`, `h1`, `signature`, `signature_pilot` and `configured`.
+Add `--seed 0` or `--capacity restricted` for a smaller subset. Completed runs
+are skipped.
 
 Seed-zero 5,000-update pilot triggered budget check in notebook 05. Paired
 expressive clustered MSE and $J_2$ diagnostic ran at 10,000 updates:
@@ -171,9 +172,8 @@ sbatch scripts/arc/submit_fixed_path_budget_diagnostic.slurm
 ```
 
 It writes under `results/runs/neural_ode_fixed_path_budget_10k/`. Ten thousand
-updates are now fixed as a finite compute budget; late-window ratios prevent
-describing terminal fits as converged. Extended primary and $H^1$ arrays remain
-deferred while signature pilot is run.
+updates are fixed as a finite compute budget; late-window ratios prevent
+describing terminal fits as converged.
 
 Signature implementation must pass tests and levelwise audit before training:
 
@@ -201,6 +201,35 @@ caffeinate -i python scripts/run_fixed_path_study.py \
   --config configs/neural_ode_fixed_path_signature_10k.yaml \
   --out results/runs/neural_ode_fixed_path_signature_10k \
   --stage signature_pilot
+```
+
+Experiment A closeout uses three seeds, two capacities and its exact configured
+case list. Existing 10,000-update pilot and budget runs are reused by metadata;
+older 5,000-update results cannot satisfy this matrix.
+
+```bash
+python scripts/check_fixed_path_study.py \
+  --config configs/neural_ode_fixed_path_closeout_10k.yaml \
+  --out results/runs/neural_ode_fixed_path_closeout_10k
+
+sbatch scripts/arc/submit_fixed_path_closeout_array.slurm
+```
+
+Completion checker exits with status 2 and lists missing exact identities until
+matrix is complete.
+
+Learning-rate sensitivity has a separate configuration and result root:
+
+```bash
+sbatch scripts/arc/submit_fixed_path_lr_sensitivity_array.slurm
+```
+
+After model files are local, evaluate Simpson, Romberg and three RK4 step sizes
+for one fit:
+
+```bash
+python scripts/evaluate_fixed_path_resolution.py \
+  --run results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/mse
 ```
 
 Brownian-to-OU stream operator begins with implementation gates:
@@ -272,7 +301,7 @@ squeue -u $USER
 | `02_p_variation.ipynb` | roughness of a path: definition, and the three implementations, one section each | complete |
 | `03_loss_comparison.ipynb` | matched MSE against weighted-$J_2$ experiment: GRU and Linear NCDE, uniform and clustered targets, pilot and held-out seed-0 results | in progress |
 | `04_classification.ipynb` | fixed 1-NN path-distance benchmark: explicit preprocessing and dependent/independent DTW controls, with signature extension defined | in progress |
-| `05_neural_ode_path.ipynb` | fixed-target Neural ODE loss comparison: design, target inspection, acceptance criteria and result analysis | adequacy complete; comparisons unrun |
+| `05_neural_ode_path.ipynb` | fixed-target Neural ODE loss comparison: design, target inspection, acceptance criteria and result analysis | seed-zero signature pilot complete; closeout arrays prepared |
 | `06_brownian_ou_operator.ipynb` | causal Brownian-driver to OU-response Neural CDE: algorithm, gates and paired loss analysis | implemented; runs absent |
 
 Each notebook records experiment stages, mathematics and results. Launch
@@ -308,6 +337,7 @@ pathwise-loss/
 │   ├── models.py            # GRU query and Linear Neural CDE baselines
 │   ├── train.py             # training loop and evaluation
 │   ├── fixed_path.py        # fixed-target Neural ODE: target, model, fitting
+│   ├── fixed_path_study.py  # exact fixed-path run identities and completion
 │   ├── operator.py          # path-output Neural CDE and Brownian-to-OU fitting
 │   ├── signatures.py        # differentiable piecewise-linear signatures
 │   │                        # bookkeeping:
@@ -320,6 +350,8 @@ pathwise-loss/
 │   ├── run_integral_study.py# job grid for the paired integral-loss study
 │   ├── run_fixed_path.py    # fixed-path fit, adequacy check or signature audit
 │   ├── run_fixed_path_study.py # staged local fixed-path runs
+│   ├── check_fixed_path_study.py # exact closeout completion report
+│   ├── evaluate_fixed_path_resolution.py # quadrature and solver refinement
 │   ├── run_ou_operator.py   # OU acceptance, audit or one fit
 │   ├── run_ou_operator_study.py # staged local OU runs
 │   ├── run_classification.py# 1-NN path-distance benchmark

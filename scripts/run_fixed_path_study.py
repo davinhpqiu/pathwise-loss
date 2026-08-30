@@ -9,6 +9,11 @@ import sys
 from itertools import product
 from pathlib import Path
 
+from pathloss.fixed_path_study import (
+    FixedPathRun,
+    configured_runs,
+    find_completed_run,
+)
 from pathloss.provenance import load_config
 
 
@@ -30,6 +35,7 @@ STAGE_CASES = {
         ("uniform", "sig_global"),
         ("uniform", "sig_local"),
     ),
+    "configured": (),
 }
 
 
@@ -48,13 +54,34 @@ def main() -> int:
     parser.add_argument("--stage", choices=tuple(STAGE_CASES), required=True)
     parser.add_argument("--seed", type=int)
     parser.add_argument("--capacity", choices=("restricted", "expressive"))
+    parser.add_argument("--task-id", type=int)
     parser.add_argument("--rerun-completed", action="store_true")
     args = parser.parse_args()
 
     config = load_config(args.config)
-    seeds = selected_values(config["train"]["seeds"], args.seed)
-    capacities = selected_values(list(config["capacities"]), args.capacity)
-    if args.stage in {"signature", "signature_pilot"} and not config.get(
+    if args.stage == "configured":
+        jobs = list(configured_runs(config))
+        if args.seed is not None:
+            jobs = [run for run in jobs if run.seed == args.seed]
+        if args.capacity is not None:
+            jobs = [run for run in jobs if run.capacity == args.capacity]
+    else:
+        seeds = selected_values(config["train"]["seeds"], args.seed)
+        capacities = selected_values(list(config["capacities"]), args.capacity)
+        jobs = [
+            FixedPathRun(
+                capacity=capacity,
+                seed=seed,
+                condition=condition,
+                loss=loss,
+                lr=float(config["train"].get("lr", 1.0e-3)),
+                updates=int(config["train"]["updates"]),
+            )
+            for seed, capacity, (condition, loss) in product(
+                seeds, capacities, STAGE_CASES[args.stage]
+            )
+        ]
+    if any(run.loss in {"sig_global", "sig_local"} for run in jobs) and not config.get(
         "signature", {}
     ).get("audit_accepted", False):
         raise SystemExit(
@@ -62,20 +89,45 @@ def main() -> int:
             "signature.audit_accepted=true"
         )
 
-    jobs = list(product(seeds, capacities, STAGE_CASES[args.stage]))
-    for index, (seed, capacity, case) in enumerate(jobs, start=1):
-        condition, loss = case
-        run_dir = args.out / capacity / f"seed{seed}" / condition / loss
-        if (run_dir / "meta.json").exists() and not args.rerun_completed:
+    if args.task_id is not None:
+        if args.seed is not None or args.capacity is not None:
+            parser.error("--task-id cannot be combined with --seed or --capacity")
+        if args.task_id < 0 or args.task_id >= len(jobs):
+            parser.error(f"--task-id must lie in [0, {len(jobs) - 1}]")
+        indexed_jobs = [(args.task_id, jobs[args.task_id])]
+    else:
+        indexed_jobs = list(enumerate(jobs))
+
+    reuse_roots = [Path(path) for path in config.get("study", {}).get("reuse_roots", [])]
+    for zero_index, run in indexed_jobs:
+        run_dir = args.out / run.relative_directory
+        current_meta = run_dir / "meta.json"
+        if current_meta.exists() and not args.rerun_completed:
+            completed = find_completed_run(run, [args.out])
+            if completed is None:
+                raise RuntimeError(
+                    f"existing result at {run_dir} has a different run identity"
+                )
             print(
-                f"[{index}/{len(jobs)}] skip completed: "
-                f"seed={seed}, capacity={capacity}, condition={condition}, loss={loss}",
+                f"[{zero_index + 1}/{len(jobs)}] skip completed in output root: "
+                f"seed={run.seed}, capacity={run.capacity}, "
+                f"condition={run.condition}, loss={run.loss}",
+                flush=True,
+            )
+            continue
+        reused = None if args.rerun_completed else find_completed_run(run, reuse_roots)
+        if reused is not None:
+            print(
+                f"[{zero_index + 1}/{len(jobs)}] reuse {reused.parent}: "
+                f"seed={run.seed}, capacity={run.capacity}, "
+                f"condition={run.condition}, loss={run.loss}",
                 flush=True,
             )
             continue
         print(
-            f"[{index}/{len(jobs)}] start: "
-            f"seed={seed}, capacity={capacity}, condition={condition}, loss={loss}",
+            f"[{zero_index + 1}/{len(jobs)}] start: "
+            f"seed={run.seed}, capacity={run.capacity}, "
+            f"condition={run.condition}, loss={run.loss}",
             flush=True,
         )
         command = [
@@ -86,13 +138,13 @@ def main() -> int:
             "--out",
             str(run_dir),
             "--seed",
-            str(seed),
+            str(run.seed),
             "--capacity",
-            capacity,
+            run.capacity,
             "--condition",
-            condition,
+            run.condition,
             "--loss",
-            loss,
+            run.loss,
         ]
         subprocess.run(command, check=True)
     return 0

@@ -15,10 +15,12 @@ import hashlib
 import math
 from dataclasses import dataclass
 
+import numpy as np
 import torch
 import torch.nn as nn
 
 from .losses import integral_lp, pointwise_mse, sobolev_h1, trapezoid_weights
+from .norms import quadrature_weights, romberg_table
 from .signatures import (
     anchored_coordinate_mean_components,
     anchored_coordinate_mean_signature_loss,
@@ -36,6 +38,7 @@ __all__ = [
     "state_fingerprint",
     "fixed_path_loss",
     "evaluate_fixed_path",
+    "fixed_path_quadrature",
     "signature_gradient_audit",
     "train_fixed_path",
 ]
@@ -392,6 +395,55 @@ def evaluate_fixed_path(
         "prediction_derivative": prediction_derivative.detach().cpu(),
     }
     return metrics, paths
+
+
+def fixed_path_quadrature(
+    t: torch.Tensor,
+    prediction: torch.Tensor,
+    target: torch.Tensor,
+    prediction_derivative: torch.Tensor,
+    target_derivative: torch.Tensor,
+    rho: torch.Tensor | float,
+) -> dict[str, float]:
+    """Simpson and Romberg estimates of fixed-path integral metrics."""
+    if t.ndim != 1 or prediction.shape != target.shape:
+        raise ValueError("t must be one-dimensional and path shapes must match")
+    if prediction.shape != prediction_derivative.shape:
+        raise ValueError("prediction derivative must match prediction shape")
+    if target.shape != target_derivative.shape or target.shape[0] != t.numel():
+        raise ValueError("target derivative and time dimension must match target")
+
+    time = t.detach().cpu().double().numpy()
+    value_error = (
+        prediction.detach().cpu().double().numpy()
+        - target.detach().cpu().double().numpy()
+    )
+    derivative_error = (
+        prediction_derivative.detach().cpu().double().numpy()
+        - target_derivative.detach().cpu().double().numpy()
+    )
+    value_integrand = np.sum(value_error**2, axis=-1)
+    derivative_integrand = np.sum(derivative_error**2, axis=-1)
+    horizon = float(time[-1] - time[0])
+    if horizon <= 0:
+        raise ValueError("time horizon must be positive")
+    simpson_weights = quadrature_weights(time, rule="simpson")
+    rho_value = float(torch.as_tensor(rho).detach().cpu())
+
+    value_simpson = float(np.sum(simpson_weights * value_integrand) / horizon)
+    value_romberg = float(romberg_table(time, value_integrand)[-1][-1] / horizon)
+    derivative_simpson = float(
+        np.sum(simpson_weights * derivative_integrand) / horizon
+    )
+    derivative_romberg = float(
+        romberg_table(time, derivative_integrand)[-1][-1] / horizon
+    )
+    return {
+        "j2_simpson": value_simpson,
+        "j2_romberg": value_romberg,
+        "h1_simpson": value_simpson + rho_value * derivative_simpson,
+        "h1_romberg": value_romberg + rho_value * derivative_romberg,
+    }
 
 
 def _component_gradient_norm(

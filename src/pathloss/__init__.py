@@ -29,6 +29,7 @@ signatures.py      differentiable piecewise-linear signatures and losses
 Bookkeeping
 -----------
 provenance.py      git state, config loading, run metadata
+fixed_path_study.py exact fixed-path run identities and completion
 """
 
 __version__ = "0.1.0"
