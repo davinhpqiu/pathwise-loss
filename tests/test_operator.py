@@ -137,6 +137,8 @@ def test_evaluation_reports_independent_and_signature_metrics():
     assert set(metrics) == {
         "target_mse",
         "target_j2",
+        "target_sig_global",
+        "target_sig_local",
         "fine_mse",
         "fine_j1",
         "fine_j2",

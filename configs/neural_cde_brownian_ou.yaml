@@ -26,7 +26,7 @@ losses:
 
 signature:
   scale_rule: training_target_std
-  audit_accepted: false
+  audit_accepted: true
   global_depth: 4
   local_depth: 2
   local_intervals: 5

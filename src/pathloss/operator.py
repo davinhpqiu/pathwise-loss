@@ -361,6 +361,26 @@ def evaluate_ou_operator(
         "target_j2": float(
             integral_lp(observed_time, prediction_target, target_observed, p=2.0)
         ),
+        "target_sig_global": float(
+            anchored_coordinate_mean_signature_loss(
+                target_time,
+                prediction_target,
+                target_observed,
+                depth=signature_global_depth,
+                intervals=1,
+                output_scale=signature_output_scale,
+            )
+        ),
+        "target_sig_local": float(
+            anchored_coordinate_mean_signature_loss(
+                target_time,
+                prediction_target,
+                target_observed,
+                depth=signature_local_depth,
+                intervals=signature_local_intervals,
+                output_scale=signature_output_scale,
+            )
+        ),
         "fine_mse": float(pointwise_mse(fine_time, prediction, target)),
         "fine_j1": float(integral_lp(fine_time, prediction, target, p=1.0)),
         "fine_j2": float(integral_lp(fine_time, prediction, target, p=2.0)),
