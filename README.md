@@ -307,9 +307,16 @@ python scripts/run_brownian_message_study.py \
   --stage aggregate
 ```
 
-Freeze transition amplitudes from `main/summary.json` in configuration before
-confirmation. Prepare confirmation cache with `--stage prepare --ensemble
-confirmation`, then submit `submit_brownian_message_confirmation.slurm`.
+The transition and predecessor amplitudes are now frozen in configuration.
+Prepare the untouched second-ensemble cache and then submit the 42-condition
+confirmation array:
+
+```bash
+sbatch scripts/arc/submit_brownian_message_prepare_confirmation.slurm
+sbatch scripts/arc/submit_brownian_message_confirmation.slurm
+```
+
+Submit the second command only after preparation completes successfully.
 
 Supervisor-provided BasicMotions classification. Raw data provide the archive
 anchor; alternative preprocessing has a separate configuration:
@@ -349,7 +356,7 @@ squeue -u $USER
 | `04_classification.ipynb` | fixed 1-NN path-distance benchmark: explicit preprocessing and dependent/independent DTW controls, with signature extension defined | in progress |
 | `05_neural_ode_path.ipynb` | fixed-target Neural ODE loss comparison: design, target inspection, acceptance criteria and result analysis | complete |
 | `06_brownian_ou_operator.ipynb` | causal Brownian-driver to OU-response Neural CDE: algorithm, gates and paired loss analysis | complete |
-| `07_brownian_message_sensitivity.ipynb` | controlled increment and Lévy-area messages: direct discrepancy curves and detection | pilot complete; main pending |
+| `07_brownian_message_sensitivity.ipynb` | controlled increment and Lévy-area messages: direct discrepancy curves and detection | main complete; independent confirmation pending |
 
 Each notebook records experiment stages, mathematics and results. Launch
 commands live in this README. Preliminary missingness check is part of notebook

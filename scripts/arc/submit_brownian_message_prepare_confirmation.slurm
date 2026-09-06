@@ -1,15 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=bm-confirm
+#SBATCH --job-name=bm-conf-prep
 #SBATCH --clusters=htc
 #SBATCH --partition=short
 #SBATCH --time=12:00:00
-#SBATCH --array=0-41%16
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=8
 #SBATCH --mem-per-cpu=8G
-#SBATCH --output=results/logs/bm-confirm-%A_%a.out
-#SBATCH --error=results/logs/bm-confirm-%A_%a.err
+#SBATCH --output=results/logs/bm-conf-prep-%j.out
+#SBATCH --error=results/logs/bm-conf-prep-%j.err
 
 set -euo pipefail
 
@@ -25,5 +24,5 @@ cd "$PROJECT_DIR"
 python scripts/run_brownian_message_study.py \
     --config configs/brownian_message.yaml \
     --out results/runs/brownian_message \
-    --stage confirmation \
-    --task-id "$SLURM_ARRAY_TASK_ID"
+    --stage prepare \
+    --ensemble confirmation

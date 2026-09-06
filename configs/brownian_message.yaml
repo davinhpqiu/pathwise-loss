@@ -90,5 +90,6 @@ acceptance:
   area_scale_relative_tolerance: 0.05
 
 confirmation:
-  # Freeze transition and preceding amplitudes here after main aggregation.
-  amplitudes: []
+  # Frozen 2026-09-06 from valid main transitions: every positive transition,
+  # its preceding grid value, and zero as an independent null control.
+  amplitudes: [0.0, 0.125, 0.25, 0.5, 1.0, 2.0, 4.0]
