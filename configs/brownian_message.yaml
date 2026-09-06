@@ -1,0 +1,94 @@
+name: brownian_message_sensitivity
+
+data:
+  main_candidates:
+    - data/raw/BrownianStreamData/ensembles-10k/ensemble-0.npy
+    - /data/math-lyons-rna-mods/BrownianStreamData/ensembles-10k/ensemble-0.npy
+  confirmation_candidates:
+    - data/raw/BrownianStreamData/ensembles-10k/ensemble-1.npy
+    - /data/math-lyons-rna-mods/BrownianStreamData/ensembles-10k/ensemble-1.npy
+  small_roots:
+    - data/raw/BrownianStreamData/single-streams
+    - /data/math-lyons-rna-mods/BrownianStreamData/single-streams
+  expected_paths: 10000
+  steps: 2048
+  duration: 1.0
+  dtype: float32
+  brownian_width: 4
+  area_pairs:
+    - [0, 1]
+    - [0, 2]
+    - [0, 3]
+    - [1, 2]
+    - [1, 3]
+    - [2, 3]
+  expected_sha256:
+    main: 8ec83683bba31171719f1cc2f034f1ecca9e65d0564c7bd9ecb3a1850840097e
+    confirmation: 4ba7a4bf95e792253b387f0fca3495cd681f0eab49f801cc554e2e3404ed5396
+  statistics_batch_size: 128
+
+message:
+  support_start: 1024
+  support_length: 16
+  types: [increment, area, combined]
+  templates: [net, balanced]
+  amplitudes: [0.0, 0.0625, 0.125, 0.25, 0.5, 1.0, 2.0, 4.0]
+  first_direction: [1.0, 0.0, 0.0, 0.0]
+  area_direction: [1.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+  alternate_first_direction: [0.0, 0.0, 1.0, 0.0]
+  alternate_area_direction: [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+
+splits:
+  proportions: [0.6, 0.2, 0.2]
+  main_seed: 20260903
+  confirmation_seed: 20260904
+
+signature:
+  global_depth: 4
+  local_depth: 2
+  local_block_size: 16
+  local_offset: 8
+  # Fixed sensitivity family for the finite linear-CDE response proxy.
+  response_bounds: [0.5, 1.0, 2.0]
+  truncated_kernel:
+    enabled: true
+    level_weight: 1.0
+  scale_delta: 1.0e-12
+  prepare_batch_size: 8
+  condition_batch_size: 64
+  rough_kernel:
+    enabled: false
+    backend: null
+    svm_c: 1.0
+    timing_paths: 100
+
+analysis:
+  pilot_paths: 500
+  derangement_seed: 20260905
+  bootstrap_seed: 20260905
+  bootstrap_replicates: 1000
+  nn_query_batch: 8
+  nn_reference_batch: 64
+  detection_representations:
+    - coordinate
+    - increment
+    - area
+    - global
+    - local_aligned
+    - local_offset
+    - response_global_r1
+    - signature_kernel_truncated
+  coordinate_detection_metrics: [mse, j2, l1, linf]
+  four_class_amplitude: 1.0
+
+acceptance:
+  small_stream_count: 8
+  absolute_tolerance: 1.0e-6
+  reference_tolerance: 1.0e-9
+  reference_accepted: false
+  first_scale_relative_tolerance: 0.05
+  area_scale_relative_tolerance: 0.05
+
+confirmation:
+  # Freeze transition and preceding amplitudes here after main aggregation.
+  amplitudes: []

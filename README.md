@@ -23,12 +23,12 @@ then the newest entry in `docs/logbook/` for what is currently in force, then
 > repository alone: this file, `CLAUDE.md`, and the notebooks, each of which
 > states its own mathematics.
 
-Current state, 22/08: short-term focus is continuous path parameterisation by a
-Neural ODE, followed by Brownian-driver to OU-response stream learning with a
-Neural CDE. Detailed procedure is
-[`docs/neural_ode_operator_experiments.md`](docs/neural_ode_operator_experiments.md).
-Existing reconstruction, classification and ARC work supplies supporting
-calibration. $p$-variation is a diagnostic.
+Current state, 06/09: fixed-path Neural ODE and Brownian-to-OU operator studies
+are closed. Current experiment plants controlled increment and Lévy-area
+messages in supplied Brownian rough streams, then compares direct path
+discrepancies and single-stream detection. Procedure is notebook 07; core
+acceptance and 500-stream pilot are complete, while 10,000-stream main study
+awaits independent RoughPy verification. $p$-variation remains a diagnostic.
 
 ## Setup: first time
 
@@ -106,6 +106,7 @@ place they appear.
 | `run_ou_operator.py` | Brownian-to-OU acceptance, audit or one Neural CDE fit |
 | `run_ou_operator_study.py` | run one Brownian-to-OU stage locally |
 | `run_classification.py` | 1-NN path-distance classification, no trained model |
+| `run_brownian_message_study.py` | controlled Brownian rough-path message sensitivity |
 
 `run_reconstruction.py` generates data, trains, evaluates, and writes
 configuration, history, metrics, and provenance:
@@ -265,6 +266,51 @@ python scripts/run_ou_operator.py \
 Review audit, set `signature.audit_accepted: true`, then run signature stage or
 `scripts/arc/submit_ou_signature_array.slurm`.
 
+Brownian message study uses supplied four-dimensional step-two rough streams.
+Core output includes variance-normalized signature discrepancies,
+response-derived $r\in\{0.5,1,2\}$ family and normalized finite depth-four
+signature-kernel distance. These use cached explicit signatures and add no
+dependency; optional Goursat-PDE rough kernel remains separate.
+Run core algebra checks, independent RoughPy reference, pilot preparation and
+pilot conditions in that order:
+
+```bash
+python scripts/run_brownian_message_study.py \
+  --config configs/brownian_message.yaml \
+  --out results/runs/brownian_message \
+  --stage acceptance
+python scripts/run_brownian_message_study.py \
+  --config configs/brownian_message.yaml \
+  --out results/runs/brownian_message \
+  --stage reference
+python scripts/run_brownian_message_study.py \
+  --config configs/brownian_message.yaml \
+  --out results/runs/brownian_message \
+  --stage prepare-pilot
+sbatch scripts/arc/submit_brownian_message_pilot_array.slurm
+```
+
+`reference` requires separately installed RoughPy and locks main jobs until its
+comparison passes. Main cache is shared across 48 condition tasks:
+
+```bash
+sbatch scripts/arc/submit_brownian_message_prepare.slurm
+sbatch scripts/arc/submit_brownian_message_main_array.slurm
+sbatch scripts/arc/submit_brownian_message_four_class.slurm
+python scripts/check_brownian_message_study.py \
+  --config configs/brownian_message.yaml \
+  --out results/runs/brownian_message \
+  --stage main
+python scripts/run_brownian_message_study.py \
+  --config configs/brownian_message.yaml \
+  --out results/runs/brownian_message \
+  --stage aggregate
+```
+
+Freeze transition amplitudes from `main/summary.json` in configuration before
+confirmation. Prepare confirmation cache with `--stage prepare --ensemble
+confirmation`, then submit `submit_brownian_message_confirmation.slurm`.
+
 Supervisor-provided BasicMotions classification. Raw data provide the archive
 anchor; alternative preprocessing has a separate configuration:
 
@@ -301,8 +347,9 @@ squeue -u $USER
 | `02_p_variation.ipynb` | roughness of a path: definition, and the three implementations, one section each | complete |
 | `03_loss_comparison.ipynb` | matched MSE against weighted-$J_2$ experiment: GRU and Linear NCDE, uniform and clustered targets, pilot and held-out seed-0 results | in progress |
 | `04_classification.ipynb` | fixed 1-NN path-distance benchmark: explicit preprocessing and dependent/independent DTW controls, with signature extension defined | in progress |
-| `05_neural_ode_path.ipynb` | fixed-target Neural ODE loss comparison: design, target inspection, acceptance criteria and result analysis | seed-zero signature pilot complete; closeout arrays prepared |
-| `06_brownian_ou_operator.ipynb` | causal Brownian-driver to OU-response Neural CDE: algorithm, gates and paired loss analysis | implemented; runs absent |
+| `05_neural_ode_path.ipynb` | fixed-target Neural ODE loss comparison: design, target inspection, acceptance criteria and result analysis | complete |
+| `06_brownian_ou_operator.ipynb` | causal Brownian-driver to OU-response Neural CDE: algorithm, gates and paired loss analysis | complete |
+| `07_brownian_message_sensitivity.ipynb` | controlled increment and Lévy-area messages: direct discrepancy curves and detection | pilot complete; main pending |
 
 Each notebook records experiment stages, mathematics and results. Launch
 commands live in this README. Preliminary missingness check is part of notebook
@@ -329,6 +376,8 @@ pathwise-loss/
 │   ├── norms.py             # quadrature, L^p integral norms and distances
 │   ├── pvar.py              # p-variation: brute force, O(N^2) DP, pruned
 │   ├── classification.py    # fixed 1-NN evaluation on labelled archives
+│   ├── brownian_messages.py # BCH messages and rough-stream discrepancies
+│   ├── brownian_message_study.py # caches, gates and message analysis
 │   │                        # data:
 │   ├── paths.py             # generators, irregular sampling, missingness
 │   ├── datasets.py          # context / target / fine-grid training examples

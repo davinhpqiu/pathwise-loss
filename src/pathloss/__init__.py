@@ -9,6 +9,8 @@ Measurement, NumPy, no training dependency
 norms.py           quadrature weights, L^p integral norms and distances
 pvar.py            p-variation: brute force, O(N^2) DP, pruned search
 classification.py  fixed 1-nearest-neighbour evaluation on labelled archives
+brownian_messages.py controlled messages and rough-path discrepancies
+brownian_message_study.py Brownian message caches, gates and analysis
 
 Data
 ----
