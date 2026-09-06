@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from pathloss.brownian_message_study import (
+    aggregate_condition_results,
     prepare_feature_cache,
     roughpy_reference_checks,
     run_message_condition,
@@ -286,3 +287,47 @@ def test_roughpy_reference_when_available():
     config["acceptance"] = {"reference_tolerance": 1e-8}
     result = roughpy_reference_checks(values, config=config)
     assert result["passed"]
+
+
+def test_aggregate_excludes_zero_and_withholds_failed_null_representation(tmp_path):
+    root = tmp_path / "main"
+
+    def write_result(amplitude, good_low, bad_low):
+        target = root / "conditions" / "net" / "increment" / f"rho-{amplitude}"
+        target.mkdir(parents=True)
+        payload = {
+            "condition": {
+                "template": "net",
+                "message_type": "increment",
+                "amplitude": float(amplitude),
+            },
+            "detection": {
+                "good": {
+                    "balanced_accuracy": good_low + 0.02,
+                    "balanced_accuracy_interval": [good_low, good_low + 0.04],
+                    "roc_auc": 0.5,
+                },
+                "bad": {
+                    "balanced_accuracy": bad_low + 0.02,
+                    "balanced_accuracy_interval": [bad_low, bad_low + 0.04],
+                    "roc_auc": 0.5,
+                },
+            },
+        }
+        (target / "result.json").write_text(json.dumps(payload))
+
+    write_result(0, 0.45, 0.51)
+    write_result(1, 0.49, 0.60)
+    write_result(2, 0.55, 0.70)
+    summary = aggregate_condition_results(root)
+
+    assert summary["null_control_failures"] == ["bad"]
+    assert summary["transitions"] == [
+        {
+            "template": "net",
+            "message_type": "increment",
+            "representation": "good",
+            "amplitude": 2.0,
+            "preceding_amplitude": 1.0,
+        }
+    ]

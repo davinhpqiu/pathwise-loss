@@ -1777,6 +1777,28 @@ def aggregate_condition_results(root: Path) -> dict:
             for name in record["detection"]
         }
     )
+    null_controls = []
+    failed_null_representations = set()
+    for representation in representations:
+        zero_records = [
+            record
+            for record in records
+            if float(record["condition"]["amplitude"]) == 0.0
+            and record.get("detection", {}).get(representation)
+        ]
+        if not zero_records:
+            continue
+        values = zero_records[0]["detection"][representation]
+        control = {
+            "representation": representation,
+            "balanced_accuracy": values["balanced_accuracy"],
+            "balanced_accuracy_interval": values["balanced_accuracy_interval"],
+            "roc_auc": values.get("roc_auc"),
+            "passed": values["balanced_accuracy_interval"][0] <= 0.5,
+        }
+        null_controls.append(control)
+        if not control["passed"]:
+            failed_null_representations.add(representation)
     for template in sorted({r["condition"]["template"] for r in records}):
         for message_type in sorted({r["condition"]["message_type"] for r in records}):
             subset = sorted(
@@ -1789,9 +1811,12 @@ def aggregate_condition_results(root: Path) -> dict:
                 key=lambda value: value["condition"]["amplitude"],
             )
             for representation in representations:
+                if representation in failed_null_representations:
+                    continue
                 eligible = [
                     r
                     for r in subset
+                    if float(r["condition"]["amplitude"]) > 0.0
                     if r.get("detection", {}).get(representation)
                     and r["detection"][representation]["balanced_accuracy_interval"][0]
                     > 0.5
@@ -1809,6 +1834,11 @@ def aggregate_condition_results(root: Path) -> dict:
                             "preceding_amplitude": preceding,
                         }
                     )
-    summary = {"condition_count": len(records), "transitions": transitions}
+    summary = {
+        "condition_count": len(records),
+        "null_controls": null_controls,
+        "null_control_failures": sorted(failed_null_representations),
+        "transitions": transitions,
+    }
     _write_json(root / "summary.json", summary)
     return summary
