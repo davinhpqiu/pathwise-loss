@@ -61,8 +61,13 @@ def configured_runs(config: dict) -> tuple[FixedPathRun, ...]:
                 loss = case["loss"]
                 if loss == "h1" and condition != "uniform":
                     raise ValueError("h1 study cases must use uniform observations")
-                if loss in {"sig_global", "sig_local"} and condition != "uniform":
-                    raise ValueError("signature study cases must use uniform observations")
+                if (
+                    loss in {"sig_global", "sig_local", "sig_local_fine"}
+                    and condition != "uniform"
+                ):
+                    raise ValueError(
+                        "signature study cases must use uniform observations"
+                    )
                 runs.append(
                     FixedPathRun(
                         capacity=capacity,
@@ -126,7 +131,8 @@ def load_run_registry(roots: Iterable[Path]) -> dict[FixedPathRun, Path]:
             run = read_run(root, meta_path)
             if run in registry:
                 raise ValueError(
-                    f"duplicate exact run in {registry[run].parent} and {meta_path.parent}"
+                    "duplicate exact run in "
+                    f"{registry[run].parent} and {meta_path.parent}"
                 )
             registry[run] = meta_path
     return registry

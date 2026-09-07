@@ -1,0 +1,42 @@
+name: neural_ode_fixed_path_local_fine_10k
+
+data:
+  n_target: 64
+  n_fine: 513
+  conditions: [uniform]
+
+model:
+  n_fourier: 5
+  max_step: 0.001953125       # 1 / 512, fixed-step RK4
+
+capacities:
+  restricted:
+    hidden: 2
+    width: 16
+  expressive:
+    hidden: 8
+    width: 64
+
+signature:
+  output_scale: 1.0
+  # Accepted 7 September: finite gradients and expected homogeneity scaling.
+  audit_accepted: true
+  global_depth: 4
+  local_depth: 2
+  local_intervals: 10
+  fine_local_intervals: 100
+  fine_reference_intervals: 10
+  audit:
+    seed: 991
+    capacity: expressive
+
+train:
+  seeds: [0, 1, 2]
+  updates: 10000
+  evaluation_checkpoints: [0, 100, 500, 1000, 2500, 5000, 7500, 10000]
+  lr: 0.001
+  device: cpu
+
+study:
+  cases:
+    - {condition: uniform, loss: sig_local_fine}

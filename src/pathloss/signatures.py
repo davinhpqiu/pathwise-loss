@@ -62,10 +62,7 @@ def chen_product(
         raise ValueError("left and right must contain same nonzero number of levels")
     combined = []
     for level in range(len(left)):
-        terms = [
-            _tensor_product(left[j], right[level - j])
-            for j in range(level + 1)
-        ]
+        terms = [_tensor_product(left[j], right[level - j]) for j in range(level + 1)]
         combined.append(torch.stack(terms, dim=0).sum(dim=0))
     return tuple(combined)
 
@@ -84,8 +81,7 @@ def piecewise_linear_signature(
     batch_shape = path.shape[:-2]
     levels = [path.new_ones(batch_shape + (1,))]
     levels.extend(
-        path.new_zeros(batch_shape + (channel**k,))
-        for k in range(1, depth + 1)
+        path.new_zeros(batch_shape + (channel**k,)) for k in range(1, depth + 1)
     )
     signature = tuple(levels)
     increments = path[..., 1:, :] - path[..., :-1, :]
@@ -132,11 +128,15 @@ def time_augmented_path(
         raise ValueError("time must be one-dimensional and match path length")
     if bool(torch.any(time[1:] <= time[:-1])):
         raise ValueError("time must be strictly increasing")
-    origin = time[0] if time_origin is None else torch.as_tensor(
-        time_origin, device=time.device, dtype=time.dtype
+    origin = (
+        time[0]
+        if time_origin is None
+        else torch.as_tensor(time_origin, device=time.device, dtype=time.dtype)
     )
-    span = time[-1] - time[0] if time_span is None else torch.as_tensor(
-        time_span, device=time.device, dtype=time.dtype
+    span = (
+        time[-1] - time[0]
+        if time_span is None
+        else torch.as_tensor(time_span, device=time.device, dtype=time.dtype)
     )
     if not bool(torch.isfinite(span)) or bool(span <= 0):
         raise ValueError("time_span must be finite and positive")
@@ -193,8 +193,18 @@ def anchored_coordinate_mean_components(
     depth: int,
     intervals: int = 1,
     output_scale: float | Sequence[float] | torch.Tensor = 1.0,
+    homogeneity_reference_intervals: int | None = None,
 ) -> dict[str, torch.Tensor]:
-    """Anchor and level terms of global or equally partitioned signature loss."""
+    """Anchor and level terms of global or equally partitioned signature loss.
+
+    If ``homogeneity_reference_intervals`` is supplied, the squared level-
+    ``k`` discrepancy is multiplied by
+    ``(intervals / homogeneity_reference_intervals) ** (2 * k)``. This
+    compensates for the degree-``k`` homogeneity of signature coordinates when
+    a fixed path is split into shorter intervals. It lets a partition
+    refinement test localisation without automatically shrinking higher-level
+    terms solely because the blocks are shorter.
+    """
     _validate_path(prediction, name="prediction")
     _validate_path(target, name="target")
     if prediction.shape != target.shape:
@@ -203,6 +213,11 @@ def anchored_coordinate_mean_components(
         raise ValueError("time must be one-dimensional and match path length")
     if depth < 1 or intervals < 1:
         raise ValueError("depth and intervals must be positive")
+    if (
+        homogeneity_reference_intervals is not None
+        and homogeneity_reference_intervals < 1
+    ):
+        raise ValueError("homogeneity_reference_intervals must be positive")
     scale = _output_scale(prediction, output_scale)
     anchor = ((prediction[..., 0, :] - target[..., 0, :]) / scale).square().mean(dim=-1)
     level_terms = [prediction.new_zeros(prediction.shape[:-2]) for _ in range(depth)]
@@ -241,7 +256,13 @@ def anchored_coordinate_mean_components(
     components = {"anchor": anchor}
     components.update(
         {
-            f"level_{level}": value / intervals
+            f"level_{level}": value
+            * (
+                1.0
+                if homogeneity_reference_intervals is None
+                else (intervals / homogeneity_reference_intervals) ** (2 * level)
+            )
+            / intervals
             for level, value in enumerate(level_terms, start=1)
         }
     )
@@ -256,6 +277,7 @@ def anchored_coordinate_mean_signature_loss(
     depth: int,
     intervals: int = 1,
     output_scale: float | Sequence[float] | torch.Tensor = 1.0,
+    homogeneity_reference_intervals: int | None = None,
 ) -> torch.Tensor:
     """Mean anchored coordinate loss, reduced across path batch dimensions."""
     components = anchored_coordinate_mean_components(
@@ -265,6 +287,7 @@ def anchored_coordinate_mean_signature_loss(
         depth=depth,
         intervals=intervals,
         output_scale=output_scale,
+        homogeneity_reference_intervals=homogeneity_reference_intervals,
     )
     per_path = torch.stack(tuple(components.values()), dim=0).sum(dim=0)
     return per_path.mean()

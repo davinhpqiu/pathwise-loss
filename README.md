@@ -23,12 +23,12 @@ then the newest entry in `docs/logbook/` for what is currently in force, then
 > repository alone: this file, `CLAUDE.md`, and the notebooks, each of which
 > states its own mathematics.
 
-Current state, 06/09: fixed-path Neural ODE and Brownian-to-OU operator studies
-are closed. Current experiment plants controlled increment and Lévy-area
-messages in supplied Brownian rough streams, then compares direct path
-discrepancies and single-stream detection. Procedure is notebook 07; core
-acceptance and 500-stream pilot are complete, while 10,000-stream main study
-awaits independent RoughPy verification. $p$-variation remains a diagnostic.
+Current state, 07/09: fixed-path Neural ODE main study is complete and its final
+hundred-block local-signature refinement is ready to run. Brownian-to-OU
+operator study is closed. Brownian-message sensitivity study is complete: core
+acceptance, independent RoughPy verification, 10,000-stream main study and
+independent 10,000-stream confirmation have finished. Procedure and results are
+in notebook 07. $p$-variation remains a diagnostic.
 
 ## Setup: first time
 
@@ -231,6 +231,43 @@ for one fit:
 ```bash
 python scripts/evaluate_fixed_path_resolution.py \
   --run results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/mse
+```
+
+The final Experiment A refinement replaces ten local signature blocks by 100
+while applying the levelwise homogeneity correction derived in notebook 05.
+It keeps the same target, 64 observations, models, seeds, optimizer and
+10,000-update budget. First run the value-gradient audit:
+
+```bash
+sbatch scripts/arc/submit_fixed_path_local_fine_audit.slurm
+```
+
+Audit passed on 7 September: all components and gradients are finite, and
+homogeneity scaling restores fine level terms to the same numerical order as
+ten-block terms. Configuration is unlocked. Launch six independent fits:
+
+```bash
+sbatch scripts/arc/submit_fixed_path_local_fine_array.slurm
+```
+
+Check exact completion with:
+
+```bash
+python scripts/check_fixed_path_study.py \
+  --config configs/neural_ode_fixed_path_local_fine_10k.yaml \
+  --out results/runs/neural_ode_fixed_path_local_fine_10k
+```
+
+After downloading the six run directories, build the paired comparison used by
+notebook 05:
+
+```bash
+python scripts/analyze_fixed_path_local_refinement.py \
+  --refinement-root results/runs/neural_ode_fixed_path_local_fine_10k \
+  --baseline-root results/runs/neural_ode_fixed_path_closeout_10k \
+  --baseline-root results/runs/neural_ode_fixed_path_signature_10k \
+  --baseline-root results/runs/neural_ode_fixed_path_budget_10k \
+  --out results/runs/neural_ode_fixed_path_local_fine_10k/analysis
 ```
 
 Brownian-to-OU stream operator begins with implementation gates:

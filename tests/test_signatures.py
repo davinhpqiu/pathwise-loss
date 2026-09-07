@@ -36,9 +36,7 @@ def test_straight_line_signature_matches_closed_form():
 
 
 def test_chen_concatenation_matches_direct_piecewise_linear_signature():
-    path = torch.tensor(
-        [[0.0, 0.0], [0.4, -0.2], [0.1, 0.8]], dtype=torch.float64
-    )
+    path = torch.tensor([[0.0, 0.0], [0.4, -0.2], [0.1, 0.8]], dtype=torch.float64)
     full = piecewise_linear_signature(path, depth=4, include_level_zero=True)
     first = piecewise_linear_signature(path[:2], depth=4, include_level_zero=True)
     second = piecewise_linear_signature(path[1:], depth=4, include_level_zero=True)
@@ -85,15 +83,13 @@ def test_translation_changes_anchor_but_not_signature_levels():
     time = torch.linspace(0.0, 1.0, 9, dtype=torch.float64)
     target = torch.stack((torch.sin(time), time.square()), dim=-1)
     prediction = target + torch.tensor([2.0, -3.0], dtype=torch.float64)
-    components = anchored_coordinate_mean_components(
-        time, prediction, target, depth=3
-    )
+    components = anchored_coordinate_mean_components(time, prediction, target, depth=3)
     assert components["anchor"].item() == pytest.approx(6.5, abs=1e-12)
     for level in range(1, 4):
         assert components[f"level_{level}"].item() == pytest.approx(0.0, abs=1e-12)
 
 
-@pytest.mark.parametrize("intervals,depth", [(1, 4), (10, 2)])
+@pytest.mark.parametrize("intervals,depth", [(1, 4), (10, 2), (100, 2)])
 def test_signature_loss_is_zero_on_identical_paths(intervals: int, depth: int):
     time = torch.linspace(0.0, 1.0, 64, dtype=torch.float64)
     path = torch.stack((torch.cos(time), torch.sin(2.0 * time)), dim=-1)
@@ -103,7 +99,7 @@ def test_signature_loss_is_zero_on_identical_paths(intervals: int, depth: int):
     assert loss.item() == pytest.approx(0.0, abs=1e-12)
 
 
-@pytest.mark.parametrize("intervals,depth", [(1, 4), (10, 2)])
+@pytest.mark.parametrize("intervals,depth", [(1, 4), (10, 2), (100, 2)])
 def test_signature_loss_has_finite_nonzero_path_gradient(intervals: int, depth: int):
     time = torch.linspace(0.0, 1.0, 64, dtype=torch.float64)
     target = torch.stack((torch.cos(time), torch.sin(2.0 * time)), dim=-1)
@@ -125,9 +121,7 @@ def test_global_and_local_representations_store_120_coordinates():
 
 def test_local_loss_inserts_partition_boundary_on_piecewise_linear_path():
     time = torch.tensor([0.0, 0.37, 1.0], dtype=torch.float64)
-    target = torch.tensor(
-        [[0.0, 0.0], [0.5, -0.2], [0.8, 0.7]], dtype=torch.float64
-    )
+    target = torch.tensor([[0.0, 0.0], [0.5, -0.2], [0.8, 0.7]], dtype=torch.float64)
     prediction = torch.tensor(
         [[0.1, -0.1], [0.4, 0.1], [1.0, 0.5]], dtype=torch.float64
     )
@@ -148,6 +142,39 @@ def test_local_loss_inserts_partition_boundary_on_piecewise_linear_path():
     assert torch.allclose(coarse, refined, atol=1e-12, rtol=1e-12)
 
 
+def test_homogeneity_scaling_preserves_straight_path_level_terms():
+    time = torch.linspace(0.0, 1.0, 64, dtype=torch.float64)
+    target = torch.stack((time, -0.5 * time), dim=-1)
+    prediction = torch.stack((1.2 * time, -0.3 * time), dim=-1)
+    coarse = anchored_coordinate_mean_components(
+        time, prediction, target, depth=2, intervals=10
+    )
+    fine = anchored_coordinate_mean_components(
+        time,
+        prediction,
+        target,
+        depth=2,
+        intervals=100,
+        homogeneity_reference_intervals=10,
+    )
+    for name in ("anchor", "level_1", "level_2"):
+        assert torch.allclose(coarse[name], fine[name], atol=1e-12, rtol=1e-12)
+
+
+def test_homogeneity_reference_must_be_positive():
+    time = torch.linspace(0.0, 1.0, 4, dtype=torch.float64)
+    path = torch.stack((time, time.square()), dim=-1)
+    with pytest.raises(ValueError, match="reference_intervals must be positive"):
+        anchored_coordinate_mean_signature_loss(
+            time,
+            path,
+            path,
+            depth=2,
+            intervals=10,
+            homogeneity_reference_intervals=0,
+        )
+
+
 @pytest.mark.parametrize(
     "name,depth,intervals", [("sig_global", 4, 1), ("sig_local", 2, 10)]
 )
@@ -160,5 +187,28 @@ def test_fixed_path_registry_uses_specified_signature_loss(
     got = fixed_path_loss(name, time, prediction, target)
     want = anchored_coordinate_mean_signature_loss(
         time, prediction, target, depth=depth, intervals=intervals
+    )
+    assert torch.allclose(got, want, atol=1e-12, rtol=1e-12)
+
+
+def test_fixed_path_registry_uses_scaled_fine_local_signature_loss():
+    time = torch.linspace(0.0, 1.0, 64, dtype=torch.float64)
+    target = torch.stack((torch.cos(time), torch.sin(time)), dim=-1)
+    prediction = target + 0.02 * torch.stack((time, time.square()), dim=-1)
+    got = fixed_path_loss(
+        "sig_local_fine",
+        time,
+        prediction,
+        target,
+        signature_local_fine_intervals=100,
+        signature_local_fine_reference_intervals=10,
+    )
+    want = anchored_coordinate_mean_signature_loss(
+        time,
+        prediction,
+        target,
+        depth=2,
+        intervals=100,
+        homogeneity_reference_intervals=10,
     )
     assert torch.allclose(got, want, atol=1e-12, rtol=1e-12)

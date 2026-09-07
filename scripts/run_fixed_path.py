@@ -112,6 +112,10 @@ def fit_config(
         signature_global_depth=signature.get("global_depth", 4),
         signature_local_depth=signature.get("local_depth", 2),
         signature_local_intervals=signature.get("local_intervals", 10),
+        signature_local_fine_intervals=signature.get("fine_local_intervals"),
+        signature_local_fine_reference_intervals=signature.get(
+            "fine_reference_intervals"
+        ),
         evaluation_checkpoints=tuple(train.get("evaluation_checkpoints", ())),
     )
 
@@ -125,9 +129,7 @@ def write_result(out: Path, result: dict, meta: dict) -> None:
     torch.save(result["model"].state_dict(), out / "model.pt")
     (out / "history.json").write_text(json.dumps(result["history"], indent=2))
     (out / "metrics.json").write_text(json.dumps(result["metrics"], indent=2))
-    (out / "checkpoints.json").write_text(
-        json.dumps(result["checkpoints"], indent=2)
-    )
+    (out / "checkpoints.json").write_text(json.dumps(result["checkpoints"], indent=2))
     if result["checkpoint_predictions"]:
         checkpoint_arrays = {
             "time": arrays["time"],
@@ -240,9 +242,16 @@ def run_signature_audit(config_path: Path, config: dict, out: Path) -> int:
     from pathloss.fixed_path import signature_gradient_audit
 
     audit_config = config.get("signature", {}).get("audit", {})
+    seed = audit_config.get("seed")
+    if seed is None:
+        seed = config.get("adequacy", {}).get("seed")
+    if seed is None:
+        raise ValueError(
+            "signature audit requires signature.audit.seed or adequacy.seed"
+        )
     cfg = fit_config(
         config,
-        seed=audit_config.get("seed", config["adequacy"]["seed"]),
+        seed=int(seed),
         capacity=audit_config.get("capacity", "expressive"),
         condition="uniform",
         loss="sig_global",
@@ -270,7 +279,8 @@ def main() -> int:
     parser.add_argument("--capacity", choices=("restricted", "expressive"))
     parser.add_argument("--condition", choices=("uniform", "clustered"))
     parser.add_argument(
-        "--loss", choices=("mse", "j2", "h1", "sig_global", "sig_local")
+        "--loss",
+        choices=("mse", "j2", "h1", "sig_global", "sig_local", "sig_local_fine"),
     )
     parser.add_argument("--adequacy", action="store_true")
     parser.add_argument("--signature-audit", action="store_true")
@@ -290,11 +300,14 @@ def main() -> int:
         parser.error("run mode requires " + ", ".join(f"--{name}" for name in missing))
     if args.loss == "h1" and args.condition != "uniform":
         parser.error("h1 is restricted to the uniform smooth-path comparison")
-    if args.loss in {"sig_global", "sig_local"} and args.condition != "uniform":
+    if (
+        args.loss in {"sig_global", "sig_local", "sig_local_fine"}
+        and args.condition != "uniform"
+    ):
         parser.error(
             "initial signature comparison is restricted to uniform observations"
         )
-    if args.loss in {"sig_global", "sig_local"} and not config.get(
+    if args.loss in {"sig_global", "sig_local", "sig_local_fine"} and not config.get(
         "signature", {}
     ).get("audit_accepted", False):
         parser.error(

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import math
 
 import pytest
@@ -18,6 +19,7 @@ from pathloss.fixed_path import (  # noqa: E402
     h1_balance,
     make_paired_model,
     observation_times,
+    signature_gradient_audit,
     state_fingerprint,
     train_fixed_path,
 )
@@ -133,7 +135,7 @@ def test_h1_requires_derivatives_and_is_uniform_only():
         )
 
 
-@pytest.mark.parametrize("loss", ["sig_global", "sig_local"])
+@pytest.mark.parametrize("loss", ["sig_global", "sig_local", "sig_local_fine"])
 def test_initial_signature_comparison_is_uniform_only(loss: str):
     with pytest.raises(ValueError, match="uniform observations"):
         train_fixed_path(
@@ -145,8 +147,72 @@ def test_initial_signature_comparison_is_uniform_only(loss: str):
                 width=1,
                 n_fourier=0,
                 max_step=1.0,
+                signature_local_fine_intervals=100,
+                signature_local_fine_reference_intervals=10,
             )
         )
+
+
+def test_fine_local_signature_requires_its_partition_definition():
+    t = observation_times(8)
+    target = fixed_target(t)
+    with pytest.raises(ValueError, match="fine and reference interval counts"):
+        fixed_path_loss("sig_local_fine", t, target, target)
+
+
+def test_fine_local_signature_is_added_to_common_evaluation_metrics():
+    result = train_fixed_path(
+        FixedPathTrainConfig(
+            updates=1,
+            n_target=4,
+            n_fine=5,
+            hidden=1,
+            width=2,
+            n_fourier=0,
+            max_step=1.0,
+            signature_local_fine_intervals=8,
+            signature_local_fine_reference_intervals=2,
+        )
+    )
+    assert "sig_local_fine" in result["metrics"]
+    assert math.isfinite(result["metrics"]["sig_local_fine"])
+
+
+def test_fine_signature_audit_requires_reference_partition():
+    with pytest.raises(ValueError, match="audit requires reference intervals"):
+        signature_gradient_audit(
+            FixedPathTrainConfig(
+                n_target=4,
+                hidden=1,
+                width=2,
+                n_fourier=0,
+                max_step=1.0,
+                signature_local_fine_intervals=8,
+            )
+        )
+
+
+def test_signature_audit_accepts_explicit_seed_without_adequacy_section(tmp_path):
+    from scripts.run_fixed_path import run_signature_audit
+
+    config = {
+        "data": {"n_target": 4, "n_fine": 5},
+        "model": {"n_fourier": 0, "max_step": 1.0},
+        "capacities": {"expressive": {"hidden": 1, "width": 2}},
+        "signature": {
+            "global_depth": 2,
+            "local_depth": 2,
+            "local_intervals": 2,
+            "fine_local_intervals": 4,
+            "fine_reference_intervals": 2,
+            "audit": {"seed": 17, "capacity": "expressive"},
+        },
+        "train": {"updates": 1, "lr": 0.001, "device": "cpu"},
+    }
+    run_signature_audit(tmp_path / "config.yaml", config, tmp_path)
+    report = json.loads((tmp_path / "signature_audit.json").read_text())
+    assert report["fit_config"]["seed"] == 17
+    assert "local_fine" in report["audit"]["representations"]
 
 
 def test_training_records_common_metrics_at_requested_checkpoints():

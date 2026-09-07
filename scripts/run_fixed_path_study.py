@@ -35,6 +35,7 @@ STAGE_CASES = {
         ("uniform", "sig_global"),
         ("uniform", "sig_local"),
     ),
+    "local_refinement": (("uniform", "sig_local_fine"),),
     "configured": (),
 }
 
@@ -81,9 +82,9 @@ def main() -> int:
                 seeds, capacities, STAGE_CASES[args.stage]
             )
         ]
-    if any(run.loss in {"sig_global", "sig_local"} for run in jobs) and not config.get(
-        "signature", {}
-    ).get("audit_accepted", False):
+    if any(
+        run.loss in {"sig_global", "sig_local", "sig_local_fine"} for run in jobs
+    ) and not config.get("signature", {}).get("audit_accepted", False):
         raise SystemExit(
             "signature stage is locked: review signature_audit.json and set "
             "signature.audit_accepted=true"
@@ -98,7 +99,9 @@ def main() -> int:
     else:
         indexed_jobs = list(enumerate(jobs))
 
-    reuse_roots = [Path(path) for path in config.get("study", {}).get("reuse_roots", [])]
+    reuse_roots = [
+        Path(path) for path in config.get("study", {}).get("reuse_roots", [])
+    ]
     for zero_index, run in indexed_jobs:
         run_dir = args.out / run.relative_directory
         current_meta = run_dir / "meta.json"

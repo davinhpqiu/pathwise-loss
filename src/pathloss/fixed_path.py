@@ -64,6 +64,8 @@ class FixedPathTrainConfig:
     signature_global_depth: int = 4
     signature_local_depth: int = 2
     signature_local_intervals: int = 10
+    signature_local_fine_intervals: int | None = None
+    signature_local_fine_reference_intervals: int | None = None
     evaluation_checkpoints: tuple[int, ...] = ()
 
 
@@ -272,6 +274,8 @@ def fixed_path_loss(
     signature_global_depth: int = 4,
     signature_local_depth: int = 2,
     signature_local_intervals: int = 10,
+    signature_local_fine_intervals: int | None = None,
+    signature_local_fine_reference_intervals: int | None = None,
 ) -> torch.Tensor:
     """One Experiment A training loss."""
     batch_t = t.unsqueeze(0)
@@ -310,6 +314,23 @@ def fixed_path_loss(
             intervals=signature_local_intervals,
             output_scale=signature_output_scale,
         )
+    if name == "sig_local_fine":
+        if (
+            signature_local_fine_intervals is None
+            or signature_local_fine_reference_intervals is None
+        ):
+            raise ValueError(
+                "sig_local_fine requires fine and reference interval counts"
+            )
+        return anchored_coordinate_mean_signature_loss(
+            t,
+            prediction,
+            target,
+            depth=signature_local_depth,
+            intervals=signature_local_fine_intervals,
+            output_scale=signature_output_scale,
+            homogeneity_reference_intervals=(signature_local_fine_reference_intervals),
+        )
     raise ValueError(f"unknown fixed-path loss {name!r}")
 
 
@@ -323,6 +344,8 @@ def evaluate_fixed_path(
     signature_global_depth: int = 4,
     signature_local_depth: int = 2,
     signature_local_intervals: int = 10,
+    signature_local_fine_intervals: int | None = None,
+    signature_local_fine_reference_intervals: int | None = None,
 ) -> tuple[dict[str, float], dict[str, torch.Tensor]]:
     """Dense metrics and paths for one fitted model."""
     if n_fine < 2:
@@ -373,6 +396,22 @@ def evaluate_fixed_path(
             )
         ),
     }
+    if signature_local_fine_intervals is not None:
+        if signature_local_fine_reference_intervals is None:
+            raise ValueError("fine signature evaluation requires reference intervals")
+        metrics["sig_local_fine"] = float(
+            anchored_coordinate_mean_signature_loss(
+                t,
+                prediction,
+                target,
+                depth=signature_local_depth,
+                intervals=signature_local_fine_intervals,
+                output_scale=signature_output_scale,
+                homogeneity_reference_intervals=(
+                    signature_local_fine_reference_intervals
+                ),
+            )
+        )
 
     local_t = torch.linspace(
         0.15, 0.35, 103, device=parameter.device, dtype=parameter.dtype
@@ -432,9 +471,7 @@ def fixed_path_quadrature(
 
     value_simpson = float(np.sum(simpson_weights * value_integrand) / horizon)
     value_romberg = float(romberg_table(time, value_integrand)[-1][-1] / horizon)
-    derivative_simpson = float(
-        np.sum(simpson_weights * derivative_integrand) / horizon
-    )
+    derivative_simpson = float(np.sum(simpson_weights * derivative_integrand) / horizon)
     derivative_romberg = float(
         romberg_table(time, derivative_integrand)[-1][-1] / horizon
     )
@@ -487,14 +524,31 @@ def signature_gradient_audit(cfg: FixedPathTrainConfig) -> dict:
     )
     target = fixed_target(t)
     specifications = {
-        "global": (cfg.signature_global_depth, 1),
-        "local": (cfg.signature_local_depth, cfg.signature_local_intervals),
+        "global": (cfg.signature_global_depth, 1, None),
+        "local": (cfg.signature_local_depth, cfg.signature_local_intervals, None),
     }
+    if cfg.signature_local_fine_intervals is not None:
+        if cfg.signature_local_fine_reference_intervals is None:
+            raise ValueError("fine signature audit requires reference intervals")
+        specifications["local_fine_raw"] = (
+            cfg.signature_local_depth,
+            cfg.signature_local_fine_intervals,
+            None,
+        )
+        specifications["local_fine"] = (
+            cfg.signature_local_depth,
+            cfg.signature_local_fine_intervals,
+            cfg.signature_local_fine_reference_intervals,
+        )
     audit = {
         "output_scale": cfg.signature_output_scale,
         "representations": {},
     }
-    for representation, (depth, intervals) in specifications.items():
+    for representation, (
+        depth,
+        intervals,
+        reference_intervals,
+    ) in specifications.items():
         prediction = model(t)
         components = anchored_coordinate_mean_components(
             t,
@@ -503,6 +557,7 @@ def signature_gradient_audit(cfg: FixedPathTrainConfig) -> dict:
             depth=depth,
             intervals=intervals,
             output_scale=cfg.signature_output_scale,
+            homogeneity_reference_intervals=reference_intervals,
         )
         total = torch.stack(tuple(components.values()), dim=0).sum(dim=0).mean()
         scalar_components = {name: value.mean() for name, value in components.items()}
@@ -521,6 +576,7 @@ def signature_gradient_audit(cfg: FixedPathTrainConfig) -> dict:
         audit["representations"][representation] = {
             "depth": depth,
             "intervals": intervals,
+            "homogeneity_reference_intervals": reference_intervals,
             "feature_count": signature_feature_count(
                 target.shape[-1] + 1,
                 depth,
@@ -540,7 +596,10 @@ def train_fixed_path(
     """Train one paired Experiment A run and return model, history and metrics."""
     if cfg.loss == "h1" and cfg.condition != "uniform":
         raise ValueError("h1 is a secondary uniform-observation comparator")
-    if cfg.loss in {"sig_global", "sig_local"} and cfg.condition != "uniform":
+    if (
+        cfg.loss in {"sig_global", "sig_local", "sig_local_fine"}
+        and cfg.condition != "uniform"
+    ):
         raise ValueError("initial signature comparison uses uniform observations")
     if cfg.updates < 1:
         raise ValueError("updates must be positive")
@@ -589,6 +648,10 @@ def train_fixed_path(
             signature_global_depth=cfg.signature_global_depth,
             signature_local_depth=cfg.signature_local_depth,
             signature_local_intervals=cfg.signature_local_intervals,
+            signature_local_fine_intervals=cfg.signature_local_fine_intervals,
+            signature_local_fine_reference_intervals=(
+                cfg.signature_local_fine_reference_intervals
+            ),
         )
         checkpoint_records.append(
             {
@@ -596,9 +659,7 @@ def train_fixed_path(
                 "metrics": checkpoint_metrics,
             }
         )
-        checkpoint_predictions[updates_completed] = checkpoint_paths[
-            "prediction"
-        ]
+        checkpoint_predictions[updates_completed] = checkpoint_paths["prediction"]
         checkpoint_evaluations[updates_completed] = (
             checkpoint_metrics,
             checkpoint_paths,
@@ -627,6 +688,10 @@ def train_fixed_path(
             signature_global_depth=cfg.signature_global_depth,
             signature_local_depth=cfg.signature_local_depth,
             signature_local_intervals=cfg.signature_local_intervals,
+            signature_local_fine_intervals=cfg.signature_local_fine_intervals,
+            signature_local_fine_reference_intervals=(
+                cfg.signature_local_fine_reference_intervals
+            ),
         )
         optimizer.zero_grad(set_to_none=True)
         loss.backward()
@@ -656,6 +721,10 @@ def train_fixed_path(
             signature_global_depth=cfg.signature_global_depth,
             signature_local_depth=cfg.signature_local_depth,
             signature_local_intervals=cfg.signature_local_intervals,
+            signature_local_fine_intervals=cfg.signature_local_fine_intervals,
+            signature_local_fine_reference_intervals=(
+                cfg.signature_local_fine_reference_intervals
+            ),
         )
     return {
         "config": cfg,

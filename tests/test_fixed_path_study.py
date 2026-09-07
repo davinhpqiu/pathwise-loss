@@ -55,9 +55,10 @@ def write_meta(root, run: FixedPathRun):
 
 def test_closeout_matrix_has_exact_revised_counts():
     runs = configured_runs(closeout_config())
-    counts = {loss: sum(run.loss == loss for run in runs) for loss in {
-        "mse", "j2", "h1", "sig_global", "sig_local"
-    }}
+    counts = {
+        loss: sum(run.loss == loss for run in runs)
+        for loss in {"mse", "j2", "h1", "sig_global", "sig_local"}
+    }
     assert len(runs) == 42
     assert counts == {
         "mse": 12,
@@ -66,6 +67,18 @@ def test_closeout_matrix_has_exact_revised_counts():
         "sig_global": 6,
         "sig_local": 6,
     }
+
+
+def test_local_refinement_matrix_has_six_paired_runs():
+    config = {
+        "capacities": {"restricted": {}, "expressive": {}},
+        "train": {"seeds": [0, 1, 2], "updates": 10000, "lr": 0.001},
+        "study": {"cases": [{"condition": "uniform", "loss": "sig_local_fine"}]},
+    }
+    runs = configured_runs(config)
+    assert len(runs) == 6
+    assert {run.loss for run in runs} == {"sig_local_fine"}
+    assert {run.condition for run in runs} == {"uniform"}
 
 
 def test_completion_uses_learning_rate_and_budget(tmp_path):
