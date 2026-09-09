@@ -30,7 +30,6 @@
 \setbeamertemplate{blocks}[rounded][shadow=false]
 
 \newcommand{\Jtwo}{J_2}
-\newcommand{\source}[1]{\vfill\hfill{\tiny\color{darkgrey}#1}}
 \newcommand{\result}[1]{\textcolor{oxfordblue}{\bfseries #1}}
 \newcommand{\caveat}[1]{\textcolor{oxfordblue}{\bfseries #1}}
 \newcommand{\metricbox}[2]{%
@@ -52,84 +51,99 @@
 \begin{frame}[plain]
   \vfill
   \centering
-  {\color{oxfordblue}\rule{0.34\textwidth}{0.9pt}}\par
   {\usebeamercolor[fg]{frametitle}\huge\bfseries Motivation}\par
-  {\color{oxfordblue}\rule{0.34\textwidth}{0.9pt}}
   \vfill
 \end{frame}
 
-\begin{frame}{Path closeness in continuous time}
-  Path-to-path models produce whole trajectories. Training therefore needs a precise rule for comparing two paths.
+\begin{frame}{From sequences to continuous paths}
+  Observed time series are finite sequences of time-stamped values. Continuous-time models interpret them as samples from evolving paths and produce another path as output.
 
-  \textbf{Project question}\par
-  The project studies definitions of path closeness and how each definition changes the learned path or operator.
+  Training therefore needs a rule for comparing whole paths. Pointwise error, elapsed-time error, derivative error, and ordered path features each express a different meaning of closeness.
+
+  These choices can change what a model learns, particularly when observations are uneven or the relevant information lies in local ordering rather than coordinate values alone (Ramsay and Silverman, 2005; Kudrat et al., 2025).
+\end{frame}
+
+\begin{frame}{Pointwise agreement and path error}
   \small
-  Suppose two predictions agree with a target at every recorded time:
+  \textbf{Project question}\par
+  The project studies definitions of path closeness and how each definition changes the learned path or operator. Let $0=t_0<\cdots<t_m=T$ be observation times and suppose two continuous predictions satisfy
   \[
     \widehat Y_A(t_j)=\widehat Y_B(t_j)=Y(t_j),
     \qquad j=0,\ldots,m.
   \]
-  Pointwise MSE gives both predictions zero loss. Their behaviour between observations can still differ, so
+  Both have zero pointwise mean squared error,
   \[
-    \int_0^T\|\widehat Y_A(t)-Y(t)\|_2^2\,dt
-    \neq
-    \int_0^T\|\widehat Y_B(t)-Y(t)\|_2^2\,dt.
+    \operatorname{MSE}(\widehat Y_\ell,Y)
+    :=\frac1{m+1}\sum_{j=0}^{m}\|\widehat Y_\ell(t_j)-Y(t_j)\|_2^2=0,
+    \qquad \ell\in\{A,B\},
+  \]
+  yet their behaviour between observations can differ. Their elapsed-time errors may therefore differ:
+  \[
+    \Jtwo(\widehat Y_A,Y)
+    \quad\text{need not equal}\quad
+    \Jtwo(\widehat Y_B,Y),
+    \qquad
+    \Jtwo(\widehat Y,Y):=\int_0^T\|\widehat Y(t)-Y(t)\|_2^2\,dt.
   \]
 
   \textbf{Role of discretisation}\par
-  Finite storage does not remove the issue. Weighting, interpolation and feature maps select the continuous error being approximated.
-  \source{Project proposal and Notebook 01, Sections 2 and 3}
+  Although paths are stored at finitely many times, the loss still determines how the underlying paths are compared. Weighting, interpolation and feature representation each affect that comparison.
+
 \end{frame}
 
 \begin{frame}{Path-to-path learning}
-  A model maps one evolving object to another. Input path $X^{(i)}:[0,T]\to\mathbb R^{d_x}$ is an observed driver or stream, and predicted response is
+  Functional-data analysis treats an input $X$ and target $Y$ as whole paths (Ramsay and Silverman, 2005):
   \[
-    \widehat Y^{(i)}_\theta=\mathcal F_\theta\!\left(X^{(i)}\right).
+    X\in\mathcal X:=C([0,T];\mathbb R^{d_x}),
+    \qquad
+    Y\in\mathcal Y:=C([0,T];\mathbb R^{d_y}).
   \]
-  Training uses paired input and target paths $(X^{(i)},Y^{(i)})$ and selects
+  A parameterized model is an operator from input paths to predicted output paths:
   \[
-    \widehat\theta=\arg\min_\theta
+    \mathcal F_\theta:\mathcal X\to\mathcal Y,
+    \qquad
+    \widehat Y_\theta:=\mathcal F_\theta(X),
+    \qquad \theta\in\Theta.
+  \]
+  Given paired training paths $(X^{(i)},Y^{(i)})_{i=1}^{N}$ and a path loss $\mathcal L:\mathcal Y\times\mathcal Y\to[0,\infty)$, training selects
+  \[
+    \widehat\theta\in\underset{\theta\in\Theta}{\arg\min}
     \frac1N\sum_{i=1}^{N}
-    \mathcal L\!\left(\widehat Y^{(i)}_\theta,Y^{(i)}\right).
+    \mathcal L\!\left(\mathcal F_\theta(X^{(i)}),Y^{(i)}\right).
   \]
+
+  The loss $\mathcal L$ determines which discrepancies between predicted and target paths training treats as important.
+\end{frame}
+
+\begin{frame}{Loss functions}
+  \small
+  \begin{tabular}{>{\bfseries}p{0.18\textwidth}p{0.34\textwidth}p{0.385\textwidth}}
+    \toprule
+    Loss & Definition & Emphasis \\
+    \midrule
+    Pointwise MSE & $\displaystyle \frac1{m+1}\sum_{j=0}^{m}\|\widehat Y(t_j)-Y(t_j)\|_2^2$ & Each recorded point has equal weight \\
+    Elapsed-time $\Jtwo$ & $\displaystyle \Jtwo(\widehat Y,Y):=\int_0^T\|\widehat Y(t)-Y(t)\|_2^2\,dt$ & Error accumulated over time \\
+    Sobolev $H^1$ & $\displaystyle \Jtwo(\widehat Y,Y)+\kappa\int_0^T\|\dot{\widehat Y}(t)-\dot Y(t)\|_2^2\,dt$ & Values and local velocity for smooth paths \\
+    Signature loss & $\displaystyle \|\Phi_M(\widehat Y)-\Phi_M(Y)\|_2^2$ & Ordered increments and interactions through depth $M$ \\
+    \bottomrule
+  \end{tabular}
 
   \vfill
-  Discrepancy $\mathcal L$ decides which prediction errors training treats as large. Every experiment below changes $\mathcal L$ and holds everything else fixed.
-  \source{Project proposal. Functional path viewpoint: Ramsay and Silverman (2005) [1]}
+  \textbf{Comparison principle}\par
+  For the $H^1$ loss, $Y,\widehat Y\in H^1([0,T];\mathbb R^{d_y})$, dots denote weak time derivatives, and $\kappa>0$ balances value and derivative error (Ramsay and Silverman, 2005). Map $\Phi_M$ collects signature coordinates through level $M$ (Chen, 1957; Lyons et al., 2007). Each fitted path is evaluated under every metric.
 \end{frame}
 
-\begin{frame}{Observation density and the sampled loss}
-  Let observation times have density $q$ on $[0,T]$ and let
-  $e_\theta(t)=\widehat Y_\theta(t)-Y(t)$. Then
+\begin{frame}{Integral norms and temporal order}
+  Following the standard $L^p$ definition (Lieb and Loss, 2001), for residual path $e(t):=\widehat Y(t)-Y(t)$ and $1\leq p<\infty$ set
   \[
-    \frac1m\sum_{j=1}^{m}\|e_\theta(t_j)\|_2^2
-    \longrightarrow
-    \int_0^T \|e_\theta(t)\|_2^2 q(t)\,dt.
+    \|e\|_{L^p}:=
+    \left(\int_0^T\|e(t)\|_2^p\,dt\right)^{1/p}.
   \]
-  Trapezoidal elapsed-time weights instead approximate
+  If $\tau:[0,T]\to[0,T]$ preserves elapsed time, then
   \[
-    \Jtwo(\theta)=\int_0^T \|e_\theta(t)\|_2^2\,dt.
+    \|e\circ\tau\|_{L^p}=\|e\|_{L^p}.
   \]
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.47\textwidth}
-      \textbf{Uniform observations}\par
-      $q$ is constant. MSE and $\Jtwo$ differ mainly through endpoint weights.
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \textbf{Clustered observations}\par
-      MSE rewards accuracy where points are dense. $\Jtwo$ restores elapsed-time emphasis.
-    \end{column}
-  \end{columns}
-  \source{Derivation and assumptions: Notebook 01, Sections 2 and 3}
-\end{frame}
-
-\begin{frame}{Order and integral norms}
-  Every $L^p$ discrepancy compares residual magnitude at aligned times, so it depends on the path only through how long the residual spends at each size. Any measure-preserving rearrangement of time leaves it unchanged:
-  \[
-    \|f\|_{L^p}\ \text{depends on}\ f\ \text{only through}\
-    \mu_f(\lambda)=\left|\{t:|f(t)|>\lambda\}\right|.
-  \]
-  Permuting when events happen is acceptable in a norm and disqualifying in a path-to-path loss, where order is the structure being learned.
+  Integral norms therefore record the size and duration of an error, but not the order in which its values occur.
 
   \vfill
   \begin{columns}[T,onlytextwidth]
@@ -138,48 +152,26 @@
       A second-level perturbation can leave every coordinate value unchanged. Coordinate losses then respond by exactly zero, whatever their exponent or weighting.
     \end{column}
     \begin{column}{0.47\textwidth}
-      \textbf{What signatures add}\par
+      \textbf{Contribution of signatures}\par
       Level $k$ is an iterated integral over $t_1<\cdots<t_k$, so it is built from ordering rather than from magnitude at aligned times.
     \end{column}
   \end{columns}
-  \source{Rearrangement invariance: Notebook 01, Section 3.3. Layer cake representation: Lieb and Loss (2001) [13]}
 \end{frame}
 
-\begin{frame}[plain]
-  \vfill
-  \centering
-  {\color{oxfordblue}\rule{0.34\textwidth}{0.9pt}}\par
-  {\usebeamercolor[fg]{frametitle}\huge\bfseries Losses}\par
-  {\color{oxfordblue}\rule{0.34\textwidth}{0.9pt}}
-  \vfill
-\end{frame}
-
-\begin{frame}{Four loss families}
-  \small
-  \begin{tabular}{>{\bfseries}p{0.18\textwidth}p{0.34\textwidth}p{0.385\textwidth}}
-    \toprule
-    Loss & Definition & Emphasis \\
-    \midrule
-    Pointwise MSE & $\displaystyle \frac1m\sum_{j=1}^{m}\|\widehat Y(t_j)-Y(t_j)\|_2^2$ & Each recorded point has equal weight \\
-    Elapsed-time $\Jtwo$ & $\displaystyle \int_0^T\|\widehat Y(t)-Y(t)\|_2^2\,dt$ & Error accumulated over time \\
-    Sobolev $H^1$ & $\displaystyle \Jtwo+\kappa\int_0^T\|\dot{\widehat Y}(t)-\dot Y(t)\|_2^2\,dt$ & Values and local velocity for smooth paths \\
-    Signature loss & $\displaystyle \|\Phi(\widehat Y)-\Phi(Y)\|_2^2$ & Ordered increments and interactions \\
-    \bottomrule
-  \end{tabular}
-
-  \vfill
-  \textbf{Comparison principle}\par
-  Weight $\kappa>0$ balances value against velocity error; $\Phi$ is a truncated signature feature map, defined on the signature slide. Train a matched model under each objective, then evaluate every fitted path under every metric.
-  \source{Integral and Sobolev norms: [1]. Signatures and rough paths: [2,3,8]}
-\end{frame}
-
-\begin{frame}{Signatures}
-  For a path $Y:[a,b]\to\mathbb R^d$, its depth-$M$ truncated signature is
+\begin{frame}{Path signatures}
+  Let $a<b$, let $Y:[a,b]\to\mathbb R^d$ have bounded variation, and let $M\in\mathbb N$. For $k=1,\ldots,M$, its signature levels and depth-$M$ truncation are
   \[
-    S^{\le M}(Y)_{a,b}
-    =\left(1,\int_a^b dY,
-    \int_{a<t_1<t_2<b}dY_{t_1}\otimes dY_{t_2},\ldots\right).
+    S^{(0)}(Y)_{a,b}:=1,
+    \qquad
+    S^{(k)}(Y)_{a,b}
+    :=\int_{a<t_1<\cdots<t_k<b}
+      dY_{t_1}\otimes\cdots\otimes dY_{t_k},
   \]
+  \[
+    S^{\le M}(Y)_{a,b}:=
+    \bigl(S^{(0)}(Y)_{a,b},\ldots,S^{(M)}(Y)_{a,b}\bigr),
+  \]
+  where $\otimes$ is the tensor product (Chen, 1957; Lyons et al., 2007). For Brownian streams, the supplied step-two rough-path lift replaces the bounded-variation assumption. A machine-learning introduction appears in Chevyrev and Kormilitzin (2016).
   \begin{columns}[T,onlytextwidth]
     \begin{column}{0.30\textwidth}
       \textbf{Level 1}\par
@@ -187,262 +179,141 @@
     \end{column}
     \begin{column}{0.30\textwidth}
       \textbf{Level 2}\par
-      Ordered pair interactions and signed area
+      Ordered pair interactions; its antisymmetric part encodes signed area
     \end{column}
     \begin{column}{0.30\textwidth}
       \textbf{Higher levels}\par
       Finer ordered interactions
     \end{column}
   \end{columns}
-  \textbf{Two constructions used in Experiment A}\par
-  Global loss compares one depth-4 signature. Local loss compares depth-2 signatures over a fixed partition, with an anchor for starting position.
-  \source{Signature foundations: Chen (1957) [2], Lyons, Caruana and L\'evy (2007) [3], Chevyrev and Kormilitzin (2016) [8]. Project definitions: Notebook 05, Sections 5 and 6}
-\end{frame}
-
-\begin{frame}{Signature losses for training}
-  Write $\Delta S^{(k)}=S^{(k)}(Z_{\widehat Y})-S^{(k)}(Z_Y)$, with $Z$ the time-augmented output path and $d_Z=3$. Each training loss is a choice of level weight and interval.
-  \begin{center}
-  \small
-  \begin{tabular}{>{\bfseries}p{0.17\textwidth}p{0.44\textwidth}p{0.29\textwidth}}
-    \toprule
-    Variant & Form & Choice it encodes \\
-    \midrule
-    Global & $\displaystyle \tfrac1{d_Y}\|\widehat Y(0)-Y(0)\|_2^2+\sum_{k=1}^{4}d_Z^{-k}\|\Delta S^{(k)}\|_2^2$ & Level weighted by coordinate count alone \\
-    Local & $\displaystyle \tfrac1K\sum_{b=1}^{K}\sum_{k=1}^{2}d_Z^{-k}\|\Delta S^{(k)}_{I_b}\|_2^2$, $K=10$ & Features attached to coarse time location \\
-    Refined local & Same with $K=100$ and factor $(K/K_0)^{2k}$ & Homogeneity correction, so block count alone changes nothing \\
-    \bottomrule
-  \end{tabular}
-  \end{center}
-
-  \vfill
-  Anchor terms appear because signatures use increments and are blind to a constant shift. Level weighting is an open choice: signature theory fixes none of these, so levelwise value and gradient are audited before any comparison.
-  \source{Definitions and audit: Notebook 05, Sections 4, 6 and 22}
-\end{frame}
-
-\begin{frame}{Signature discrepancies for measurement}
-  Study C trains nothing, so the same features can be weighted by observed variation rather than by convenience.
-  \begin{center}
-  \small
-  \begin{tabular}{>{\bfseries}p{0.19\textwidth}p{0.42\textwidth}p{0.29\textwidth}}
-    \toprule
-    Variant & Form & Choice it encodes \\
-    \midrule
-    Variance normalised & $\displaystyle \sum_{k=1}^{4}\|\Delta S^{(k)}\|_2^2\big/\!\left(d_Z^{k}(q_k^2+\delta)\right)$ & Levels balanced by Brownian variation $q_k$ measured on training streams \\
-    Aligned and offset local & Depth two over 128 blocks of 16 increments, and the same shifted by 8 & Isolates partition placement against the message \\
-    Response derived & $\displaystyle \sum_{k=1}^{L}r^{k}\|\Delta S^{(k)}\|_1$, $r\in\{0.5,1,2\}$ & $r$ bounds one-step response of a linear controlled system \\
-    \bottomrule
-  \end{tabular}
-  \end{center}
-
-  \vfill
-  Response weight $r^k$ is not a convention. A level-$k$ term of a linear controlled response carries $k$ coefficient matrices, so bounding each by $r$ bounds that term by $r^k$, and sweeping $r$ asks how much high-level weight a message needs before it is visible.
-  \source{Notebook 07, Section 9. Response bound: Ferrucci, Perr\'ee and Lyons (2026) [10]}
+  \textbf{Truncation and localization}\par
+  A global comparison uses one truncated signature over the full interval. A local comparison uses signatures over a partition, thereby retaining coarse information about where an ordered feature occurs.
 \end{frame}
 
 \begin{frame}[plain]
   \vfill
   \centering
-  {\color{oxfordblue}\rule{0.34\textwidth}{0.9pt}}\par
-  {\usebeamercolor[fg]{frametitle}\huge\bfseries Experimental design}\par
-  {\color{oxfordblue}\rule{0.34\textwidth}{0.9pt}}
+  {\usebeamercolor[fg]{frametitle}\huge\bfseries Experiment A: fixed path}\par
   \vfill
 \end{frame}
 
-\begin{frame}{Three studies}
+\begin{frame}{Experiment A: fitting one path}
   \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.31\textwidth}
-      \textbf{A. Fixed target}\par
-      One analytic target path, fitted repeatedly. No input variation and no generalization, so a difference between fitted paths comes from capacity, optimizer or loss.
-    \end{column}
-    \begin{column}{0.31\textwidth}
-      \textbf{B. Learned operator}\par
-      Many Brownian drivers with paired OU responses, held-out test paths. Adds generalization and causality to the same loss comparison.
-    \end{column}
-    \begin{column}{0.31\textwidth}
-      \textbf{C. Message sensitivity}\par
-      No model and no training. Perturb a stream by a known amount and measure how far each discrepancy moves.
-    \end{column}
-  \end{columns}
+    \begin{column}{0.47\textwidth}
+      \textbf{Target}\par
+      A smooth two-dimensional loop contains a short burst of faster oscillation. This creates both broad shape and fine local structure in one path.
 
-  \vfill
-  \textbf{Reason for keeping C separate}\par
-  In A and B a loss reaching a poor fit is ambiguous between a representation that ignores the feature and an optimizer that failed to minimize its own objective. Both happened: global-signature training in A finishes worse on its own discrepancy than a pointwise fit. Study C removes optimization entirely, so its answer describes the representation alone.
-  \source{Notebooks 05, 06 and 07}
-\end{frame}
-
-\begin{frame}{Experiment A: fixed target}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.51\textwidth}
-      \textbf{Controlled Neural ODE fit}\par
-      Fit one fixed analytic two-dimensional target path:
+      \textbf{Model}\par
+      A Neural ODE generates a continuous fitted path (Chen et al., 2018)
       \[
         \dot z_\theta(t)=f_\theta(t,z_\theta(t)),
-        \qquad \widehat Y_\theta(t)=g_\theta(z_\theta(t)).
+        \qquad
+        \widehat Y_\theta(t)=g_\theta(z_\theta(t)).
       \]
-      \begin{itemize}
-        \item 64 target observations
-        \item uniform or clustered observation times
-        \item restricted or expressive model capacity
-        \item 3 paired seeds and 10,000 Adam updates
-      \end{itemize}
+      The experiment uses a restricted model and a more expressive model.
     \end{column}
-    \begin{column}{0.44\textwidth}
-      \textbf{Reason for the fixed target}\par
-      Input variation and generalization are removed. Differences between fitted paths come from model capacity, optimization and training loss.
-
-      \textbf{Matched comparison}\par
-      Target, initialization, optimizer budget and model family remain fixed within each group. Only training loss changes.
-
-      Evaluation uses a dense 1,025-point grid and common metrics.
-    \end{column}
-  \end{columns}
-  \source{Procedure: Notebook 05, Sections 3 to 9. Neural ODE model: Chen et al. (2018) [4]}
-\end{frame}
-
-\begin{frame}{Experiment B: Brownian driver to OU response}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.50\textwidth}
-      Brownian driver $W$ determines an Ornstein--Uhlenbeck response
-      \[
-        dY_t=-\lambda Y_t\,dt+\sigma\,dW_t,
-        \qquad Y_0=0.
-      \]
-      A Neural CDE learns the whole map $W\mapsto Y$
-      \[
-        dh_t=f_\theta(h_t)\,d\widetilde X_t,
-        \qquad \widehat Y_t=g_\theta(h_t).
-      \]
-      Control $\widetilde X_t=(t,W_t)$ is the driver augmented by time.
-    \end{column}
-    \begin{column}{0.44\textwidth}
-      \textbf{Matched study}\par
-      \begin{itemize}
-        \item 512 train, 128 validation and 256 test paths
-        \item 64 target times per response
-        \item uniform or clustered target sampling
-        \item 3 seeds per primary loss
-      \end{itemize}
+    \begin{column}{0.47\textwidth}
+      \textbf{Comparison}\par
+      The model fits the same target under each loss. Target observations are either uniform in time or concentrated near the burst.
 
       \textbf{Purpose}\par
-      Test whether the sampling mechanism persists when one model learns across many input and response paths.
+      This controlled setting reveals whether the loss changes the fitted path when model capacity is limited, observations are uneven, or the target contains local structure.
     \end{column}
   \end{columns}
-  \source{Procedure: Notebook 06, Sections 2 to 5. Neural CDE model: Kidger et al. (2020) [5]}
 \end{frame}
 
-\begin{frame}{Experiment B: procedure}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.47\textwidth}
-      \textbf{Paired generation}\par
-      One draw of standard-normal increments produces both the Brownian driver and, through Euler--Maruyama, its OU response. Target is therefore the response to \emph{that} driver, not an independent OU path.
-
-      \textbf{Causal model}\par
-      One RK4 step per interval integrates $dh=f_\theta(h)\,d\widetilde X$, so the output at time $t$ depends only on driver increments before $t$.
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \textbf{Acceptance before comparison}\par
-      Gates run before any loss comparison: the generator reproduces its own Euler recurrence exactly; perturbing the driver after the midpoint leaves earlier output unchanged and later output changed; every parameter receives finite gradient; data, initialization, target times and batch order all reproduce by fingerprint.
-
-      \textbf{Matched runs}\par
-      Within a seed and condition, every loss shares inputs, targets, initialization and batch order. Only the loss changes.
-    \end{column}
-  \end{columns}
-  \source{Procedure and acceptance: Notebook 06, Sections 2 to 6. Generator: brownian\_ou\_pairs in src/pathloss/datasets.py}
-\end{frame}
-
-\begin{frame}{Experiment C: rough-path streams}
-  Elapsed-time weighting changes where coordinate error counts. It cannot measure information absent from coordinate values.
-  Each supplied stream contains 2,048 step-two increments in four dimensions:
-  \[
-    \mathbf X_j=(a_j,A_j),
-    \qquad a_j\in\mathbb R^4,
-    \quad A_j\in\Lambda^2\mathbb R^4.
-  \]
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.46\textwidth}
-      \textbf{First level $a_j$}\par
-      Four coordinate increments. Their cumulative sum gives the visible piecewise path.
-    \end{column}
-    \begin{column}{0.46\textwidth}
-      \textbf{Second level $A_j$}\par
-      Six L\'evy-area coordinates. They record within-step order and affect rough differential equation responses.
-    \end{column}
-  \end{columns}
-  Independent Gaussian coordinate increments do not determine the correct joint L\'evy-area law. The supplied simulation includes both levels.
-  \source{Data specification: Notebook 07, Sections 3 and 4. Brownian area simulation: Wiktorsson (2001) [6], Foster and Habermann (2023) [7]}
-\end{frame}
-
-\begin{frame}{Experiment C: procedure}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.47\textwidth}
-      \textbf{Two readings}\par
-      Paired: compare each modified stream against its own unmodified original, and normalise by the median distance between two independent streams, so a value of one means the message is as large as ordinary Brownian variation.
-
-      Detection: hand a classifier one stream and ask whether it is modified, with originals and modifications drawn from disjoint underlying paths.
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \textbf{Controls fixed in advance}\par
-      Amplitude grid, message support, discrepancy definitions and split are frozen before results. A second 10,000-stream ensemble stays untouched until every choice is fixed, then repeats the transitions.
-
-      \textbf{Independent verification}\par
-      RoughPy reproduces the step-two signatures of original and modified streams to $10^{-9}$, so the perturbation is checked against a library outside this project.
-    \end{column}
-  \end{columns}
-
-  \vfill
-  Amplitude zero is a null control: it must leave every stored coordinate unchanged bit for bit and every discrepancy at zero.
-  \source{Notebook 07, Sections 7, 8, 11 and 12}
-\end{frame}
-
-\begin{frame}{Message construction}
-  A 16-increment block at the stream midpoint receives a message of normalized size $\rho$.
-  \[
-    b_r=\rho\sigma_1 s_r u,
-    \qquad B_r=\rho\sigma_2 s_r v,
-    \qquad
-    \rho\in\left\{0,\tfrac1{16},\tfrac18,\tfrac14,\tfrac12,1,2,4\right\}.
-  \]
-  \small
-  Scales $\sigma_1,\sigma_2$ are training-set standard deviations of first- and second-level increments. Fixed directions $u\in\mathbb R^4$ and $v\in\Lambda^2\mathbb R^4$ select one coordinate at each level, and $s_r$ is the template below.
-  \begin{tabular}{>{\bfseries}p{0.20\textwidth}p{0.31\textwidth}p{0.39\textwidth}}
+\begin{frame}{Experiment A: loss comparisons}
+  \begin{tabular}{>{\bfseries}p{0.23\textwidth}p{0.66\textwidth}}
     \toprule
-    Message & Modified component & Intended probe \\
+    Comparison & Main idea \\
     \midrule
-    Increment & $a_j$ only & Coordinate displacement \\
-    Area & $A_j$ only & Hidden second-level information \\
-    Combined & $a_j$ and $A_j$ & Mixed-level sensitivity \\
-    \midrule
-    Net template & $s_r=1$ & Basic response to accumulated change \\
-    Balanced template & Eight $+1$, then eight $-1$ & Local order with zero direct sum \\
-    \bottomrule
-  \end{tabular}
-  \source{Message construction and training-only scales: Notebook 07, Sections 5 and 6}
-\end{frame}
-
-\begin{frame}{Path views and metrics}
-  \small
-  \begin{tabular}{>{\bfseries\raggedright\arraybackslash}p{0.17\textwidth}>{\raggedright\arraybackslash}p{0.42\textwidth}>{\raggedright\arraybackslash}p{0.31\textwidth}}
-    \toprule
-    Path view & Distances and features & Information measured \\
-    \midrule
-    Coordinate & MSE, $\Jtwo$, $L^1$, maximum error, direct increment & First-level coordinate motion \\
-    Rough path & Direct area, global depth-4 signature, local depth-2 signatures & Second-level area and order \\
-    Derived & Truncated signature kernel, response-derived signatures & Reweighted signature information \\
+    MSE and $\Jtwo$ & Effect of elapsed-time weighting under clustered observations \\
+    $H^1$ & Recovery of the short burst through direct velocity supervision \\
+    Global signature & Structural agreement from one summary of the whole path \\
+    Local signatures & Recovery of local structure when the partition is refined from 10 to 100 intervals \\
     \bottomrule
   \end{tabular}
 
-  \textbf{Two readings of sensitivity}\par
-  Direct comparison measures each modified stream against its exact original. A 1-nearest-neighbour classifier tests whether one distance separates the two populations.
-  \source{Metrics: Notebook 07, Sections 7 and 8. Signature kernels: Salvi et al. (2021) [9]. Response representations: Ferrucci, Perr\'ee and Lyons (2026) [10]}
+  \vfill
+  Every comparison uses matched initialization and optimization. Each fitted path is then evaluated under all losses on the same dense time grid, so a training objective is not judged only by its own score.
 \end{frame}
 
-\begin{frame}[plain]
-  \vfill
-  \centering
-  {\color{oxfordblue}\rule{0.34\textwidth}{0.9pt}}\par
-  {\usebeamercolor[fg]{frametitle}\huge\bfseries Results}\par
-  {\color{oxfordblue}\rule{0.34\textwidth}{0.9pt}}
-  \vfill
+\begin{frame}{Experiment A: anchored signature loss}
+  For a two-dimensional output path $Y$, define the time-augmented path
+  \[
+    Z_Y(t):=(t,Y(t))\in\mathbb R^{d_Z},
+    \qquad d_Z=3.
+  \]
+  The time channel makes the timing of motion visible to the signature. For an interval $I=[a,b]$, write
+  \[
+    \Delta S_I^{(k)}
+    :=S^{(k)}(Z_{\widehat Y})_{a,b}-S^{(k)}(Z_Y)_{a,b}.
+  \]
+
+  \textbf{Anchor}\par
+  Signatures do not change when a constant vector is added to every point of a path (Chen, 1957; Lyons et al., 2007). The additional term
+  \[
+    A_0(\widehat Y,Y):=\frac12\|\widehat Y(0)-Y(0)\|_2^2
+  \]
+  restores sensitivity to the starting position. Experiment A treats paths with different initial positions as different, so this information must be retained.
+
+  \textbf{Level weights}\par
+  Level $k$ has $d_Z^k$ tensor coordinates. Weight $d_Z^{-k}$ converts its squared Euclidean discrepancy into a mean squared discrepancy per coordinate, preventing dimension alone from favouring higher levels.
+\end{frame}
+
+\begin{frame}{Experiment A: global and local signature losses}
+  The global objective compares one depth-four signature over the full path:
+  \[
+    \mathcal L_{\mathrm{global}}(\widehat Y,Y)
+    :=A_0(\widehat Y,Y)
+      +\sum_{k=1}^{4}d_Z^{-k}\|\Delta S_{[0,1]}^{(k)}\|_2^2.
+  \]
+  It measures overall ordered structure, but does not identify where within the interval a discrepancy occurs.
+
+  Partition $[0,1]$ into $K$ intervals $I_b=[(b-1)/K,b/K]$. The local objective is
+  \[
+    \mathcal L_{\mathrm{local},K}(\widehat Y,Y)
+    :=A_0(\widehat Y,Y)
+      +\frac1K\sum_{b=1}^{K}\sum_{k=1}^{2}
+        d_Z^{-k}\|\Delta S_{I_b}^{(k)}\|_2^2.
+  \]
+  Experiment A first uses $K=10$. Comparing signatures block by block retains coarse temporal location while keeping the representation small.
+\end{frame}
+
+\begin{frame}{Experiment A: depth and localization}
+  For the three-dimensional time-augmented path, one depth-four signature contains
+  \[
+    3+3^2+3^3+3^4=120
+  \]
+  nonconstant coordinates. A depth-two signature contains $3+3^2=12$ coordinates, so ten local blocks also contain
+  \[
+    10(3+3^2)=120
+  \]
+  coordinates in total.
+
+  The initial comparison therefore changes the structure of the representation while holding its raw size fixed:
+  \begin{itemize}
+    \item global depth four retains higher-order interactions but loses their location;
+    \item local depth two discards levels three and four but retains coarse location.
+  \end{itemize}
+  In the local objective, factor $1/K$ averages rather than sums block discrepancies, so adding blocks does not increase the loss merely by adding terms.
+\end{frame}
+
+\begin{frame}{Experiment A: refined local signature loss}
+  On an interval of length $h$, a level-$k$ signature scales approximately as $h^k$. Its squared discrepancy therefore scales as $h^{2k}$. Refining from a reference partition $K_0=10$ to $K=100$ would otherwise make the signature terms much smaller.
+
+  The refined objective compensates for this homogeneity:
+  \[
+    \mathcal L_{\mathrm{local},K}^{\mathrm{hom}}(\widehat Y,Y)
+    :=A_0(\widehat Y,Y)
+      +\frac1K\sum_{b=1}^{K}\sum_{k=1}^{2}
+        \left(\frac{K}{K_0}\right)^{2k}
+        d_Z^{-k}\|\Delta S_{I_b}^{(k)}\|_2^2.
+  \]
+
+  The factor $(K/K_0)^{2k}$ keeps each level on approximately the same scale as the ten-interval construction. It does not make the fine and coarse losses identical: the finer partition retains more location information.
+
+  Coordinate averaging and homogeneity correction are project design choices. Their component values and parameter gradients were checked before training.
 \end{frame}
 
 \begin{frame}{Experiment A: sampling density}
@@ -450,15 +321,14 @@
     \includegraphics[width=\linewidth]{assets/fixed_clustered_residuals.png}
   \end{center}
   \textbf{Paired result}\par
-  Under clustered sampling, $\Jtwo$ lowers dense elapsed-time error in all 6 comparisons. Ratio-of-means reductions are \result{68.4\%} for restricted models and \result{40.8\%} for expressive models. Uniform sampling gives a 3 to 3 split.
-  \source{Notebook 05, Section 17. Restricted capacity, seed 1, clustered, 10,000 updates. Shared vertical scale}
+  Under clustered sampling, $\Jtwo$ lowers dense elapsed-time error in all six capacity-seed comparisons ($2$ capacities $\times$ $3$ seeds). Ratio-of-means reductions are \result{68.4\%} for restricted models and \result{40.8\%} for expressive models. Uniform sampling gives a 3 to 3 split.
 \end{frame}
 
 \begin{frame}{Experiment A: derivative supervision}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{0.52\textwidth}
       \textbf{$H^1$ result}\par
-      $H^1$ training gives the best general errors in all 6 groups at update 1,000 and 5 of 6 groups at update 10,000.
+      $H^1$ training gives the best general errors in all six capacity-seed groups at update 1,000 and five of six groups at update 10,000.
       It directly penalizes velocity error, so it resolves the target's short oscillatory burst efficiently.
     \end{column}
     \begin{column}{0.42\textwidth}
@@ -469,7 +339,6 @@
 
   \vfill
   Smooth targets can reward derivative-aware losses more than generic structural summaries. Signature losses are compared against this control rather than against MSE alone.
-  \source{Results: Notebook 05, Sections 17 and 21. Sobolev viewpoint: Ramsay and Silverman (2005) [1]}
 \end{frame}
 
 \begin{frame}{Experiment A: learning dynamics}
@@ -481,31 +350,67 @@
   \begin{columns}[T,onlytextwidth]
     \begin{column}{0.47\textwidth}
       \textbf{Early advantage is objective-specific}\par
-      At update 500 global-signature training leads on its own discrepancy in all 6 groups and local-signature training in 5 of 6. Neither leads on event-region error, where pointwise and $H^1$ losses are ahead in 5 of 6.
+      At update 500 global-signature training leads on its own discrepancy in all six capacity-seed groups and local-signature training in five of six. Neither leads on event-region error, where pointwise and $H^1$ losses are ahead in five of six.
     \end{column}
     \begin{column}{0.47\textwidth}
       \textbf{Terminal fits alone would hide this}\par
       Signature advantage is transient. Reporting only update 10,000 would record a null where an ordering exists earlier in training.
     \end{column}
   \end{columns}
-  \source{Stored checkpoints, restricted capacity, seed 0, uniform observations. Notebook 05, Section 18}
 \end{frame}
 
 \begin{frame}{Experiment A: truncation and partition}
+  \small
   \begin{center}
     \includegraphics[width=\linewidth]{assets/path_comparison_restricted.png}
   \end{center}
   \begin{columns}[T,onlytextwidth]
     \begin{column}{0.47\textwidth}
       \textbf{Global depth 4}\par
-      At the final update, pointwise-trained fits have lower global-signature error than the global-signature-trained fit in all 6 groups. Optimization limits this arm.
+      At the final update, pointwise-trained fits have lower global-signature error than the global-signature-trained fit in all six capacity-seed groups. Optimization limits this arm.
     \end{column}
     \begin{column}{0.47\textwidth}
       \textbf{Local depth 2}\par
-      Refining the partition from 10 to 100 intervals lowers MSE, $\Jtwo$, $H^1$, maximum error and both local-signature discrepancies in all 6 groups.
+      Refining the partition from 10 to 100 intervals lowers MSE, $\Jtwo$, $H^1$, maximum error and both local-signature discrepancies in all six capacity-seed groups.
     \end{column}
   \end{columns}
-  \source{Results and figure generation: Notebook 05, Sections 17, 21 and 22. Stored 10,000-update paths}
+\end{frame}
+
+\begin{frame}[plain]
+  \vfill
+  \centering
+  {\usebeamercolor[fg]{frametitle}\huge\bfseries Experiment B: learned operator}\par
+  \vfill
+\end{frame}
+
+\begin{frame}{Experiment B: Brownian to OU}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}
+      \textbf{Stream-to-stream task}\par
+      A Brownian path $W$ drives an Ornstein--Uhlenbeck response $Y$:
+      \[
+        dY_t=-2Y_t\,dt+0.5\,dW_t,
+        \qquad Y_0=0.
+      \]
+      Each input and target share the same Brownian increments. The model receives the whole driver path and returns the whole response path over the same interval.
+
+      \textbf{Model}\par
+      A Neural CDE learns the operator $\mathcal F_\theta:W\mapsto\widehat Y_\theta$ (Kidger et al., 2020):
+      \[
+        dh_t=f_\theta(h_t)\,d(t,W_t),
+        \qquad \widehat Y_\theta(t)=g_\theta(h_t).
+      \]
+    \end{column}
+    \begin{column}{0.47\textwidth}
+      \textbf{Comparison}\par
+      Separate models minimize MSE, $\Jtwo$, or a signature loss. Target times are uniform or clustered, while held-out evaluation always uses the full time grid.
+
+      \textbf{Purpose}\par
+      Experiment A fits one path. Experiment B tests whether the same loss effects persist when a single model must learn a map across many input and output paths.
+
+      The comparison is matched: each loss sees the same paths, observation times, initialization, and training order.
+    \end{column}
+  \end{columns}
 \end{frame}
 
 \begin{frame}{Experiment B: operator learning}
@@ -526,7 +431,6 @@
       \par\scriptsize Clustered $\Jtwo$ fit, seed 1, held-out test path 0. Residual stays below $2\times10^{-3}$, so loss comparison concerns residual scale rather than shape.
     \end{column}
   \end{columns}
-  \source{Results and stored predictions: Notebook 06, Sections 10 to 12}
 \end{frame}
 
 \begin{frame}{Experiment B: optimizer stability}
@@ -536,7 +440,136 @@
 
   \vfill
   Both signature objectives reach much lower training loss early, then rise. Final-to-best training-loss ratios are 28.4, 28.5 and 2.32 for the global loss. Terminal fits therefore record optimizer behaviour rather than a path the geometry prefers, so every signature claim in this project is stated at a fixed budget.
-  \source{Stored training histories, uniform observations, 3 seeds. Notebook 06, Section 11}
+\end{frame}
+
+\begin{frame}[plain]
+  \vfill
+  \centering
+  {\usebeamercolor[fg]{frametitle}\huge\bfseries Experiment C: message sensitivity}\par
+  \vfill
+\end{frame}
+
+\begin{frame}{Experiment C: rough-path streams}
+  Each supplied Brownian stream contains first-level increments and second-level L\'evy areas:
+  \[
+    X=\bigl((a_j,A_j)\bigr)_{j=0}^{2047},
+    \qquad a_j\in\mathbb R^4,
+    \quad A_j\in\Lambda^2\mathbb R^4.
+  \]
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.46\textwidth}
+      \textbf{Coordinate path}\par
+      Cumulative sums of $a_j$ produce the visible four-dimensional path. MSE and integral norms compare this level.
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{Rough-path lift}\par
+      The six area coordinates $A_j$ retain within-step ordering that the coordinate path alone does not contain.
+    \end{column}
+  \end{columns}
+
+  \textbf{Central construction}\par
+  An area-only message changes $A_j$ while leaving every $a_j$ unchanged. Coordinate losses then return zero, whereas an appropriate rough-path distance can respond.
+
+  The supplied simulation includes the joint Brownian area information. Independent Gaussian coordinate increments alone do not determine that information (Wiktorsson, 2001; Foster and Habermann, 2023).
+\end{frame}
+
+\begin{frame}{Experiment C: distances compared}
+  Experiment C trains no path model. It measures how strongly each definition of distance responds to a controlled message.
+
+  \begin{tabular}{>{\bfseries}p{0.20\textwidth}p{0.38\textwidth}p{0.32\textwidth}}
+    \toprule
+    Path view & Examples & Information available \\
+    \midrule
+    Coordinate & MSE, integral norms, maximum error & Visible coordinate motion \\
+    Rough path & Direct area distance & Stored second-level area \\
+    Global signature & Signature through depth four & Overall ordered structure \\
+    Local signature & Depth two on short intervals & Approximate location of structure \\
+    Derived signature & Variance-normalized and response-derived distances & Alternative weighting of signature levels \\
+    \bottomrule
+  \end{tabular}
+
+  \vfill
+  Variance normalization puts naturally small higher levels on a comparable scale. Comparing aligned and shifted local partitions tests whether sensitivity depends on where interval boundaries fall.
+\end{frame}
+
+\begin{frame}{Experiment C: variance-normalized signature distance}
+  For block $b$ and signature level $k$, define
+  \[
+    \Delta S_b^{(k)}(X,Y):=S_b^{(k)}(X)-S_b^{(k)}(Y).
+  \]
+  Let $q_k^2$ be the empirical training variance per level-$k$ coordinate, averaged over streams and blocks. Since a four-dimensional level-$k$ signature has $4^k$ coordinates, set
+  \[
+    d_{\mathrm{var}}(X,Y)
+    :=\left[
+      \frac1B\sum_{b=1}^{B}\sum_{k=1}^{L}
+      \frac{\|\Delta S_b^{(k)}(X,Y)\|_2^2}
+           {4^k(q_k^2+\delta)}
+    \right]^{1/2},
+    \qquad \delta=10^{-12}.
+  \]
+
+  \textbf{Motivation for the weights}\par
+  Factor $4^{-k}$ averages over coordinates. Division by $q_k^2$ measures a discrepancy relative to the natural Brownian variation at that level. The small constant $\delta$ only protects against division by zero.
+
+  The global version uses one block through depth four. Local versions use depth two over short aligned or shifted blocks.
+\end{frame}
+
+\begin{frame}{Experiment C: response-derived signature distance}
+  In a linear controlled differential equation, a level-$k$ signature coordinate is multiplied by a product of $k$ response matrices. If every matrix satisfies $\|A_i\|_{\mathrm{op}}\le r$, then
+  \[
+    \|A_{i_k}\cdots A_{i_1}\|_{\mathrm{op}}
+    \le \prod_{j=1}^{k}\|A_{i_j}\|_{\mathrm{op}}
+    \le r^k.
+  \]
+  This motivates the response-derived discrepancy
+  \[
+    U_{r,L}(X,Y)
+    :=\frac1B\sum_{b=1}^{B}\sum_{k=1}^{L}
+      r^k\|\Delta S_b^{(k)}(X,Y)\|_1.
+  \]
+
+  Parameter $r$ represents the scale of the response system. Small $r$ suppresses higher levels; large $r$ makes them more influential. The experiment uses $r\in\{0.5,1,2\}$. The coordinate $\ell^1$ norm matches the sum of absolute signature contributions produced by the triangle-inequality bound.
+
+  Thus $U_{r,L}$ estimates how distinguishable two streams could be through a family of linear responses. It is a project discrepancy motivated by the response bound of Ferrucci, Perr\'ee and Lyons (2026), rather than a canonical signature metric.
+\end{frame}
+
+\begin{frame}{Experiment C: sensitivity tests}
+  \begin{columns}[T,onlytextwidth]
+    \begin{column}{0.47\textwidth}
+      \textbf{Paired response}\par
+      Compare each original stream with its own modified copy. Normalize this distance by the typical distance between unrelated Brownian streams.
+
+      This shows whether a message is visible relative to ordinary variation in the data.
+    \end{column}
+    \begin{column}{0.47\textwidth}
+      \textbf{Single-stream detection}\par
+      A one-nearest-neighbour classifier uses one distance at a time to separate original and modified streams.
+
+      The smallest reliably detectable amplitude gives a practical sensitivity threshold. A second independent ensemble checks whether every selected threshold repeats.
+    \end{column}
+  \end{columns}
+
+  \vfill
+  Together, the two views distinguish a metric that merely changes numerically from one that can identify a weak message in a population of random streams.
+\end{frame}
+
+\begin{frame}{Experiment C: message construction}
+  \small
+  A message modifies 16 increments near the middle of a stream. Its amplitude $\rho$ is measured in units of the natural Brownian scale.
+
+  \begin{tabular}{>{\bfseries}p{0.18\textwidth}p{0.28\textwidth}p{0.44\textwidth}}
+    \toprule
+    Message & Modified component & Intended probe \\
+    \midrule
+    Increment & First-level increments & Visible coordinate displacement \\
+    Area & Second-level areas & Hidden information with no coordinate change \\
+    Combined & Both levels & Mixed coordinate and area information \\
+    \midrule
+    Net template & All perturbations have the same sign & Accumulated change and endpoint displacement \\
+    Balanced template & Eight positive, then eight negative & Local ordering with zero direct sum \\
+    \bottomrule
+  \end{tabular}
+  Amplitudes range from an exact zero-message control to several times the natural scale. The rough-path composition law keeps every modified stream algebraically consistent.
 \end{frame}
 
 \begin{frame}{Experiment C: message templates}
@@ -555,7 +588,6 @@
       Direct increments sum to zero over the block. Response now depends on whether a representation retains local order, which is the discriminating case.
     \end{column}
   \end{columns}
-  \source{Combined message, both templates. Notebook 07, Sections 5 and 10}
 \end{frame}
 
 \begin{frame}{Experiment C: balanced messages}
@@ -576,7 +608,6 @@
       Pointwise losses respond to the local excursion. Signature response depends on partition placement.
     \end{column}
   \end{columns}
-  \source{Observed values and figure code: Notebook 07, Section 10. Stored main-study paired sensitivities}
 \end{frame}
 
 \begin{frame}{Experiment C: partition alignment}
@@ -607,7 +638,6 @@
   \end{tikzpicture}
   \end{center}
   \centering Partition choice is part of the loss definition.
-  \source{Construction, derivation and observed sensitivity: Notebook 07, Sections 5, 7 and 10}
 \end{frame}
 
 \begin{frame}{Experiment C: single-stream detection}
@@ -615,16 +645,13 @@
     \includegraphics[width=\linewidth]{assets/detection_balanced.png}
   \end{center}
   \small
-  A 1-nearest-neighbour classifier uses one loss-derived distance and asks whether modified streams separate from original streams; the dotted line marks 50\% chance accuracy. For balanced increment and combined messages, direct increment features detect from $\rho=0.5$, offset local signatures from $\rho=1$, aligned local signatures from $\rho=2$, and maximum error from $\rho=4$. Every transition reproduces on the independent confirmation ensemble.
-  \source{Classifier, thresholds and confirmation: Notebook 07, Sections 8 to 12. Main and confirmation ensembles are disjoint}
+  Classifier $\widehat c_d$ uses one loss-derived distance $d$; the dotted line marks chance balanced accuracy $\operatorname{BA}=1/2$. For balanced increment and combined messages, direct increment features detect from $\rho=0.5$, offset local signatures from $\rho=1$, aligned local signatures from $\rho=2$, and maximum error from $\rho=4$. Every transition reproduces on the independent confirmation ensemble.
 \end{frame}
 
 \begin{frame}[plain]
   \vfill
   \centering
-  {\color{oxfordblue}\rule{0.34\textwidth}{0.9pt}}\par
   {\usebeamercolor[fg]{frametitle}\huge\bfseries Conclusions}\par
-  {\color{oxfordblue}\rule{0.34\textwidth}{0.9pt}}
   \vfill
 \end{frame}
 
@@ -642,7 +669,6 @@
   \end{tabular}
   \textbf{Project conclusion}\par
   Two paths count as close only relative to structure relevant to the task. Observation density, regularity, scale, signature truncation, localization and optimization can each change the comparison.
-  \source{Evidence synthesis: notebooks 01, 05, 06 and 07}
 \end{frame}
 
 \begin{frame}{Scope and continuation}
@@ -664,7 +690,6 @@
       Hybrid losses, multiscale local signatures, learned path representations and broader stream operators.
     \end{column}
   \end{columns}
-  \source{Scope and recorded decisions: notebooks 05 to 07 and logbook entry 8 September 2026}
 \end{frame}
 
 \begin{frame}{Appendix: Experiment A comparison matrix}
@@ -686,65 +711,43 @@
         Dense MSE, $\Jtwo$, $H^1$, maximum error, global signature, 10-block local signature, 100-block local signature and burst-region $\Jtwo$.
       \end{block}
       \textbf{Numerical audit}\par
-      Simpson and Romberg quadrature agree beyond any observed loss separation. RK4 refinement changes metrics at a smaller scale still.
+      Simpson and Romberg quadrature agree beyond any observed loss separation. RK4 refinement changes metrics at a smaller scale still (Davis and Rabinowitz, 1984; Trefethen and Weideman, 2014).
     \end{column}
   \end{columns}
-  \source{Design, analysis and numerical audit: Notebook 05, Sections 9, 17, 20 and 22. Quadrature references: [11,12]}
-\end{frame}
-
-\begin{frame}{Validation checks for Brownian messages}
-  \small
-  \begin{itemize}
-    \item Acceptance tests verify shape, finite values, basis dimensions, Brownian scaling, message support and zero-message identity.
-    \item RoughPy independently verifies original and modified step-two signatures to tolerance $10^{-9}$.
-    \item Main study uses 10,000 supplied streams. Confirmation uses a disjoint 10,000-stream ensemble.
-    \item All 29 valid main detection transitions reappear in confirmation. Twenty-three use the same amplitude, four move by one tested amplitude, and two response-derived thresholds move by two.
-    \item A main raw-area null control failed and passed on confirmation. Main thresholds involving that feature are withheld.
-  \end{itemize}
-  \textbf{Interpretation rule}\par
-  Confirmation establishes repeatability of threshold order on another finite ensemble. It does not create a universal detection boundary.
-  \source{Notebook 07, Sections 9 to 12}
 \end{frame}
 
 \begin{frame}{References I: functional paths and continuous models}
   \small
-  \begin{enumerate}
+  \begin{itemize}
     \setlength{\itemsep}{0.55em}
     \item J. O. Ramsay and B. W. Silverman. \emph{Functional Data Analysis}. Second edition. Springer, 2005.
     \item K.-T. Chen. ``Integration of paths, geometric invariants and a generalized Baker--Hausdorff formula.'' \emph{Annals of Mathematics}, 65(1):163--178, 1957.
     \item T. J. Lyons, M. Caruana and T. L\'evy. \emph{Differential Equations Driven by Rough Paths}. Lecture Notes in Mathematics 1908. Springer, 2007.
     \item R. T. Q. Chen, Y. Rubanova, J. Bettencourt and D. K. Duvenaud. ``Neural Ordinary Differential Equations.'' \emph{Advances in Neural Information Processing Systems}, 31:6571--6583, 2018. arXiv:1806.07366.
-  \end{enumerate}
-  \source{Bibliographic source: papers/references.bib. Publication record for [4]: NeurIPS proceedings}
+  \end{itemize}
 \end{frame}
 
 \begin{frame}{References II: neural CDEs and Brownian area}
   \small
-  \begin{enumerate}
-    \setcounter{enumi}{4}
+  \begin{itemize}
     \setlength{\itemsep}{0.55em}
     \item P. Kidger, J. Morrill, J. Foster and T. Lyons. ``Neural Controlled Differential Equations for Irregular Time Series.'' \emph{Advances in Neural Information Processing Systems}, 33, 2020. arXiv:2005.08926.
     \item M. Wiktorsson. ``Joint characteristic function and simultaneous simulation of iterated It\^o integrals for multiple independent Brownian motions.'' \emph{The Annals of Applied Probability}, 11(2):470--487, 2001. doi:10.1214/aoap/1015345301.
     \item J. Foster and K. Habermann. ``Brownian bridge expansions for L\'evy area approximations and particular values of the Riemann zeta function.'' \emph{Combinatorics, Probability and Computing}, 32(3):370--397, 2023. doi:10.1017/S096354832200030X.
     \item I. Chevyrev and A. Kormilitzin. ``A Primer on the Signature Method in Machine Learning.'' arXiv:1603.03788, 2016.
-  \end{enumerate}
-  \source{Bibliographic source: papers/references.bib. Publication record for [5]: NeurIPS proceedings}
+  \end{itemize}
 \end{frame}
 
-\begin{frame}{References III: signature losses and numerical integration}
+\begin{frame}{References III: discrepancies and numerical analysis}
   \small
-  \begin{enumerate}
-    \setcounter{enumi}{8}
+  \begin{itemize}
     \setlength{\itemsep}{0.5em}
-    \item C. Salvi, T. Cass, J. Foster, T. Lyons and W. Yang. ``The Signature Kernel Is the Solution of a Goursat PDE.'' \emph{SIAM Journal on Mathematics of Data Science}, 3(3):873--899, 2021. doi:10.1137/20M1366794.
     \item E. Ferrucci, O. Perr\'ee and T. Lyons. ``Concise $(\varepsilon,r)$-Representations of a Path.'' arXiv:2607.26281, 2026.
     \item P. J. Davis and P. Rabinowitz. \emph{Methods of Numerical Integration}. Second edition. Academic Press, 1984.
     \item L. N. Trefethen and J. A. C. Weideman. ``The Exponentially Convergent Trapezoidal Rule.'' \emph{SIAM Review}, 56(3):385--458, 2014. doi:10.1137/130932132.
     \item E. H. Lieb and M. Loss. \emph{Analysis}. Second edition. American Mathematical Society, 2001. Layer cake representation, Section 1.13.
-  \end{enumerate}
-  \begin{block}{Project record}
-    Full project bibliography: papers/references.bib. Experiment definitions, stored result paths and analysis code appear in notebooks 01, 05, 06 and 07.
-  \end{block}
+    \item D. Kudrat, Z. Xie, Y. Sun, T. Jia and Q. Hu. ``Patch-wise Structural Loss for Time Series Forecasting.'' \emph{Proceedings of the 42nd International Conference on Machine Learning}, 2025.
+  \end{itemize}
 \end{frame}
 
 \end{document}
