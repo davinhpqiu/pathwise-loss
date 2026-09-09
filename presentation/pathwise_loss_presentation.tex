@@ -37,10 +37,11 @@
     #2
   \end{beamercolorbox}}
 
-\title[Pathwise losses]{Principled loss functions\\for continuous-time learning}
+\title[Pathwise losses]{Principled loss functions\\
+for continuous-time learning}
 \author{Haoping Qiu}
-\institute{Mathematical Institute\\University of Oxford}
-\date[September 2026]{Summer project, 3 August to 11 September 2026}
+\institute{Mathematical Institute, University of Oxford\\Datasig}
+\date[September 2026]{3 August to 10 September 2026}
 
 \begin{document}
 
@@ -55,12 +56,12 @@
   \vfill
 \end{frame}
 
-\begin{frame}{From sequences to continuous paths}
-  Observed time series are finite sequences of time-stamped values. Continuous-time models interpret them as samples from evolving paths and produce another path as output.
+\begin{frame}{Motivation}
+Observed time series are finite sequences of time-stamped values. Sequence to sequence models are trained using pointwise losses such as mean squared error (MSE). 
 
-  Training therefore needs a rule for comparing whole paths. Pointwise error, elapsed-time error, derivative error, and ordered path features each express a different meaning of closeness.
+Continuous time mdoels such as neural differential equations enable path-to-path learning, where inputs and outputs are continuous-time trajectories.
 
-  These choices can change what a model learns, particularly when observations are uneven or the relevant information lies in local ordering rather than coordinate values alone (Ramsay and Silverman, 2005; Kudrat et al., 2025).
+An open question is which loss functions are best suited to path-to-path learning, as previous work has shown that pointwise objectives can overfit local noise and fail to capture temporal structure (Ramsay and Silverman, 2005; Kudrat et al., 2025). 
 \end{frame}
 
 \begin{frame}{Pointwise agreement and path error}
@@ -171,7 +172,7 @@
     S^{\le M}(Y)_{a,b}:=
     \bigl(S^{(0)}(Y)_{a,b},\ldots,S^{(M)}(Y)_{a,b}\bigr),
   \]
-  where $\otimes$ is the tensor product (Chen, 1957; Lyons et al., 2007). For Brownian streams, the supplied step-two rough-path lift replaces the bounded-variation assumption. A machine-learning introduction appears in Chevyrev and Kormilitzin (2016).
+  where $\otimes$ is the tensor product (Chen, 1957; Lyons et al., 2007). A machine-learning introduction appears in Chevyrev and Kormilitzin (2016).
   \begin{columns}[T,onlytextwidth]
     \begin{column}{0.30\textwidth}
       \textbf{Level 1}\par
