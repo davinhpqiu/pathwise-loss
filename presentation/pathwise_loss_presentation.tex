@@ -57,11 +57,11 @@ for continuous-time learning}
 \end{frame}
 
 \begin{frame}{Motivation}
-Observed time series are finite sequences of time-stamped values. Sequence to sequence models are trained using pointwise losses such as mean squared error (MSE). 
+Observed time series are finite sequences of time-stamped values. Sequence to sequence models are trained using pointwise losses such as mean squared error (MSE).
 
-Continuous time mdoels such as neural differential equations enable path-to-path learning, where inputs and outputs are continuous-time trajectories.
+Continuous time models such as neural differential equations enable path-to-path learning, where inputs and outputs are continuous-time trajectories.
 
-An open question is which loss functions are best suited to path-to-path learning, as previous work has shown that pointwise objectives can overfit local noise and fail to capture temporal structure (Ramsay and Silverman, 2005; Kudrat et al., 2025). 
+An open question is which loss functions are best suited to path-to-path learning, as previous work has shown that pointwise objectives can overfit local noise and fail to capture temporal structure (Ramsay and Silverman, 2005; Kudrat et al., 2025).
 \end{frame}
 
 \begin{frame}{Pointwise agreement and path error}
@@ -173,20 +173,11 @@ An open question is which loss functions are best suited to path-to-path learnin
     \bigl(S^{(0)}(Y)_{a,b},\ldots,S^{(M)}(Y)_{a,b}\bigr),
   \]
   where $\otimes$ is the tensor product (Chen, 1957; Lyons et al., 2007). A machine-learning introduction appears in Chevyrev and Kormilitzin (2016).
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.30\textwidth}
-      \textbf{Level 1}\par
-      Net displacement
-    \end{column}
-    \begin{column}{0.30\textwidth}
-      \textbf{Level 2}\par
-      Ordered pair interactions; its antisymmetric part encodes signed area
-    \end{column}
-    \begin{column}{0.30\textwidth}
-      \textbf{Higher levels}\par
-      Finer ordered interactions
-    \end{column}
-  \end{columns}
+  \begin{itemize}
+    \item Level 1 records net displacement.
+    \item Level 2 records ordered pair interactions. Its antisymmetric part records signed area.
+    \item Higher levels record increasingly detailed ordered interactions.
+  \end{itemize}
   \textbf{Truncation and localization}\par
   A global comparison uses one truncated signature over the full interval. A local comparison uses signatures over a partition, thereby retaining coarse information about where an ordered feature occurs.
 \end{frame}
@@ -198,29 +189,38 @@ An open question is which loss functions are best suited to path-to-path learnin
   \vfill
 \end{frame}
 
-\begin{frame}{Experiment A: fitting one path}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.47\textwidth}
-      \textbf{Target}\par
-      A smooth two-dimensional loop contains a short burst of faster oscillation. This creates both broad shape and fine local structure in one path.
+\begin{frame}{Experiment A: target path}
+  For $t\in[0,1]$, define
+  \[
+    a(t):=0.3\exp\!\left[-100\left(t-\tfrac14\right)^2\right],
+    \qquad
+    Y^\star(t):=
+    \begin{pmatrix}
+      \cos(2\pi t)+a(t)\cos(12\pi t)\\
+      \sin(2\pi t)+a(t)\sin(12\pi t)
+    \end{pmatrix}.
+  \]
+  The circular component gives the broad shape. The localized envelope $a(t)$ creates a short oscillatory burst near $t=0.25$.
 
-      \textbf{Model}\par
-      A Neural ODE generates a continuous fitted path (Chen et al., 2018)
-      \[
-        \dot z_\theta(t)=f_\theta(t,z_\theta(t)),
-        \qquad
-        \widehat Y_\theta(t)=g_\theta(z_\theta(t)).
-      \]
-      The experiment uses a restricted model and a more expressive model.
-    \end{column}
-    \begin{column}{0.47\textwidth}
-      \textbf{Comparison}\par
-      The model fits the same target under each loss. Target observations are either uniform in time or concentrated near the burst.
+  \begin{center}
+    \includegraphics[width=0.92\linewidth]{assets/target_design.png}
+  \end{center}
+\end{frame}
 
-      \textbf{Purpose}\par
-      This controlled setting reveals whether the loss changes the fitted path when model capacity is limited, observations are uneven, or the target contains local structure.
-    \end{column}
-  \end{columns}
+\begin{frame}{Experiment A: model and comparison}
+  A Neural ODE generates a continuous fitted path (Chen et al., 2018):
+  \[
+    z_\theta(0)=z_{0,\theta},
+    \qquad
+    \dot z_\theta(t)=f_\theta\!\left(t,z_\theta(t)\right),
+    \qquad
+    \widehat Y_\theta(t)=g_\theta\!\left(z_\theta(t)\right).
+  \]
+  Here $z_\theta(t)$ is the learned hidden trajectory, $f_\theta$ is a neural vector field, and $g_\theta$ maps the hidden state to two output coordinates. The restricted model has hidden dimension 2 and width 16. The expressive model has hidden dimension 8 and width 64.
+
+  For each loss, the model fits the same target $Y^\star$ from 64 observations. The observation times are either uniform or clustered, while the initialization, optimizer and training budget remain matched. Evaluation compares every fitted path on the same dense grid under every metric.
+
+  The experiment isolates how the training loss changes the path recovered from the same data and model family.
 \end{frame}
 
 \begin{frame}{Experiment A: loss comparisons}
@@ -317,28 +317,48 @@ An open question is which loss functions are best suited to path-to-path learnin
   Coordinate averaging and homogeneity correction are project design choices. Their component values and parameter gradients were checked before training.
 \end{frame}
 
-\begin{frame}{Experiment A: sampling density}
+\begin{frame}{Restricted-model terminal fits}
+  \begin{center}
+    \includegraphics[width=\linewidth]{assets/fixed_terminal_restricted.png}
+  \end{center}
+
+  The upper row overlays the fitted path on the black target path. The lower row shows the residual magnitude over time, with the oscillatory burst shaded. All fits use seed 0, uniform observations and 10,000 Adam updates.
+\end{frame}
+
+\begin{frame}{Expressive-model terminal fits}
+  \begin{center}
+    \includegraphics[width=\linewidth]{assets/fixed_terminal_expressive.png}
+  \end{center}
+
+  Extra capacity substantially improves the 10-block local-signature fit, while the global-signature fit remains limited by optimization under the common budget. The 100-block local-signature fit appears in the final column of both visual comparisons.
+\end{frame}
+
+\begin{frame}{Clustered-sampling residuals}
   \begin{center}
     \includegraphics[width=\linewidth]{assets/fixed_clustered_residuals.png}
   \end{center}
-  \textbf{Paired result}\par
-  Under clustered sampling, $\Jtwo$ lowers dense elapsed-time error in all six capacity-seed comparisons ($2$ capacities $\times$ $3$ seeds). Ratio-of-means reductions are \result{68.4\%} for restricted models and \result{40.8\%} for expressive models. Uniform sampling gives a 3 to 3 split.
+
+  One matched restricted-model pair is shown. MSE gives equal weight to every recorded point, so the cluster receives disproportionate influence. The $\Jtwo$ quadrature weights instead approximate elapsed time and reduce error throughout the path.
 \end{frame}
 
-\begin{frame}{Experiment A: derivative supervision}
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.52\textwidth}
-      \textbf{$H^1$ result}\par
-      $H^1$ training gives the best general errors in all six capacity-seed groups at update 1,000 and five of six groups at update 10,000.
-      It directly penalizes velocity error, so it resolves the target's short oscillatory burst efficiently.
-    \end{column}
-    \begin{column}{0.42\textwidth}
-      \textbf{Interpretation limit}\par
-      This target is analytic and its derivative is known. Brownian paths are almost surely outside $H^1$, so the same supervision is unavailable for rough stream tasks.
-    \end{column}
-  \end{columns}
+\begin{frame}{Sampling-density effect}
+  Let $E^{\mathrm{MSE}}_{c,r}$ denote dense evaluation MSE for the model trained with MSE at capacity $c$ and seed $r$. Define $E^{\Jtwo}_{c,r}$ analogously for $\Jtwo$ training. With $R=3$ seeds, the reported ratio-of-means reduction is
+  \[
+    \operatorname{Reduction}_c
+    :=1-
+    \frac{R^{-1}\sum_{r=1}^{R}E^{\Jtwo}_{c,r}}
+         {R^{-1}\sum_{r=1}^{R}E^{\mathrm{MSE}}_{c,r}}.
+  \]
+  Thus we first average the evaluation error across seeds for each training loss, then compare those two averages. This differs from calculating a percentage reduction within each seed and averaging the percentages.
 
-  \vfill
+  Under clustered sampling, $\Jtwo$ gives lower dense MSE in all six paired comparisons. The reduction is \result{68.4\%} for the restricted model and \result{40.8\%} for the expressive model. Under uniform sampling, each loss wins three of the six comparisons, as expected when the two objectives differ only through small endpoint-weight effects.
+\end{frame}
+
+\begin{frame}{Derivative supervision}
+  $H^1$ training gives the best general errors in all six capacity-seed groups at update 1,000 and five of six groups at update 10,000. It directly penalizes velocity error, so it resolves the target's short oscillatory burst efficiently.
+
+  This result depends on the smooth fixed target. Its derivative is known analytically, whereas Brownian paths are almost surely outside $H^1$. The same derivative supervision is therefore unavailable for rough stream tasks.
+
   Smooth targets can reward derivative-aware losses more than generic structural summaries. Signature losses are compared against this control rather than against MSE alone.
 \end{frame}
 
@@ -360,7 +380,7 @@ An open question is which loss functions are best suited to path-to-path learnin
   \end{columns}
 \end{frame}
 
-\begin{frame}{Experiment A: truncation and partition}
+\begin{frame}{Signature truncation and partition}
   \small
   \begin{center}
     \includegraphics[width=\linewidth]{assets/path_comparison_restricted.png}

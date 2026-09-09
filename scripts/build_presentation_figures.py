@@ -288,6 +288,80 @@ def build_refinement_paths() -> dict:
             "seeds": [0, 1, 2], "condition": "uniform", "updates": 10000}
 
 
+def _terminal_fixed_path_directory(capacity: str, loss: str) -> Path:
+    """Return the stored seed-zero uniform run used in the terminal-fit panels."""
+    if loss == "h1":
+        root, stored_loss = "neural_ode_fixed_path_closeout_10k", "h1"
+    elif loss == "sig_local_fine":
+        root, stored_loss = "neural_ode_fixed_path_local_fine_10k", "sig_local_fine"
+    else:
+        root, stored_loss = "neural_ode_fixed_path_signature_10k", loss
+    return RUNS / root / capacity / "seed0" / "uniform" / stored_loss
+
+
+def build_terminal_fixed_path_comparison(capacity: str) -> dict:
+    """Terminal paths and residuals for every Experiment A loss, including refinement."""
+    losses = ("mse", "j2", "h1", "sig_global", "sig_local", "sig_local_fine")
+    labels = {
+        "mse": "MSE",
+        "j2": "$J_2$",
+        "h1": "$H^1$",
+        "sig_global": "global signature",
+        "sig_local": "local, 10 blocks",
+        "sig_local_fine": "local, 100 blocks",
+    }
+    colours = {
+        "mse": "tab:blue",
+        "j2": "tab:cyan",
+        "h1": "tab:green",
+        "sig_global": "tab:orange",
+        "sig_local": "tab:red",
+        "sig_local_fine": "tab:purple",
+    }
+    figure, axes = plt.subplots(2, len(losses), figsize=(15.0, 5.2), sharex="row")
+    provenance = []
+    for column, loss in enumerate(losses):
+        directory = _terminal_fixed_path_directory(capacity, loss)
+        arrays = np.load(directory / "paths.npz")
+        meta = json.loads((directory / "meta.json").read_text())
+        config = meta["fit_config"]
+        if config["seed"] != 0 or config["condition"] != "uniform":
+            raise ValueError(f"unexpected terminal-fit configuration in {directory}")
+
+        path_axis = axes[0, column]
+        path_axis.plot(arrays["target"][:, 0], arrays["target"][:, 1],
+                       color="black", linewidth=1.25)
+        path_axis.plot(arrays["prediction"][:, 0], arrays["prediction"][:, 1],
+                       color=colours[loss], linewidth=1.2)
+        path_axis.set_aspect("equal")
+        path_axis.set_title(labels[loss])
+        path_axis.set_xticks([-1, 0, 1])
+        path_axis.set_yticks([-1, 0, 1])
+
+        residual_axis = axes[1, column]
+        residual = np.linalg.norm(arrays["prediction"] - arrays["target"], axis=-1)
+        residual_axis.plot(arrays["time"], residual, color=colours[loss], linewidth=1.2)
+        residual_axis.axvspan(*EVENT_INTERVAL, color="tab:orange", alpha=0.16)
+        residual_axis.set_yscale("log")
+        _log_ticks(residual_axis)
+        residual_axis.set_xlabel("time")
+        provenance.append({
+            "run": str(directory.relative_to(REPO)),
+            "capacity": capacity,
+            "seed": 0,
+            "condition": "uniform",
+            "loss": loss,
+            "updates": config["updates"],
+        })
+    axes[0, 0].set_ylabel("$Y_2$")
+    axes[1, 0].set_ylabel("residual")
+    figure.tight_layout()
+    filename = f"fixed_terminal_{capacity}.png"
+    figure.savefig(ASSETS / filename)
+    plt.close(figure)
+    return {"asset": filename, "runs": provenance}
+
+
 
 def build_target_design() -> dict:
     """Fixed target and the two observation conditions used in experiment A."""
@@ -431,6 +505,8 @@ def main() -> int:
     with plt.rc_context(STYLE):
         manifest = {
             "fixed_path_residuals": build_fixed_path_residuals(),
+            "fixed_terminal_restricted": build_terminal_fixed_path_comparison("restricted"),
+            "fixed_terminal_expressive": build_terminal_fixed_path_comparison("expressive"),
             "ou_response": build_ou_response(),
             "refinement_paths": build_refinement_paths(),
             "paired_sensitivity": _message_panels(
@@ -451,6 +527,8 @@ def main() -> int:
     (ASSETS / "figure_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     written = {
         "fixed_clustered_residuals.png",
+        "fixed_terminal_restricted.png",
+        "fixed_terminal_expressive.png",
         "ou_clustered_j2_response_path0.png",
         "path_comparison_restricted.png",
         "paired_balanced.png",
