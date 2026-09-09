@@ -435,7 +435,7 @@ An open question is which loss functions are best suited to path-to-path learnin
 
   \small The left panel shows global-signature training and the right panel local-signature training. Epoch is on the horizontal axis, epoch-average training loss is on the logarithmic vertical axis, and each coloured curve represents one matched seed.
 
-  Global-signature loss fluctuates and finishes well above its earlier minimum in every seed: the final-to-best ratios are 28.4, 28.5 and 2.32. Local-signature training is smoother for two seeds but rises late for the third. Terminal fits therefore reflect optimizer behaviour as well as path geometry, so signature results are reported at a fixed training budget.
+  Global-signature loss fluctuates and finishes well above its earlier minimum in every seed: the final-to-best ratios are 28.4, 28.5 and 2.32. Local-signature training is smoother for two seeds but rises late for the third. Final checkpoints therefore reflect optimizer behaviour as well as path geometry, so signature results are reported at a fixed training budget.
 \end{frame}
 
 \dividerframe{Experiment C: sensitivity to messages in Brownian streams}
@@ -658,32 +658,30 @@ An open question is which loss functions are best suited to path-to-path learnin
 \end{frame}
 
 \begin{frame}{References}
-  \scriptsize
-  \begin{columns}[T,onlytextwidth]
-    \begin{column}{0.49\textwidth}
-      \begin{itemize}
-        \setlength{\itemsep}{0.18em}
-        \item J. O. Ramsay and B. W. Silverman. \emph{Functional Data Analysis}. 2nd ed. Springer, 2005.
-        \item K.-T. Chen. ``Integration of paths, geometric invariants and a generalized Baker--Hausdorff formula.'' \emph{Annals of Mathematics}, 65(1):163--178, 1957.
-        \item T. J. Lyons, M. Caruana and T. L\'evy. \emph{Differential Equations Driven by Rough Paths}. LNM 1908. Springer, 2007.
-        \item I. Chevyrev and A. Kormilitzin. ``A Primer on the Signature Method in Machine Learning.'' arXiv:1603.03788, 2016.
-        \item R. T. Q. Chen, Y. Rubanova, J. Bettencourt and D. K. Duvenaud. ``Neural Ordinary Differential Equations.'' \emph{NeurIPS} 31, 2018. arXiv:1806.07366.
-        \item P. Kidger, J. Morrill, J. Foster and T. Lyons. ``Neural Controlled Differential Equations for Irregular Time Series.'' \emph{NeurIPS} 33, 2020. arXiv:2005.08926.
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.49\textwidth}
-      \begin{itemize}
-        \setlength{\itemsep}{0.18em}
-        \item M. Wiktorsson. ``Joint characteristic function and simultaneous simulation of iterated It\^o integrals for multiple independent Brownian motions.'' \emph{Annals of Applied Probability}, 11(2):470--487, 2001.
-        \item J. Foster and K. Habermann. ``Brownian bridge expansions for L\'evy area approximations.'' \emph{Combinatorics, Probability and Computing}, 32(3):370--397, 2023.
-        \item E. Ferrucci, O. Perr\'ee and T. Lyons. ``Concise $(\varepsilon,r)$-Representations of a Path.'' arXiv:2607.26281, 2026.
-        \item P. J. Davis and P. Rabinowitz. \emph{Methods of Numerical Integration}. 2nd ed. Academic Press, 1984.
-        \item L. N. Trefethen and J. A. C. Weideman. ``The Exponentially Convergent Trapezoidal Rule.'' \emph{SIAM Review}, 56(3):385--458, 2014.
-        \item E. H. Lieb and M. Loss. \emph{Analysis}. 2nd ed. American Mathematical Society, 2001.
-        \item D. Kudrat et al. ``Patch-wise Structural Loss for Time Series Forecasting.'' \emph{ICML}, 2025.
-      \end{itemize}
-    \end{column}
-  \end{columns}
+  \fontsize{6.7}{8.0}\selectfont
+  \setlength{\parskip}{0.45em}
+  \raggedright
+
+  \textbf{Functional data and continuous-time models.}\par
+  J. O. Ramsay and B. W. Silverman. \emph{Functional Data Analysis}. 2nd ed. Springer, 2005.
+  R. T. Q. Chen, Y. Rubanova, J. Bettencourt and D. K. Duvenaud. ``Neural Ordinary Differential Equations.'' \emph{NeurIPS} 31, 2018. arXiv:1806.07366.
+  P. Kidger, J. Morrill, J. Foster and T. Lyons. ``Neural Controlled Differential Equations for Irregular Time Series.'' \emph{NeurIPS} 33, 2020. arXiv:2005.08926.
+  D. Kudrat et al. ``Patch-wise Structural Loss for Time Series Forecasting.'' \emph{ICML}, 2025.
+
+  \textbf{Signatures and rough paths.}\par
+  K.-T. Chen. ``Integration of paths, geometric invariants and a generalized Baker--Hausdorff formula.'' \emph{Annals of Mathematics}, 65(1):163--178, 1957.
+  T. J. Lyons, M. Caruana and T. L\'evy. \emph{Differential Equations Driven by Rough Paths}. LNM 1908. Springer, 2007.
+  I. Chevyrev and A. Kormilitzin. ``A Primer on the Signature Method in Machine Learning.'' arXiv:1603.03788, 2016.
+  E. Ferrucci, O. Perr\'ee and T. Lyons. ``Concise $(\varepsilon,r)$-Representations of a Path.'' arXiv:2607.26281, 2026.
+
+  \textbf{Brownian area simulation.}\par
+  M. Wiktorsson. ``Joint characteristic function and simultaneous simulation of iterated It\^o integrals for multiple independent Brownian motions.'' \emph{Annals of Applied Probability}, 11(2):470--487, 2001.
+  J. Foster and K. Habermann. ``Brownian bridge expansions for L\'evy area approximations.'' \emph{Combinatorics, Probability and Computing}, 32(3):370--397, 2023.
+
+  \textbf{Analysis and numerical integration.}\par
+  P. J. Davis and P. Rabinowitz. \emph{Methods of Numerical Integration}. 2nd ed. Academic Press, 1984.
+  L. N. Trefethen and J. A. C. Weideman. ``The Exponentially Convergent Trapezoidal Rule.'' \emph{SIAM Review}, 56(3):385--458, 2014.
+  E. H. Lieb and M. Loss. \emph{Analysis}. 2nd ed. American Mathematical Society, 2001.
 \end{frame}
 
 \end{document}
