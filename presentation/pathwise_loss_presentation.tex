@@ -38,10 +38,10 @@
     #2
   \end{beamercolorbox}}
 
-\title[Pathwise losses]{Principled loss functions\\for continuous-time learning}
+\title[Pathwise losses]{Principled loss functions for  continuous-time learning}
 \author{Haoping Qiu}
-\institute{Mathematical Institute\\University of Oxford}
-\date[September 2026]{Summer project, 3 August to 11 September 2026}
+\institute{Mathematical Institute, University of Oxford \\ Datasig}
+\date[September 2026]{3 August to 10 September 2026}
 
 \begin{document}
 
@@ -52,18 +52,19 @@
 \begin{frame}[plain]
   \vfill
   \centering
-  {\color{oxfordblue}\rule{0.34\textwidth}{0.9pt}}\par
   {\usebeamercolor[fg]{frametitle}\huge\bfseries Motivation}\par
-  {\color{oxfordblue}\rule{0.34\textwidth}{0.9pt}}
   \vfill
 \end{frame}
 
 \begin{frame}{Path closeness in continuous time}
-  Path-to-path models produce whole trajectories. Training therefore needs a precise rule for comparing two paths.
+\textbf{Role of discretisation}\par
+  Most time series models are sequence-to-sequence and trained with pointwise losses such as mean squared error (MSE). Neural differential equations enable path-to-path learning, where inputs and outputs are continuous-time trajectories. An open question is which loss functions are best suited to path-to-path learning, as previous work has shown that pointwise objectives can overfit local noise and fail to capture temporal structure (Ramsay and Silverman, 2005; Kudrat et al., 2025). 
+  \source{Project proposal and Notebook 01, Sections 2 and 3}
+\end{frame}
 
+\begin{frame}{Path closeness in continuous time}
   \textbf{Project question}\par
   The project studies definitions of path closeness and how each definition changes the learned path or operator.
-  \small
   Suppose two predictions agree with a target at every recorded time:
   \[
     \widehat Y_A(t_j)=\widehat Y_B(t_j)=Y(t_j),
@@ -77,7 +78,8 @@
   \]
 
   \textbf{Role of discretisation}\par
-  Finite storage does not remove the issue. Weighting, interpolation and feature maps select the continuous error being approximated.
+  Although paths are stored at finitely many times, the loss still determines how the underlying paths are compared. Weighting, interpolation and feature representation each affect that comparison.
+  
   \source{Project proposal and Notebook 01, Sections 2 and 3}
 \end{frame}
 
