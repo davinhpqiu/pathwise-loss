@@ -34,5 +34,22 @@ slurm-*.out
 node_modules/
 package-lock.json
 
-# Working notes: kept locally, deliberately untracked (20/08)
-docs/
+# Working notes: kept locally, deliberately untracked (20/08).
+# Exception: the pre-registered procedure for experiments A and B is tracked,
+# since notebooks 05 and 06 cite it as the design fixed before their results.
+docs/*
+!docs/neural_ode_operator_experiments.md
+
+# LaTeX build artefacts. Deck source, theme and rendered presentation assets
+# are tracked. Regenerate the figures from restored experiment outputs with
+# scripts/build_presentation_figures.py.
+presentation/*.aux
+presentation/*.log
+presentation/*.nav
+presentation/*.snm
+presentation/*.toc
+presentation/*.out
+presentation/*.fls
+presentation/*.fdb_latexmk
+presentation/*.synctex.gz
+presentation/tmp*.tmp

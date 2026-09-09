@@ -1,0 +1,96 @@
+{
+  "fixed_path_residuals": [
+    {
+      "run": "results/runs/neural_ode_fixed_path_closeout_10k/restricted/seed1/clustered/mse",
+      "capacity": "restricted",
+      "seed": 1,
+      "condition": "clustered",
+      "loss": "mse",
+      "updates": 10000,
+      "initial_fingerprint": "27d5dfe70143b48437d5f34a4e7402923b4d8a99328764ea651e05ce185412a0",
+      "shared_y_limit": 0.08894918859004974
+    },
+    {
+      "run": "results/runs/neural_ode_fixed_path_closeout_10k/restricted/seed1/clustered/j2",
+      "capacity": "restricted",
+      "seed": 1,
+      "condition": "clustered",
+      "loss": "j2",
+      "updates": 10000,
+      "initial_fingerprint": "27d5dfe70143b48437d5f34a4e7402923b4d8a99328764ea651e05ce185412a0",
+      "shared_y_limit": 0.08894918859004974
+    }
+  ],
+  "ou_response": {
+    "run": "results/runs/neural_cde_brownian_ou/seed1/clustered/j2",
+    "seed": 1,
+    "condition": "clustered",
+    "loss": "j2",
+    "test_path_index": 0,
+    "max_absolute_residual": 0.0017567146569490433
+  },
+  "refinement_paths": {
+    "asset": "path_comparison_restricted.png",
+    "capacity": "restricted",
+    "seeds": [
+      0,
+      1,
+      2
+    ],
+    "condition": "uniform",
+    "updates": 10000
+  },
+  "paired_sensitivity": {
+    "asset": "paired_balanced.png",
+    "template": "balanced",
+    "messages": [
+      "area",
+      "combined",
+      "increment"
+    ],
+    "source": "results/runs/brownian_message/main/conditions/*/result.json"
+  },
+  "detection": {
+    "asset": "detection_balanced.png",
+    "template": "balanced",
+    "messages": [
+      "area",
+      "combined",
+      "increment"
+    ],
+    "source": "results/runs/brownian_message/main/conditions/*/result.json"
+  },
+  "learning_dynamics": {
+    "asset": "learning_dynamics.png",
+    "capacity": "restricted",
+    "seed": 0,
+    "condition": "uniform",
+    "runs": {
+      "mse": "results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/mse",
+      "j2": "results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/j2",
+      "h1": "results/runs/neural_ode_fixed_path_closeout_10k/restricted/seed0/uniform/h1",
+      "sig_global": "results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/sig_global",
+      "sig_local": "results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/sig_local"
+    }
+  },
+  "ou_signature_histories": {
+    "asset": "ou_signature_histories.png",
+    "condition": "uniform",
+    "seeds": [
+      0,
+      1,
+      2
+    ]
+  },
+  "template_comparison": {
+    "asset": "template_comparison.png",
+    "templates": [
+      "net",
+      "balanced"
+    ],
+    "message": "combined"
+  },
+  "target_design": {
+    "pending": "target_design needs pathloss.fixed_path, which imports torch. Run from the project environment with requirements-ml.txt installed."
+  }
+}
