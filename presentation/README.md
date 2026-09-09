@@ -40,3 +40,11 @@ python scripts/build_presentation_figures.py
 The script checks the fixed-path and OU captions against the stored run
 metadata before writing the figures. Regenerating figures is not required for
 ordinary editing or compilation of the slides.
+
+## Brand assets
+
+The DataSig mark in the frame header is taken from the official
+[DataSig style guide](https://github.com/datasig-ac-uk/DataSig_style_guide),
+using its white-background primary rectangle artwork. The local PNG removes
+only the surrounding empty margin so that it aligns optically with the Oxford
+Mathematical Institute mark; the logo artwork and proportions are unchanged.

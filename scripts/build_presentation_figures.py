@@ -75,10 +75,10 @@ HIGHLIGHT = {
     "mse": ("tab:blue", "MSE"),
     "j2": ("tab:cyan", r"$J_2$"),
     "linf": ("tab:brown", "maximum error"),
-    "area": ("tab:green", "direct area"),
-    "global": ("tab:orange", "global depth 4"),
-    "local_aligned": ("tab:purple", "local aligned"),
-    "local_offset": ("tab:red", "local offset"),
+    "area": ("tab:green", "direct area distance"),
+    "global": ("tab:orange", "global signature"),
+    "local_aligned": ("tab:purple", "local signature -- aligned"),
+    "local_offset": ("tab:red", "local signature -- offset"),
 }
 
 
@@ -135,19 +135,23 @@ def verify_fixed_path(loss: str) -> dict:
 
 
 def build_fixed_path_residuals() -> list[dict]:
-    """Both residual panels in one wide figure, sharing a vertical scale."""
+    """Both residual panels in one wide figure, sharing one logarithmic scale."""
     provenance = [verify_fixed_path(loss) for loss in ("mse", "j2")]
     stored = {loss: np.load(fixed_path_dir(loss) / "paths.npz") for loss in ("mse", "j2")}
     residual = {
         loss: np.linalg.norm(a["prediction"] - a["target"], axis=-1) for loss, a in stored.items()
     }
-    ceiling = max(r.max() for r in residual.values()) * 1.06
+    positive = np.concatenate([r[r > 0] for r in residual.values()])
+    floor = 10 ** np.floor(np.log10(positive.min()))
+    ceiling = 10 ** np.ceil(np.log10(positive.max()))
 
     figure, axes = plt.subplots(1, 2, figsize=(14.0, 4.3), sharey=True)
     for axis, loss, title in zip(axes, ("mse", "j2"), ("MSE-trained fit", "$J_2$-trained fit")):
         axis.plot(stored[loss]["time"], residual[loss], color="tab:red", linewidth=1.3)
         axis.axvspan(*EVENT_INTERVAL, color="tab:orange", alpha=0.20, label="event interval")
-        axis.set_ylim(0.0, ceiling)
+        axis.set_yscale("log")
+        axis.set_ylim(floor, ceiling)
+        _log_ticks(axis)
         axis.set_xlabel("time")
         axis.set_title(title)
     axes[0].set_ylabel("residual magnitude")
@@ -157,8 +161,65 @@ def build_fixed_path_residuals() -> list[dict]:
     plt.close(figure)
 
     for entry in provenance:
-        entry["shared_y_limit"] = float(ceiling)
+        entry["shared_y_limits"] = [float(floor), float(ceiling)]
     return provenance
+
+
+def build_checkpoint_path_comparison(capacity: str) -> dict:
+    """Full saved learning trajectory for the four original Experiment A losses."""
+    losses = ("mse", "j2", "sig_global", "sig_local")
+    updates = (100, 500, 1000, 2500, 10000)
+    labels = {
+        "mse": "MSE",
+        "j2": "$J_2$",
+        "sig_global": "global signature",
+        "sig_local": "local signature",
+    }
+    colours = {
+        "mse": "tab:blue",
+        "j2": "tab:orange",
+        "sig_global": "tab:green",
+        "sig_local": "tab:red",
+    }
+    figure, axes = plt.subplots(
+        len(losses), len(updates), figsize=(15.0, 10.7), sharex=True, sharey=True
+    )
+    used = {}
+    for row, loss in enumerate(losses):
+        directory = (
+            RUNS / "neural_ode_fixed_path_signature_10k" / capacity
+            / "seed0" / "uniform" / loss
+        )
+        arrays = np.load(directory / "checkpoint_paths.npz")
+        used[loss] = str(directory.relative_to(REPO))
+        for column, update in enumerate(updates):
+            axis = axes[row, column]
+            prediction = arrays[f"prediction_updates_{update:05d}"]
+            axis.plot(
+                arrays["target"][:, 0], arrays["target"][:, 1],
+                color="black", linewidth=1.15,
+            )
+            axis.plot(
+                prediction[:, 0], prediction[:, 1],
+                color=colours[loss], linewidth=1.15,
+            )
+            axis.set_aspect("equal")
+            if row == 0:
+                axis.set_title(f"{update:,} updates")
+        axes[row, 0].set_ylabel(labels[loss])
+    figure.suptitle(f"{capacity} model: target (black) and fitted path", y=0.995)
+    figure.tight_layout(rect=(0, 0, 1, 0.985))
+    filename = f"fixed_checkpoints_{capacity}.png"
+    figure.savefig(ASSETS / filename)
+    plt.close(figure)
+    return {
+        "asset": filename,
+        "capacity": capacity,
+        "seed": 0,
+        "condition": "uniform",
+        "updates": list(updates),
+        "runs": used,
+    }
 
 
 def build_ou_response() -> dict:
@@ -175,10 +236,11 @@ def build_ou_response() -> dict:
     target = stored["target"][index, :, 0]
     prediction = stored["prediction"][index, :, 0]
 
-    figure, axes = plt.subplots(2, 1, figsize=(8.2, 5.6), sharex=True, height_ratios=[2, 1])
+    figure, axes = plt.subplots(1, 2, figsize=(13.0, 4.3), width_ratios=[1.7, 1])
     axes[0].plot(time, target, color="black", linewidth=1.4, label="target")
     axes[0].plot(time, prediction, color="tab:blue", linewidth=1.2, linestyle="--", label="prediction")
     axes[0].set_ylabel("OU response")
+    axes[0].set_xlabel("time")
     axes[0].legend(loc="best", frameon=False)
     axes[1].plot(time, np.abs(prediction - target), color="tab:red", linewidth=1.2)
     axes[1].set_yscale("log")
@@ -246,7 +308,7 @@ def _message_panels(section: str, field: str, ylabel: str, chance, filename: str
 
 def build_refinement_paths() -> dict:
     """Ten-block against hundred-block local-signature fits, restricted capacity."""
-    figure, axes = plt.subplots(2, 3, figsize=(15.0, 4.9))
+    figure, axes = plt.subplots(2, 3, figsize=(15.0, 4.9), sharey="row")
     for column, seed in enumerate(range(3)):
         coarse_dir = None
         for root in ("neural_ode_fixed_path_signature_10k", "neural_ode_fixed_path_closeout_10k"):
@@ -505,8 +567,8 @@ def main() -> int:
     with plt.rc_context(STYLE):
         manifest = {
             "fixed_path_residuals": build_fixed_path_residuals(),
-            "fixed_terminal_restricted": build_terminal_fixed_path_comparison("restricted"),
-            "fixed_terminal_expressive": build_terminal_fixed_path_comparison("expressive"),
+            "fixed_checkpoints_restricted": build_checkpoint_path_comparison("restricted"),
+            "fixed_checkpoints_expressive": build_checkpoint_path_comparison("expressive"),
             "ou_response": build_ou_response(),
             "refinement_paths": build_refinement_paths(),
             "paired_sensitivity": _message_panels(
@@ -527,8 +589,8 @@ def main() -> int:
     (ASSETS / "figure_manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     written = {
         "fixed_clustered_residuals.png",
-        "fixed_terminal_restricted.png",
-        "fixed_terminal_expressive.png",
+        "fixed_checkpoints_restricted.png",
+        "fixed_checkpoints_expressive.png",
         "ou_clustered_j2_response_path0.png",
         "path_comparison_restricted.png",
         "paired_balanced.png",

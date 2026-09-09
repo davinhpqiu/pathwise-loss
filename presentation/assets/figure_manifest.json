@@ -8,7 +8,10 @@
       "loss": "mse",
       "updates": 10000,
       "initial_fingerprint": "27d5dfe70143b48437d5f34a4e7402923b4d8a99328764ea651e05ce185412a0",
-      "shared_y_limit": 0.08894918859004974
+      "shared_y_limits": [
+        9.999999747378752e-05,
+        0.10000000149011612
+      ]
     },
     {
       "run": "results/runs/neural_ode_fixed_path_closeout_10k/restricted/seed1/clustered/j2",
@@ -18,114 +21,49 @@
       "loss": "j2",
       "updates": 10000,
       "initial_fingerprint": "27d5dfe70143b48437d5f34a4e7402923b4d8a99328764ea651e05ce185412a0",
-      "shared_y_limit": 0.08894918859004974
+      "shared_y_limits": [
+        9.999999747378752e-05,
+        0.10000000149011612
+      ]
     }
   ],
-  "fixed_terminal_restricted": {
-    "asset": "fixed_terminal_restricted.png",
-    "runs": [
-      {
-        "run": "results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/mse",
-        "capacity": "restricted",
-        "seed": 0,
-        "condition": "uniform",
-        "loss": "mse",
-        "updates": 10000
-      },
-      {
-        "run": "results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/j2",
-        "capacity": "restricted",
-        "seed": 0,
-        "condition": "uniform",
-        "loss": "j2",
-        "updates": 10000
-      },
-      {
-        "run": "results/runs/neural_ode_fixed_path_closeout_10k/restricted/seed0/uniform/h1",
-        "capacity": "restricted",
-        "seed": 0,
-        "condition": "uniform",
-        "loss": "h1",
-        "updates": 10000
-      },
-      {
-        "run": "results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/sig_global",
-        "capacity": "restricted",
-        "seed": 0,
-        "condition": "uniform",
-        "loss": "sig_global",
-        "updates": 10000
-      },
-      {
-        "run": "results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/sig_local",
-        "capacity": "restricted",
-        "seed": 0,
-        "condition": "uniform",
-        "loss": "sig_local",
-        "updates": 10000
-      },
-      {
-        "run": "results/runs/neural_ode_fixed_path_local_fine_10k/restricted/seed0/uniform/sig_local_fine",
-        "capacity": "restricted",
-        "seed": 0,
-        "condition": "uniform",
-        "loss": "sig_local_fine",
-        "updates": 10000
-      }
-    ]
+  "fixed_checkpoints_restricted": {
+    "asset": "fixed_checkpoints_restricted.png",
+    "capacity": "restricted",
+    "seed": 0,
+    "condition": "uniform",
+    "updates": [
+      100,
+      500,
+      1000,
+      2500,
+      10000
+    ],
+    "runs": {
+      "mse": "results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/mse",
+      "j2": "results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/j2",
+      "sig_global": "results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/sig_global",
+      "sig_local": "results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/sig_local"
+    }
   },
-  "fixed_terminal_expressive": {
-    "asset": "fixed_terminal_expressive.png",
-    "runs": [
-      {
-        "run": "results/runs/neural_ode_fixed_path_signature_10k/expressive/seed0/uniform/mse",
-        "capacity": "expressive",
-        "seed": 0,
-        "condition": "uniform",
-        "loss": "mse",
-        "updates": 10000
-      },
-      {
-        "run": "results/runs/neural_ode_fixed_path_signature_10k/expressive/seed0/uniform/j2",
-        "capacity": "expressive",
-        "seed": 0,
-        "condition": "uniform",
-        "loss": "j2",
-        "updates": 10000
-      },
-      {
-        "run": "results/runs/neural_ode_fixed_path_closeout_10k/expressive/seed0/uniform/h1",
-        "capacity": "expressive",
-        "seed": 0,
-        "condition": "uniform",
-        "loss": "h1",
-        "updates": 10000
-      },
-      {
-        "run": "results/runs/neural_ode_fixed_path_signature_10k/expressive/seed0/uniform/sig_global",
-        "capacity": "expressive",
-        "seed": 0,
-        "condition": "uniform",
-        "loss": "sig_global",
-        "updates": 10000
-      },
-      {
-        "run": "results/runs/neural_ode_fixed_path_signature_10k/expressive/seed0/uniform/sig_local",
-        "capacity": "expressive",
-        "seed": 0,
-        "condition": "uniform",
-        "loss": "sig_local",
-        "updates": 10000
-      },
-      {
-        "run": "results/runs/neural_ode_fixed_path_local_fine_10k/expressive/seed0/uniform/sig_local_fine",
-        "capacity": "expressive",
-        "seed": 0,
-        "condition": "uniform",
-        "loss": "sig_local_fine",
-        "updates": 10000
-      }
-    ]
+  "fixed_checkpoints_expressive": {
+    "asset": "fixed_checkpoints_expressive.png",
+    "capacity": "expressive",
+    "seed": 0,
+    "condition": "uniform",
+    "updates": [
+      100,
+      500,
+      1000,
+      2500,
+      10000
+    ],
+    "runs": {
+      "mse": "results/runs/neural_ode_fixed_path_signature_10k/expressive/seed0/uniform/mse",
+      "j2": "results/runs/neural_ode_fixed_path_signature_10k/expressive/seed0/uniform/j2",
+      "sig_global": "results/runs/neural_ode_fixed_path_signature_10k/expressive/seed0/uniform/sig_global",
+      "sig_local": "results/runs/neural_ode_fixed_path_signature_10k/expressive/seed0/uniform/sig_local"
+    }
   },
   "ou_response": {
     "run": "results/runs/neural_cde_brownian_ou/seed1/clustered/j2",
