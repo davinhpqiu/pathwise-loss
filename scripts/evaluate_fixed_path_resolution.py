@@ -101,7 +101,7 @@ def main() -> int:
         "--solver-max-steps",
         type=float,
         nargs=3,
-        default=(1.0 / 512.0, 1.0 / 1024.0, 1.0 / 2048.0),
+        default=(1.0 / 1024.0, 1.0 / 2048.0, 1.0 / 4096.0),
     )
     args = parser.parse_args()
 

@@ -17,8 +17,11 @@ real dataset at the end.
    entry is resumable without reading its source.
 5. Notebooks in order, as needed. Each states its own mathematics.
 
-Steps 3 and 4 need `docs/`, untracked since 20/08 and so absent from a fresh
-clone. Working from repository alone, read steps 1, 2, 5.
+Steps 3 and 4 need local working notes under `docs/`, untracked since 20/08 and
+absent from a fresh clone. Versioned exception
+`docs/neural_ode_operator_experiments.md` records detailed procedure for
+notebooks 05 and 06. Working from repository alone, read steps 1, 2, 5 and that
+procedure when needed.
 
 **State of play is the newest logbook entry, not this file.** Directions change:
 $p$-variation was central for a week and is now a diagnostic (17/08); a

@@ -1,5 +1,9 @@
 """Integral norms and quadrature on sampled paths.
 
+Notebook 01 gives definitions, convergence arguments and citations. This module
+is the reusable NumPy implementation used for closed-form and numerical checks;
+``losses.py`` contains differentiable PyTorch counterparts.
+
 Everything here treats a "path" as a pair (t, x) where
 
     t : (T,)        strictly increasing sample times
@@ -7,7 +11,7 @@ Everything here treats a "path" as a pair (t, x) where
 
 i.e. the *time axis is the second-to-last*, matching the (batch, time, channel)
 convention used by torchcde / signatory. All functions are pure NumPy so they
-can be unit-tested cheaply; the torch versions live in `losses.py`.
+can be unit-tested cheaply.
 
 References
 ----------

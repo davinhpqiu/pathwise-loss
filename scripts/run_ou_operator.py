@@ -1,5 +1,10 @@
 #!/usr/bin/env python
-"""Run one Brownian-to-OU Neural CDE fit or its implementation gates."""
+"""Run one notebook 06 Brownian-to-OU fit or implementation gate.
+
+Modes perform acceptance checks, a signature value-gradient audit, or one
+configured fit. A fit writes metadata, model state, history and held-out metrics
+under the supplied output directory; notebook 06 reads those artifacts.
+"""
 
 from __future__ import annotations
 

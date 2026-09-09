@@ -8,11 +8,10 @@ with t_ctx (B, C), x_ctx (B, C, d), t_query (B, Q). Query times are arbitrary
 and need not lie in the context, which is what allows the loss to be evaluated
 on an irregular grid of its own (`datasets.py`).
 
-`GRUQuery` is deliberately the dumbest model that satisfies that interface: a
-recurrent encoder summarising the context into one vector, and a feed-forward
-decoder mapping (summary, time) to a value. It exists to make the pipeline run
-end to end, and its accuracy is beside the point. The Linear Neural CDE named in
-the proposal replaces the encoder later without touching the interface.
+``GRUQuery`` provides the discrete recurrent baseline: an encoder summarises
+context into one vector and a feed-forward decoder maps summary and query time
+to a value. ``LinearCDEQuery`` supplies the parameter-matched continuous-time
+control in notebook 03 without changing this interface.
 """
 
 from __future__ import annotations

@@ -17,18 +17,46 @@ New to the project: read `CLAUDE.md` first (aim, conventions, reading order),
 then the newest entry in `docs/logbook/` for what is currently in force, then
 `docs/open_questions.md` for what is undecided.
 
-> `docs/` is working notes, kept locally and deliberately untracked since
-> 20/08. A fresh clone has no `docs/` directory, so every reference to it below
-> resolves only in the author's working copy. Orientation available from the
-> repository alone: this file, `CLAUDE.md`, and the notebooks, each of which
-> states its own mathematics.
+> `docs/logbook/` and `docs/open_questions.md` are local working notes, kept
+> untracked since 20/08. Versioned exception
+> `docs/neural_ode_operator_experiments.md` records detailed procedure for
+> notebooks 05 and 06. Orientation available from a fresh clone: this file,
+> `CLAUDE.md`, the versioned procedure and notebooks, each of which states its
+> own mathematics.
 
-Current state, 07/09: fixed-path Neural ODE main study is complete and its final
-hundred-block local-signature refinement is ready to run. Brownian-to-OU
-operator study is closed. Brownian-message sensitivity study is complete: core
-acceptance, independent RoughPy verification, 10,000-stream main study and
-independent 10,000-stream confirmation have finished. Procedure and results are
-in notebook 07. $p$-variation remains a diagnostic.
+Current state, 08/09: all experiments used in the final evidence chain are
+complete. Fixed-path Neural ODE study includes its hundred-block local-signature
+refinement; Brownian-to-OU operator study is closed; Brownian-message sensitivity
+includes core acceptance, independent RoughPy verification, 10,000-stream main
+study and independent 10,000-stream confirmation. Classification is deferred;
+the early GRU/Linear-Neural-CDE reconstruction branch is preliminary. Final
+claims exclude both branches.
+
+Recommended report reading order is notebook 01 for the sampling-measure
+argument, notebook 05 for the controlled fixed-path comparison, notebook 06 for
+transfer to stream-to-stream operator learning, and notebook 07 for direct
+sensitivity to first- and second-level Brownian rough-path messages. Notebook 02
+is a roughness diagnostic; notebooks 03 and 04 document earlier or deferred
+branches and state their evidence limits at the top.
+
+### Experimental story
+
+Project asks what closeness between paths should mean when training or comparing
+stream-valued objects. [Notebook 01](notebooks/01_integral_norms.ipynb) shows
+that equal sample weights average error under observation distribution, while
+elapsed-time quadrature approximates an integral over time.
+[Notebook 05](notebooks/05_neural_ode_path.ipynb) turns that distinction into a
+controlled Neural ODE study: uneven sampling separates MSE from $J_2$;
+derivative supervision is powerful for one smooth target; signature behavior
+depends on optimization, truncation and local partition.
+[Notebook 06](notebooks/06_brownian_ou_operator.ipynb) transfers sampling result
+to a causal Brownian-driver to OU-response operator.
+[Notebook 07](notebooks/07_brownian_message_sensitivity.ipynb) then isolates
+what coordinate norms cannot see: area-only rough-path messages leave
+coordinate paths unchanged, while lift-aware signature comparisons respond,
+with local sensitivity controlled by window placement. Combined result is a
+map of what each discrepancy controls and misses, not one universally best
+loss.
 
 ## Setup: first time
 
@@ -44,8 +72,9 @@ pip install -r requirements.txt      # jupyter, pytest, pyyaml, the rest
 python -m ipykernel install --user --name pathwise-loss
 ```
 
-`requirements.txt` is **core only**, does not need compiler, GPU, or
-a git clone. The modelling stack (torch, neural CDEs, signatures) is in `requirements-ml.txt`. See [Troubleshooting](#troubleshooting) before installing that one.
+`requirements.txt` is **core only** and needs no compiler, GPU or git clone.
+The modelling stack for Neural ODE, Neural CDE and signature experiments is in
+`requirements-ml.txt`; install it only when running those notebooks or fits.
 
 Check it worked:
 
@@ -233,10 +262,10 @@ python scripts/evaluate_fixed_path_resolution.py \
   --run results/runs/neural_ode_fixed_path_signature_10k/restricted/seed0/uniform/mse
 ```
 
-The final Experiment A refinement replaces ten local signature blocks by 100
+The completed final Experiment A refinement replaces ten local signature blocks by 100
 while applying the levelwise homogeneity correction derived in notebook 05.
 It keeps the same target, 64 observations, models, seeds, optimizer and
-10,000-update budget. First run the value-gradient audit:
+10,000-update budget. The value-gradient audit passed; this command reproduces it:
 
 ```bash
 sbatch scripts/arc/submit_fixed_path_local_fine_audit.slurm
@@ -244,7 +273,8 @@ sbatch scripts/arc/submit_fixed_path_local_fine_audit.slurm
 
 Audit passed on 7 September: all components and gradients are finite, and
 homogeneity scaling restores fine level terms to the same numerical order as
-ten-block terms. Configuration is unlocked. Launch six independent fits:
+ten-block terms. Six independent fits then completed; this command reproduces
+the array:
 
 ```bash
 sbatch scripts/arc/submit_fixed_path_local_fine_array.slurm
@@ -367,6 +397,23 @@ python scripts/run_classification.py \
   --config configs/classification_basicmotions_per_series.yaml
 ```
 
+### Presentation
+
+```bash
+python scripts/build_presentation_figures.py      # regenerate every deck figure
+cd presentation && latexmk -pdf pathwise_loss_presentation.tex
+```
+
+Deck references `presentation/assets/` only. That folder is written entirely by
+the figure script, which reads stored runs, verifies each run's configuration
+against what the slide caption claims, and records provenance in
+`assets/figure_manifest.json`. Editing a caption that names a capacity, seed or
+condition means updating `FIXED_PATH_RUN` or `OU_RUN` in the script, which then
+fails loudly if the named run disagrees.
+
+Figures need `results/runs/`, which is gitignored, so a fresh clone rebuilds the
+deck from committed assets and regenerates them only after rerunning the studies.
+
 ### On ARC
 
 ARC becomes relevant once model training starts. See [`docs/arc_guide.md`](docs/arc_guide.md).
@@ -388,10 +435,10 @@ squeue -u $USER
 | notebook | what it covers | status |
 |---|---|---|
 | `01_integral_norms.ipynb` | The estimator and why: quadrature rules, convergence rates, **why MSE is inconsistent under non-uniform sampling**, choice of $p$. Exposition; verification is in `tests/` | complete |
-| `02_p_variation.ipynb` | roughness of a path: definition, and the three implementations, one section each | complete |
-| `03_loss_comparison.ipynb` | matched MSE against weighted-$J_2$ experiment: GRU and Linear NCDE, uniform and clustered targets, pilot and held-out seed-0 results | in progress |
-| `04_classification.ipynb` | fixed 1-NN path-distance benchmark: explicit preprocessing and dependent/independent DTW controls, with signature extension defined | in progress |
-| `05_neural_ode_path.ipynb` | fixed-target Neural ODE loss comparison: design, target inspection, acceptance criteria and result analysis | complete |
+| `02_p_variation.ipynb` | roughness of a path: definition and three implemented estimators; index estimation is documented future work | supporting diagnostic |
+| `03_loss_comparison.ipynb` | early matched MSE against weighted-$J_2$ reconstruction study: pilot and held-out seed-0 GRU/Linear-NCDE results | preliminary; further seeds deferred |
+| `04_classification.ipynb` | fixed 1-NN path-distance benchmark design and one retained historical output | deferred; not final evidence |
+| `05_neural_ode_path.ipynb` | fixed-target Neural ODE loss comparison, including three-seed closeout and hundred-block local-signature refinement | complete |
 | `06_brownian_ou_operator.ipynb` | causal Brownian-driver to OU-response Neural CDE: algorithm, gates and paired loss analysis | complete |
 | `07_brownian_message_sensitivity.ipynb` | controlled increment and Lévy-area messages: direct discrepancy curves and detection | complete |
 
@@ -401,8 +448,8 @@ commands live in this README. Preliminary missingness check is part of notebook
 
 Neural ODE and stream-to-stream experiments are specified in
 [`docs/neural_ode_operator_experiments.md`](docs/neural_ode_operator_experiments.md).
-Fixed-path implementation and future results use notebook 05.
-Brownian-to-OU implementation and future results use notebook 06.
+Fixed-path implementation and final results use notebook 05.
+Brownian-to-OU implementation and final results use notebook 06.
 
 ---
 
@@ -454,9 +501,9 @@ pathwise-loss/
 ├── data/{raw,synthetic}/    # gitignored. Regenerate, don't commit.
 ├── results/{runs,logs,figures}/
 ├── papers/                  # PDFs + references.bib
-└── docs/                    # untracked since 20/08: absent from a fresh clone
+└── docs/                    # local notes plus one versioned procedure
     ├── arc_guide.md         # Oxford ARC: accounts, SLURM, storage
-    ├── neural_ode_operator_experiments.md # next experiment procedure
+    ├── neural_ode_operator_experiments.md # versioned design and execution record
     ├── open_questions.md    # register of what is undecided
     └── logbook/             # dated notes and findings. Append-only.
 ```
@@ -493,30 +540,16 @@ drift apart quickly if the second is left until the write-up.
 | | status |
 |---|---|
 | Quadrature, $L^p$ norms, convergence studies | done: notebook 01 |
-| $p$-variation: brute force, $O(N^2)$ DP, pruned $O(N\log N)$ | done, tests pass 16/08 |
-| $p$-variation index estimator | deferred: diagnostic only |
-| MSE vs integral norm estimator under irregular sampling | done: notebook 01 §3 |
-| Learned effect of target sampling mechanism | seed 0 complete for GRU and matched Linear NCDE; two seeds remain |
-| Effect of exponent $p$ | implementation available; application-specific experiments deferred |
-| Top-down segmentation (adequacy + similarity) | designed, not written: `docs/logbook/2026-08-12.md` |
-| `src/pathloss/losses.py` (torch, differentiable) | done: MSE + weighted $L^p$ |
-| Baseline model (GRU encoder + query-time decoder) | done: `src/pathloss/models.py` |
-| Linear NCDE baseline | parameter matched core study implemented; seed 0 complete |
-| `scripts/run_reconstruction.py` training loop | done, needs torch installed |
-| 1-NN path-distance classification benchmark | corrected BasicMotions configurations written; fresh raw and preprocessing runs remain |
-| Signatures | differentiable global/local fixed-path losses and independent checks written; value and gradient audit is next |
-| Fixed-path Neural ODE | Fourier adequacy passes; 10,000-update finite-budget signature pilot prepared |
-| Brownian-to-OU path operator | data, causal Neural CDE and acceptance gates implemented; work deferred |
-| Controlled missingness | evaluator implemented; one-seed pipeline check only |
-| Real dataset | not obtained |
-| ARC | fixed-path eight-job signature pilot prepared; earlier integral and extended arrays retained |
+| $p$-variation algorithms | implemented and retained as notebook 02 diagnostic |
+| Early GRU and Linear Neural CDE reconstruction | seed-0 pilot complete; preliminary evidence only: notebook 03 |
+| BasicMotions 1-NN classification | corrected design retained; fresh runs deferred and excluded: notebook 04 |
+| Fixed-path Neural ODE loss comparison | complete, including three seeds, numerical checks and hundred-block refinement: notebook 05 |
+| Brownian-to-OU path operator | complete for three paired seeds: notebook 06 |
+| Brownian message sensitivity | complete main and independent confirmation analyses: notebook 07 |
 
-Next: run fixed-path signature value and gradient audit, then matched eight-fit
-signature pilot at 10,000 updates.
-Remaining reconstruction and
-classification runs are supporting tasks. Exponent-specific integral-norm
-studies remain deferred.
-`docs/open_questions.md` contains the remaining decisions.
+No further run is required for a coherent final report. Optional extensions are
+listed in `docs/open_questions.md`; they should not be mixed into the completed
+evidence chain without a new design decision.
 
 ---
 

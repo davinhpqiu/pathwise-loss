@@ -1,9 +1,11 @@
-"""Controlled messages and discrepancies for supplied Brownian rough streams.
+"""Controlled messages and discrepancies for notebook 07.
 
 Input rows are step-two Lie increments: four first-level coordinates followed
 by six antisymmetric area coordinates. Tensor signatures are obtained by
 embedding each Lie increment in tensor algebra, exponentiating, and applying
 Chen multiplication. No rough-path library is required for this core route.
+Notebook 07 defines every message and discrepancy and records an independent
+RoughPy comparison against this implementation.
 """
 
 from __future__ import annotations

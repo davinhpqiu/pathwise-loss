@@ -1,4 +1,10 @@
-"""Fixed 1-nearest-neighbour evaluation for labelled path archives."""
+"""Fixed 1-nearest-neighbour evaluation for notebook 04.
+
+Only preprocessing rule and path distance vary. Functions load fixed UEA/UCR
+splits, apply training-only or per-series normalization, compute dependent or
+independent multivariate distances through aeon, and return accuracy plus
+balanced accuracy. Notebook 04 records definitions and evidence limits.
+"""
 
 from __future__ import annotations
 

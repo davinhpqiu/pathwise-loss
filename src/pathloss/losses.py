@@ -1,4 +1,6 @@
-"""Differentiable losses in torch, matching the NumPy definitions in `norms.py`.
+"""Differentiable path losses used by notebooks 03, 05 and 06.
+
+Definitions match the NumPy reference implementation in ``norms.py``.
 
 Each loss takes target times `t` of shape (B, T), predictions and targets of
 shape (B, T, d), and returns a scalar averaged over the batch.

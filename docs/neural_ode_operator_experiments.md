@@ -1,9 +1,13 @@
 # Neural differential path experiments
 
-Status, 28 August: experiment A implementation, Fourier adequacy and signature
-value-gradient audit pass. Immediate focus is fixed-path signature comparison
-at a 10,000-update finite budget. Brownian stream tasks are deferred pending
-external input. Forecasting is outside scope.
+Status, 8 September: experiments A and B are complete. Experiment A comprises
+the fixed-path adequacy and signature audits, the paired 10,000-update loss
+comparison, numerical checks and the hundred-block local-signature refinement;
+results are reconstructed in `../notebooks/05_neural_ode_path.ipynb`.
+Experiment B comprises the accepted Brownian-driver-to-OU-response Neural CDE
+comparison in `../notebooks/06_brownian_ou_operator.ipynb`. Section 6 records an
+unrun nonlinear extension rather than completed evidence. Forecasting remains
+outside scope.
 
 ## 1. Aim
 
@@ -27,7 +31,7 @@ Two experiments form one progression.
 | experiment | input | target | fitted output | role |
 |---|---|---|---|---|
 | A: one-path fit | time and learned initial state | one fixed path $Y^\star$ | Neural ODE path $\widehat Y$ | expose loss-dependent approximation |
-| B: stream-to-stream, deferred | Brownian path $W^{(i)}$ | paired OU response $Y^{(i)}$ | Neural CDE response $\widehat Y^{(i)}$ | future operator calibration |
+| B: stream-to-stream calibration | Brownian path $W^{(i)}$ | paired OU response $Y^{(i)}$ | Neural CDE response $\widehat Y^{(i)}$ | test transfer to causal operator learning |
 
 Experiment A is path fitting. Experiment B is path-to-path operator learning.
 
@@ -102,7 +106,8 @@ $$
 Anchor is required because signature is unchanged by constant translation of
 output channel. Factors $1/d_Y$ and $d_Z^{-k}$ make each block a mean squared
 coordinate discrepancy: level $k$ has $d_Z^k$ coordinates. This is an
-engineering convention rather than the $d_r$ distance of `2026-08-16.md`.
+engineering convention rather than the response-derived $d_r$ family derived
+in notebook 05 §5.
 It does not compensate factorial decay or equalize gradients. For continuous
 bounded-variation $Z$ with channelwise $\ell^1$ variation $V_Z$,
 
@@ -480,7 +485,7 @@ ten-block result is not repaired simply by using more intervals.
 | signature fit improves loop or local-event recovery under independent metrics | path representation has broader effect |
 | all losses fail | model, solver or optimization must be repaired before comparison |
 
-## 4. Experiment B: Brownian stream to OU stream (deferred)
+## 4. Experiment B: Brownian stream to OU stream
 
 ### 4.1 Aim
 
@@ -739,7 +744,7 @@ Differentiable PyTorch implementation requires tests against:
 7. levelwise loss and parameter-gradient magnitudes recorded on a fixed
    perturbed batch before training. Scaling is frozen before paired runs.
 
-## 6. Main nonlinear operator comparison
+## 6. Nonlinear operator comparison (future design; unrun)
 
 OU operator is linear and lies close to model class. Retain it as implementation
 check and use nonlinear target dynamics
@@ -849,29 +854,40 @@ Signature training improving only its own discrepancy is objective recovery.
 Improvement in $E_\tau$ or $E_A$ supports preservation of path behaviour not
 directly optimized.
 
-## 7. Execution order
+## 7. Execution record and evidence locations
 
-Completed: fixed target, latent Neural ODE, Fourier adequacy, differentiable
-signature implementation and 5,000-update seed-zero MSE and $J_2$ pilot.
+The completed sequence is:
 
-Immediate order:
+1. **Experiment A, fixed-path comparison.** Fourier adequacy, signature
+   value-gradient audits, paired 10,000-update fits, three-seed closeout,
+   learning-rate sensitivity, quadrature and solver-resolution checks, and the
+   hundred-block local-signature refinement are complete. The analysis in
+   `../notebooks/05_neural_ode_path.ipynb` reads the stored configurations,
+   histories, fitted models and metrics from
+   `../results/runs/neural_ode_fixed_path_*`.
+2. **Experiment B, causal operator calibration.** Generator and model
+   acceptance, paired MSE and $J_2$ comparisons under uniform and clustered
+   target sampling, and uniform-grid signature comparisons are complete for
+   three seeds. The executable analysis and exact evidence map are in
+   `../notebooks/06_brownian_ou_operator.ipynb`; stored artefacts are under
+   `../results/runs/neural_cde_brownian_ou/`.
+3. **Brownian message sensitivity.** This is a separate path-space distance
+   experiment, not the nonlinear operator design of §6. Its procedure and
+   completed analysis are in
+   `../notebooks/07_brownian_message_sensitivity.ipynb`.
 
-1. run eight uniform, seed-zero fits at 10,000 updates: four losses and two
-   capacities;
-2. inspect common checkpoint metrics, residual paths and paired fingerprints;
-3. extend informative signature fits across paired seeds;
-4. consider $H^1$, clustered signatures or quadrature refinement only after
-   initial signature result.
+The nonlinear double-well operator in §6, the deferred classification branch
+and signature-Wasserstein comparisons are optional future extensions. They are
+not needed for the report's completed evidence chain.
 
-Brownian and nonlinear operator sections remain future designs. Their execution
-requires a later decision and any needed external input.
+## 8. Historical design review
 
-Classification and signature Wasserstein remain outside this immediate
-sequence. Existing reconstruction runs remain supporting calibration.
-
-## 8. Review
-
-Second reader, 22 August, before implementation.
+The following review was written on 22 August, before implementation. It is
+retained because it explains why controls and acceptance gates were added;
+§7 and notebooks 05–07 give the current execution status and results.
+Present and future tense below belongs to that dated design discussion. Actual
+execution differed in one material respect: experiment B retained its signature
+calibration rows, while nonlinear §6 was left unrun.
 
 Procedure covers the meeting notes closely: experiment A is the neural-ODE path
 fit with learned vector field and learned initial hidden state, experiment B is
@@ -906,8 +922,8 @@ Best fit under different Banach norms remains deferred exposition.
 $$\sum_{k=1}^{L} d_Z^{-k}\big\|\Delta S^{(k)}\big\|_2^2 ,$$
 
 so weights are $3^{-k}$ in A and $2^{-k}$ in B, with squared level norms.
-Theorem 3 of `2026-08-16.md` instead gives unsquared
-$\lambda_k=r^k$ in tensor $\ell^1$, from a response-strength bound $r$.
+Notebook 05 §5 instead derives unsquared $\lambda_k=r^k$ weights in tensor
+$\ell^1$ from a response-strength bound $r$.
 
 Section 2.3 therefore labels $D_{\mathrm{coord},L}$ as a coordinate-average
 engineering loss and keeps response-derived $D_{r,L}$ separate. Initial-value
@@ -1238,6 +1254,9 @@ of signatures for classification.
 | sFML learns a different operator | §6 parameters selected for crossings, not superficial comparability |
 | signature classification has prior art | classification retained as controlled evaluation, not novelty claim |
 
-Core progression remains experiment A, OU acceptance, then nonlinear
-stream-to-stream comparison. Literature changes protocol details and claim
-strength, rather than its research direction.
+The completed progression is experiment A followed by the OU operator
+calibration in experiment B. The nonlinear stream-to-stream design and
+classification study remain possible future work, while Brownian message
+sensitivity is reported separately in notebook 07. Literature changed protocol
+details and the strength of the claims without changing the central question:
+how a path discrepancy affects learning or comparison of path-valued objects.

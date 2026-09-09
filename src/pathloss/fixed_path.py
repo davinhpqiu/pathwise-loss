@@ -1,11 +1,12 @@
-"""Fixed-path Neural ODE experiment from the 22 August procedure.
+"""Fixed-path Neural ODE experiment analyzed in notebook 05.
 
 One learned initial state and one neural vector field generate a continuous
 hidden trajectory. An affine decoder maps it to the two-dimensional target
 path. Training changes only the path discrepancy.
 
-This module contains experiment mathematics and training code. The command-line
-wrapper only handles configuration and output files.
+This module contains target, model, losses, training, dense evaluation and
+signature audit. ``scripts/run_fixed_path.py`` handles configuration and output;
+``scripts/analyze_fixed_path_local_refinement.py`` compares stored refinements.
 """
 
 from __future__ import annotations

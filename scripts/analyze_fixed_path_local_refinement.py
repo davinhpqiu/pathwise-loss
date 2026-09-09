@@ -1,5 +1,11 @@
 #!/usr/bin/env python
-"""Compare the hundred-block Experiment A refinement with stored controls."""
+"""Compare Experiment A's hundred-block local-signature fits with controls.
+
+The script never trains a model. It reloads the six completed refinement fits
+and paired MSE, J2, H1, global-signature and ten-block local-signature fits,
+evaluates both local partitions on every saved path, and writes ``comparison.csv``
+plus ``summary.json`` for notebook 05.
+"""
 
 from __future__ import annotations
 

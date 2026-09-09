@@ -24,6 +24,35 @@
 \newlength{\mathslogowidth}
 \setlength{\mathslogowidth}{\dimexpr 3mm * 347 / 105 \relax}
 
+%% DataSig logo, header only: brand assets carry a light background, so the
+%% navy title slide takes the institute line instead. Drop datasig-logo.png into
+%% theme-assets/ to switch it on; deck compiles unchanged while file is absent.
+%% Width 16mm sets logo height 7.2mm against the 10mm Oxford crest at aspect
+%% 561:252, the cropped mark-and-wordmark block.
+\newlength{\datasiglogowidth}
+\setlength{\datasiglogowidth}{16mm}
+\newlength{\datasiglogolift}
+\setlength{\datasiglogolift}{1.4mm}
+\newcommand{\datasiglogofile}{datasig-logo.png}
+\newif\ifdatasiglogo
+\IfFileExists{theme-assets/\datasiglogofile}{\datasiglogotrue}{\datasiglogofalse}
+%% Width reserved beside frame title: both logos when DataSig is present.
+\newlength{\headerlogowidth}
+\ifdatasiglogo
+  \setlength{\headerlogowidth}{\dimexpr\oxfordlogowidth+\datasiglogowidth+3mm\relax}
+\else
+  \setlength{\headerlogowidth}{\oxfordlogowidth}
+\fi
+
+%% Logo row for frame titles, one box so no input newline can break the line.
+%% \smash keeps the crest setting header height; lift centres the shorter logo.
+\newcommand{\headerlogos}{%
+  \ifdatasiglogo
+    \smash{\raisebox{\datasiglogolift}{\includegraphics[width=\datasiglogowidth]{\datasiglogofile}}}\hspace{3mm}%
+  \fi%
+  \includegraphics[width=\oxfordlogowidth]{oxford-logo.png}%
+}
+
 \setbeamertemplate{title page}{
   \begin{picture}(0,0)
     \put(-\textmargin, \dimexpr -\paperheight*6/10 \relax){%
@@ -50,14 +79,14 @@
 \setbeamertemplate{frametitle}{%
   \rlap{%
     \begin{beamercolorbox}[sep=\titlevmargin,left,wd=\dimexpr\fullpagewidth-\titlehmargin*2+\titlevmargin*2\relax]{frametitle}%
-      \begin{minipage}{\dimexpr\fullpagewidth-\oxfordlogowidth-\titlehmargin*3-0.1cm\relax}%
+      \begin{minipage}{\dimexpr\fullpagewidth-\headerlogowidth-\titlehmargin*3-0.1cm\relax}%
         \strut\insertframetitle\strut\par%
       \end{minipage}%
       \hspace{\titlehmargin}%
-      \begin{minipage}{\dimexpr\oxfordlogowidth+1mm\relax}%
-        \hfill
-        \vspace*{-4mm}
-        \includegraphics[width=\oxfordlogowidth]{oxford-logo.png}%
+      \begin{minipage}{\dimexpr\headerlogowidth+1mm\relax}%
+        \vspace*{-4mm}%
+        %% One box: a paragraph would break at \hfill and stack the logos.
+        \makebox[\linewidth][r]{\headerlogos}%
       \end{minipage}%
     \end{beamercolorbox}%
   }%

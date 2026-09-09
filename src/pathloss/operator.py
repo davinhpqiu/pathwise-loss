@@ -1,8 +1,10 @@
-"""Paired stream-to-stream operator learning for Brownian drivers and OU targets.
+"""Brownian-driver to OU-response operator experiment in notebook 06.
 
 Experiment B supplies a complete Brownian control path on a fixed grid. A
 path-output Neural CDE evolves causally along that control and decodes its hidden
 state throughout the interval. Training changes output-path discrepancy only.
+This module contains split generation, model, losses, training, acceptance and
+held-out evaluation; command-line scripts only orchestrate and save artifacts.
 """
 
 from __future__ import annotations

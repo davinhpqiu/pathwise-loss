@@ -46,5 +46,4 @@ study:
 
 evaluation:
   n_points: 1025
-  solver_max_steps: [0.001953125, 0.0009765625, 0.00048828125]
-
+  solver_max_steps: [0.0009765625, 0.00048828125, 0.000244140625]

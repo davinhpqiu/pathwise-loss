@@ -1,4 +1,13 @@
-"""Reusable preparation and one-condition Brownian message analysis."""
+"""Preparation and analysis for notebook 07's Brownian-message study.
+
+The input archive contains step-two Brownian rough-path increments. Preparation
+validates that archive and caches global/local signature factors for unmodified
+stream identities. A condition then inserts a controlled increment, area, or
+combined message; compares original and modified streams under every configured
+discrepancy; and runs the fixed 1-nearest-neighbour detection check. Aggregation
+writes the tables consumed directly by notebook 07. No neural model is trained
+in this experiment.
+"""
 
 from __future__ import annotations
 

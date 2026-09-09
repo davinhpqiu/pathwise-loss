@@ -1,9 +1,13 @@
-"""Differentiable signatures and signature losses for piecewise-linear paths.
+"""Differentiable signatures and signature losses for notebooks 05 and 06.
 
 Tensor levels use flattened lexicographic word order. Paths have shape
 ``(..., time, channel)``. Implementation uses Chen multiplication, so gradients
 flow from every signature coordinate to path values through ordinary PyTorch
 operations.
+
+Notebook 05 §§3--6 derives and motivates the anchored coordinate-mean loss.
+Notebook 07 uses a separate NumPy rough-path construction because its supplied
+streams include explicit Lévy-area coordinates.
 """
 
 from __future__ import annotations
