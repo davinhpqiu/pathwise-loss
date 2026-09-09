@@ -43,18 +43,24 @@ for continuous-time learning}
 \institute{Mathematical Institute, University of Oxford\\DataSig}
 \date[September 2026]{3 August to 10 September 2026}
 
+%% Section divider: empty frame title so header rule and logos stay, and
+%% frame counts in the footer.
+\newcommand{\dividerframe}[1]{%
+  \begin{frame}{\strut}%
+    \vfill
+    \centering
+    {\usebeamercolor[fg]{frametitle}\huge\bfseries #1}\par
+    \vfill
+  \end{frame}%
+}
+
 \begin{document}
 
 \begin{frame}[plain]
   \titlepage
 \end{frame}
 
-\begin{frame}[plain]
-  \vfill
-  \centering
-  {\usebeamercolor[fg]{frametitle}\huge\bfseries Motivation}\par
-  \vfill
-\end{frame}
+\dividerframe{Motivation}
 
 \begin{frame}{Motivation}
 Observed time series are finite sequences of time-stamped values. Sequence to sequence models are trained using pointwise losses such as mean squared error (MSE).
@@ -182,12 +188,7 @@ An open question is which loss functions are best suited to path-to-path learnin
   A global comparison uses one truncated signature over the full interval. A local comparison uses signatures over a partition, thereby retaining coarse information about where an ordered feature occurs.
 \end{frame}
 
-\begin{frame}[plain]
-  \vfill
-  \centering
-  {\usebeamercolor[fg]{frametitle}\huge\bfseries Experiment A: fixed path}\par
-  \vfill
-\end{frame}
+\dividerframe{Experiment A: fixed path}
 
 \begin{frame}{Experiment A: target path}
   For $t\in[0,1]$, define
@@ -397,12 +398,7 @@ An open question is which loss functions are best suited to path-to-path learnin
   \end{columns}
 \end{frame}
 
-\begin{frame}[plain]
-  \vfill
-  \centering
-  {\usebeamercolor[fg]{frametitle}\huge\bfseries Experiment B: learned operator}\par
-  \vfill
-\end{frame}
+\dividerframe{Experiment B: learned operator}
 
 \begin{frame}{Experiment B: Brownian to OU}
   \begin{columns}[T,onlytextwidth]
@@ -463,12 +459,7 @@ An open question is which loss functions are best suited to path-to-path learnin
   Both signature objectives reach much lower training loss early, then rise. Final-to-best training-loss ratios are 28.4, 28.5 and 2.32 for the global loss. Terminal fits therefore record optimizer behaviour rather than a path the geometry prefers, so every signature claim in this project is stated at a fixed budget.
 \end{frame}
 
-\begin{frame}[plain]
-  \vfill
-  \centering
-  {\usebeamercolor[fg]{frametitle}\huge\bfseries Experiment C: message sensitivity}\par
-  \vfill
-\end{frame}
+\dividerframe{Experiment C: message sensitivity}
 
 \begin{frame}{Experiment C: rough-path streams}
   Each supplied Brownian stream contains first-level increments and second-level L\'evy areas:
@@ -669,12 +660,7 @@ An open question is which loss functions are best suited to path-to-path learnin
   Classifier $\widehat c_d$ uses one loss-derived distance $d$; the dotted line marks chance balanced accuracy $\operatorname{BA}=1/2$. For balanced increment and combined messages, direct increment features detect from $\rho=0.5$, offset local signatures from $\rho=1$, aligned local signatures from $\rho=2$, and maximum error from $\rho=4$. Every transition reproduces on the independent confirmation ensemble.
 \end{frame}
 
-\begin{frame}[plain]
-  \vfill
-  \centering
-  {\usebeamercolor[fg]{frametitle}\huge\bfseries Conclusions}\par
-  \vfill
-\end{frame}
+\dividerframe{Conclusions}
 
 \begin{frame}{Summary}
   \small
