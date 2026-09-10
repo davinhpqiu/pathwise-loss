@@ -225,6 +225,8 @@ An open question is which loss functions are best suited to path-to-path learnin
   \]
   Here $z_\theta(t)$ is the learned hidden trajectory, $f_\theta$ is a neural vector field, and $g_\theta$ maps the hidden state to two output coordinates. The restricted model has hidden dimension 2 and width 16. The expressive model has hidden dimension 8 and width 64.
 
+  The vector field receives $t$ together with five Fourier sine--cosine pairs $\{\sin(2^k\pi t),\cos(2^k\pi t)\}_{k=0}^{4}$. These time features help the model represent the target's short high-frequency burst.
+
   For each loss, the model fits the same target $Y^\star$ from 64 observations. The observation times are either uniform or clustered, while the initialization, optimizer and training budget remain matched. Evaluation compares every fitted path on the same dense grid under every metric.
 
   The experiment isolates how the training loss changes the path recovered from the same data and model family.
@@ -390,7 +392,7 @@ An open question is which loss functions are best suited to path-to-path learnin
   \begin{center}
     \includegraphics[width=0.98\linewidth,height=0.75\textheight,keepaspectratio]{assets/ou_clustered_j2_response_path0.png}
   \end{center}
-  \small Target and prediction are shown for one unseen Brownian driver after clustered-$\Jtwo$ training. The residual panel uses a logarithmic scale; the maximum absolute error is below $2\times10^{-3}$.
+  \small The prediction closely follows the OU target for this unseen Brownian driver after clustered-$\Jtwo$ training. The logarithmic residual panel shows that the largest errors occur around sharper response changes, but the maximum absolute error remains below $2\times10^{-3}$. This path illustrates the fit; the reported comparison averages over every held-out path and three matched seeds.
 \end{frame}
 
 \begin{frame}{Experiment B: results}
@@ -408,7 +410,7 @@ An open question is which loss functions are best suited to path-to-path learnin
     \includegraphics[width=\linewidth]{assets/ou_signature_histories.png}
   \end{center}
 
-  \small The left panel shows global-signature training and the right panel local-signature training. Epoch is on the horizontal axis, epoch-average training loss is on the logarithmic vertical axis, and each coloured curve represents one matched seed.
+  \small The left panel shows global-signature training and the right panel local-signature training. Epoch is on the horizontal axis, epoch-average training loss is on the logarithmic vertical axis, and each coloured curve represents one matched seed. A downward curve indicates successful optimization; upward spikes show that an optimizer has moved away from a previously better solution.
 
   Global-signature loss fluctuates and finishes well above its earlier minimum in every seed: the final-to-best ratios are 28.4, 28.5 and 2.32. Local-signature training is smoother for two seeds but rises late for the third. Final checkpoints therefore reflect optimizer behaviour as well as path geometry, so signature results are reported at a fixed training budget.
 \end{frame}
@@ -535,6 +537,8 @@ An open question is which loss functions are best suited to path-to-path learnin
     \node[below,darkgrey] at (96,-1.54) {offset: a boundary divides the message};
   \end{tikzpicture}
   \end{center}
+
+  \small Both rows contain exactly the same message. Any difference between the resulting distances therefore comes from the placement of the signature partition, showing that localization forms part of the definition of path closeness.
 \end{frame}
 
 \begin{frame}{Experiment C: normalized paired sensitivity}
@@ -573,8 +577,8 @@ An open question is which loss functions are best suited to path-to-path learnin
     \includegraphics[width=\linewidth]{assets/template_comparison.png}
   \end{center}
 
-  \small\textbf{Net template.} Perturbations accumulate, so endpoint displacement is available and every highlighted distance responds.\par
-  \textbf{Balanced template.} Positive and negative perturbations cancel over the full message block. Sensitivity now depends on whether the representation retains local order and on where its block boundaries lie.
+  \small\textbf{Net template.} Perturbations accumulate, so endpoint displacement is available and every highlighted distance responds. This is the easier case because a coordinate comparison can see the final displacement.\par
+  \textbf{Balanced template.} Positive and negative perturbations cancel over the full message block. Most responses shrink sharply, while the offset local signature remains strongly sensitive because its boundary separates the positive and negative halves.
 \end{frame}
 
 \begin{frame}{Experiment C: paired response to balanced messages}
@@ -582,14 +586,14 @@ An open question is which loss functions are best suited to path-to-path learnin
     \includegraphics[width=\linewidth]{assets/paired_balanced.png}
   \end{center}
 
-  \small The three panels differ only in whether the planted message alters area, increments, or both. Higher $R_d$ means that the planted change is larger relative to normal Brownian variation under distance $d$. Area-only messages are invisible to coordinate losses; combined and increment messages reveal the strong dependence of local signatures on partition placement.
+  \small The three panels differ only in whether the planted message alters area, increments, or both. Higher $R_d$ means that the planted change is larger relative to normal Brownian variation under distance $d$. In the area-only panel, coordinate losses remain zero while direct area distance responds. In the combined and increment panels, the offset local signature is most sensitive because the partition prevents cancellation across the message.
 \end{frame}
 
 \begin{frame}{Experiment C: held-out detection results}
   \begin{center}
     \includegraphics[width=\linewidth,height=0.75\textheight,keepaspectratio]{assets/detection_balanced.png}
   \end{center}
-  \small Each curve uses one named distance; the dotted line is chance balanced accuracy.
+  \small Each curve uses one named distance; the dotted line is chance balanced accuracy. For area-only messages, only direct area distance moves clearly above chance. For combined and increment messages, the offset local signature separates the classes first and approaches perfect accuracy as $\rho$ grows; the aligned local signature improves later, while MSE and $\Jtwo$ remain near chance.
 \end{frame}
 
 \begin{frame}{Experiment C: detection thresholds}
