@@ -39,7 +39,7 @@
 
 \title[Pathwise losses]{Principled loss functions\\
 for continuous-time learning}
-\author[Haoping Qiu]{Haoping Qiu\\[0.25cm]{\small Supervisors: Dr Sam Morley, Dr Ben Walker and Prof. Terry Lyons}}
+\author[Haoping Qiu]{Haoping Qiu\\[0.25cm]{\small Supervisors: Dr Sam Morley, Dr Ben Walker, Prof. Terry Lyons}}
 \institute{Mathematical Institute, University of Oxford\\DataSig}
 \date[September 2026]{3 August to 10 September 2026}
 
@@ -134,9 +134,7 @@ An open question is which loss functions are best suited to path-to-path learnin
     Signature loss & $\displaystyle \|\Phi_M(\widehat Y)-\Phi_M(Y)\|_2^2$ & Ordered increments and interactions through depth $M$ \\
     \bottomrule
   \end{tabular}
-
   \vfill
-  \textbf{Comparison principle}\par
   For the $H^1$ loss, $Y,\widehat Y\in H^1([0,T];\mathbb R^{d_y})$, dots denote weak time derivatives, and $\kappa>0$ balances value and derivative error (Ramsay and Silverman, 2005). Map $\Phi_M$ collects signature coordinates through level $M$ (Chen, 1957; Lyons et al., 2007). Each fitted path is evaluated under every metric.
 \end{frame}
 
@@ -274,30 +272,7 @@ An open question is which loss functions are best suited to path-to-path learnin
   Experiment A first uses $K=10$. Comparing signatures block by block retains coarse temporal location while keeping the representation small.
 
   \vfill
-  \small For the three-dimensional time-augmented path, the two constructions have the same raw size:
-  \[
-    3+3^2+3^3+3^4=120,
-    \qquad
-    10(3+3^2)=120.
-  \]
-  The comparison changes where structure is retained, rather than simply changing the number of coordinates.
-\end{frame}
-
-\begin{frame}{Experiment A: refined local signature loss}
-  On an interval of length $h$, a level-$k$ signature scales approximately as $h^k$. Its squared discrepancy therefore scales as $h^{2k}$. Refining from a reference partition $K_0=10$ to $K=100$ would otherwise make the signature terms much smaller.
-
-  The refined objective compensates for this homogeneity:
-  \[
-    \mathcal L_{\mathrm{local},K}^{\mathrm{hom}}(\widehat Y,Y)
-    :=A_0(\widehat Y,Y)
-      +\frac1K\sum_{b=1}^{K}\sum_{k=1}^{2}
-        \left(\frac{K}{K_0}\right)^{2k}
-        d_Z^{-k}\|\Delta S_{I_b}^{(k)}\|_2^2.
-  \]
-
-  The factor $(K/K_0)^{2k}$ keeps each level on approximately the same scale as the ten-interval construction. It does not make the fine and coarse losses identical: the finer partition retains more location information.
-
-  Coordinate averaging and homogeneity correction are project design choices. Their component values and parameter gradients were checked before training.
+  
 \end{frame}
 
 \begin{frame}{Experiment A: learning paths with the restricted model}
