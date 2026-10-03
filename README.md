@@ -79,7 +79,7 @@ The modelling stack for Neural ODE, Neural CDE and signature experiments is in
 Check it worked:
 
 ```bash
-pytest -q                            # expect: all pass
+python -m pytest -q                  # expect: all pass
 ```
 
 ## Running things
@@ -87,13 +87,14 @@ pytest -q                            # expect: all pass
 ### Tests
 
 ```bash
-pytest -q                  # all
-pytest -q -k p_variation   # one group
-pytest -q -v               # see the names: the names are documentation
+python -m pytest -q                  # all
+python -m pytest -q -k p_variation   # one group
+python -m pytest -q -v               # see the names: the names are documentation
 ```
 
-Run before trusting notebook output. If they pass, every formula the notebooks
-rely on does what it claims.
+Run before trusting notebook output. Passing tests establish their stated
+anchors; mathematical proofs and novelty require separate review. Module-form
+invocation also makes repository-local study scripts importable in tests.
 
 ### Maths rendering
 
@@ -103,7 +104,63 @@ npm install katex && node scripts/check_math.js
 
 Renders every `$...$` and `$$...$$` in the logbook, README and notebooks through
 KaTeX. KaTeX implements a subset of LaTeX, so expressions that are valid TeX can
-still fail to display.
+still fail to display. Failures give a nonzero exit status. Use `--root DIRECTORY`
+to check an isolated Markdown/notebook fixture.
+
+### Response distance and storage studies
+
+This research branch compares terminal responses of norm-bounded linear CDEs.
+Local theory and evidence are indexed in `docs/response_distance/README.md`.
+The 2 October audit is `docs/response_distance/audit_2026-10-02.md`.
+The versioned [notebook 08](notebooks/08_response_distance.ipynb) contains the
+self-contained planar BV and mixed-block proofs, with an executable example;
+`mixed_blocks.md` is their local working copy. `proofs.md` covers
+Lie response constants and log-ODE merges; `storage.md` covers exact bounded
+variation Euler minimax error and pure Engel storage bounds. These notes and
+run outputs follow the repository's local, untracked working-note convention.
+
+| runner in `scripts/` | purpose |
+|---|---|
+| `check_response_separation.py` | overflow-safe finite-field ranks; full rank excludes identities, deficient rank supplies candidates |
+| `study_response_gap.py` | level response estimates against HS certificates |
+| `study_response_composition.py` | global against local interval responses |
+| `study_response_compression.py` | two-loop tensor Euler merge comparison |
+| `study_response_logode_merge.py` | two-loop log-ODE merge bounds and estimates |
+| `study_response_area_gauges.py` | spectral area bounds and numerical slack |
+| `study_response_storage.py` | exact BV integer optimization and analytic pure-Lie storage brackets |
+| `study_response_mixed.py` | planar BV log-ODE and mixed-block analytic bounds, finite-scale radii and exact matrix witnesses |
+
+Run from repository root, using a new output directory each time:
+
+```bash
+python scripts/check_response_separation.py --kmax 8 --seed 211 --out results/runs/response_separation/new_run
+python scripts/study_response_gap.py --out results/runs/response_gap/new_run --seed 211
+python scripts/study_response_composition.py --out results/runs/response_composition/new_run --seed 211
+python scripts/study_response_compression.py --out results/runs/response_compression/new_run --seed 211
+python scripts/study_response_logode_merge.py --out results/runs/response_logode_merge/new_run --seed 211
+python scripts/study_response_area_gauges.py --out results/runs/response_area_gauges/new_run --response-dims 2 3 --seed 211
+python scripts/study_response_storage.py --out results/runs/response_storage/new_run
+python scripts/study_response_mixed.py --out results/runs/response_mixed/new_run
+python -m pytest -q tests/test_response*.py
+```
+
+Storage runner uses NumPy, SciPy and Matplotlib, with no ascent, GPU or sampling.
+It writes optimum and depth-profile tables, provenance and two figures. The
+pure-Lie response costs form a rigorous lower/upper bracket; only the bounded
+variation response optimum is computed exactly. The mixed runner also needs
+no ascent: it checks analytic bounds using explicit matrix witnesses. Its BV
+theorem requires a nonzero sum of interval cubic log-signatures on the fixed
+partition; straight paths and cancellation cases are reported separately.
+Radii are sufficient, not maximal. Other response searches use nonconvex
+estimates and must retain their lower-estimate labels.
+Analytic inequalities are proved in the notes; their floating-point evaluations
+and high-precision boundary checks are numerical, without interval-certified
+rounding. Historical run metadata records source snapshots rather than
+necessarily matching current files. Working notes and outputs are ignored by
+Git; response modules, tests, runners and notebook 08 belong to the versioned
+source tree. Runners do not require ignored proof notes to record provenance;
+their absence is reported explicitly. Independent proof review and novelty
+checks remain outstanding.
 
 ### Notebooks
 

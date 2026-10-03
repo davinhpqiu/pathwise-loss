@@ -1,8 +1,7 @@
 """Run provenance: git state, configuration loading, environment record.
 
-Every runner in `scripts/` writes a `meta.json` before doing work, so a crashed
-run stays attributable. Keys are fixed here so runs from different scripts stay
-comparable.
+Helpers record shared environment keys and reserve fresh output directories.
+Individual runners control when their metadata is written.
 """
 
 from __future__ import annotations
@@ -14,20 +13,31 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-__all__ = ["git_sha", "load_config", "run_metadata", "utc_now"]
+__all__ = ["create_run_directory", "git_sha", "load_config", "run_metadata", "utc_now"]
+
+
+def create_run_directory(path: str | Path) -> Path:
+    """Reserve a fresh output directory, preserving every existing run."""
+    output = Path(path)
+    try:
+        output.mkdir(parents=True, exist_ok=False)
+    except FileExistsError as error:
+        raise ValueError(
+            f"output already exists; choose a new run directory: {output}"
+        ) from error
+    return output
 
 
 def git_sha() -> str:
     """Short commit hash, or ``"unknown"`` outside a working repository.
 
-    Exception handling is deliberately broad: provenance recording must never
-    be the reason a training run fails.
+    Missing Git or a failed Git command must not prevent a run.
     """
     try:
         return subprocess.check_output(
             ["git", "rev-parse", "--short", "HEAD"], text=True
         ).strip()
-    except Exception:
+    except (OSError, subprocess.SubprocessError):
         return "unknown"
 
 
@@ -45,9 +55,7 @@ def load_config(path: str | Path) -> dict:
     return yaml.safe_load(Path(path).read_text())
 
 
-def run_metadata(
-    config_path: str | Path, config: dict, **extra: Any
-) -> dict:
+def run_metadata(config_path: str | Path, config: dict, **extra: Any) -> dict:
     """Environment and configuration record written at start of a run.
 
     `extra` merges additional keys, letting a script record study or job fields

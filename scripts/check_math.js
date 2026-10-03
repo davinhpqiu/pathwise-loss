@@ -8,7 +8,12 @@
 
 const fs = require('fs'), path = require('path');
 const katex = require('katex');            // resolved from ./node_modules
-const root = path.resolve(__dirname, '..');
+const args = process.argv.slice(2);
+if (args.length && (args.length !== 2 || args[0] !== '--root')) {
+  console.error('Usage: node scripts/check_math.js [--root DIRECTORY]');
+  process.exit(2);
+}
+const root = args.length ? path.resolve(args[1]) : path.resolve(__dirname, '..');
 function extract(text) {
   const out = [];
   text.replace(/\$\$([\s\S]*?)\$\$/g, (m,g) => { out.push([g,true]); return ' '; })
@@ -17,7 +22,7 @@ function extract(text) {
 }
 let files = [];
 (function walk(d){ for (const e of fs.readdirSync(d,{withFileTypes:true})) {
-  if (e.name==='.git'||e.name==='.venv'||e.name==='.ipynb_checkpoints'||e.name==='__pycache__') continue;
+  if (e.name==='.git'||e.name==='.venv'||e.name==='node_modules'||e.name==='.ipynb_checkpoints'||e.name==='__pycache__') continue;
   const f = path.join(d,e.name);
   if (e.isDirectory()) walk(f); else if (f.endsWith('.md')||f.endsWith('.ipynb')) files.push(f);
 }})(root);
@@ -38,3 +43,4 @@ for (const f of files) {
   }
 }
 console.log(`\n${total} expressions checked, ${bad} failed`);
+process.exitCode = bad ? 1 : 0;
