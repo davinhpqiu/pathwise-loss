@@ -90,7 +90,7 @@ Theorems 3.1, 4.1 and 5.1, addresses the Lyons--Sidorova conjecture through
 Cartan development and log-signature convergence. These statements concern
 signature tails and regularity, rather than our small-scale certificate ratio.
 
-### FPL criterion and storage
+### $(\varepsilon,r)$-representation criterion and storage
 
 [Ferrucci, Perrée and Lyons, arXiv:2607.26281v1](https://arxiv.org/html/2607.26281v1),
 (1.9)--(1.10), Theorem 1.3 and (1.13), supplies the norm/response criterion,

@@ -66,3 +66,18 @@ def test_moved_note_equations_keep_unique_resolving_labels() -> None:
     references = re.findall(r"\\(?:eqref|ref)\{([^}]+)\}", source)
     assert len(labels) == len(set(labels))
     assert set(references) <= set(labels)
+
+
+def test_note_defines_norms_and_tensor_operations_before_criteria() -> None:
+    root = Path(__file__).resolve().parents[2]
+    source = (root / "response_distance/note.tex").read_text()
+    opening = source.split(r"\label{eq:criterion}", 1)[0]
+    for definition in (
+        r"\norm{X}_{1\text{-var}}",
+        r"S(X)_0=1",
+        r"e_\otimes^U=\exp_\otimes U=",
+        r"[U,V]=U\otimes V-V\otimes U",
+        r"\norm{A_i}_F^2=\operatorname{tr}(A_i^\top A_i)",
+    ):
+        assert definition in opening
+    assert r"\norm{M}_{\op}=\sup_{\norm{v}_2=1}\norm{Mv}_2" in source

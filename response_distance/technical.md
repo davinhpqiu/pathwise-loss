@@ -2369,7 +2369,8 @@ $K\le\sqrt2\cos^2(\pi/(\ell+2))$ from §8.10.
 <a id="storage"></a>
 ## C. Euler minimax and storage
 
-Euler decoding and dense generic log-signature storage follow FPL,
+Euler decoding and dense generic log-signature storage follow
+$(\varepsilon,r)$-representation paper,
 (1.8)--(1.10); they are distinct from one-factor log-ODE decoding.
 
 ### 1. Exact bounded variation minimax error
@@ -2406,7 +2407,8 @@ partitions with fixed total variation and interval count.
 
 *Proof.* Expand each exact interval factor into its homogeneous response
 series. Its degree $j$ term has operator norm at most $x_i^j/j!$, by
-signature factorial decay and FPL (1.9). Expand the product of all exact
+signature factorial decay and (1.9) of $(\varepsilon,r)$-representation paper.
+Expand the product of all exact
 factors. The Euler product retains precisely terms with every interval degree
 at most $N$. Thus the difference is a sum over excluded multi-indices; absolute
 convergence and the triangle inequality give
@@ -2436,7 +2438,8 @@ even the best partition has error at least $e^r-P_N(r/m)^m$. Outside range
 $Q$ both responses are identity. This proves the minimax equality, including
 the permission to choose partitions adaptively. $\square$
 
-FPL already display this scalar expression as a sharpness example in (1.13).
+The $(\varepsilon,r)$-representation paper gives this scalar sharpness example
+in (1.13).
 The extension here is its universal upper bound, partition minimization and
 resulting exact discrete constraint. Novelty relative to wider numerical
 analysis literature remains unverified.
@@ -2444,7 +2447,8 @@ analysis literature remains unverified.
 ### 2. Exact discrete optimization and asymptotics
 
 Two sources of conservatism are separate. The exact weighted HS certificate
-is the sum of homogeneous error norms; FPL's length envelope applies further
+is the sum of homogeneous error norms; $(\varepsilon,r)$-representation
+length envelope applies further
 tail/product bounds. Straight lines attain the exact scalar error and its HS
 certificate. The BV refinement below improves the length envelope, while the
 pure Lie comparison in §3 exhibits a response/HS gap within the specified class.
@@ -2485,7 +2489,7 @@ q_*\sim\sqrt{\lambda/\beta},\qquad
 \log(C_{d,k}/z)\sim2\sqrt{\beta\lambda}.
 $$
 
-Replacing $\mathcal E(q,m,z)$ by FPL's bound
+Replacing $\mathcal E(q,m,z)$ by $(\varepsilon,r)$-representation bound
 
 $$
 B(q,m,z)=\frac{e^z z^{q+1}}{(q+1)!m^q}
@@ -2518,7 +2522,8 @@ $ma\le-\log(1-\varepsilon e^{-z})$.
 Taking $q$ nearest $\sqrt{\lambda/\beta}$ and the least integer satisfying
 $B\le\varepsilon$ gives
 $\log(C_{d,k}/z)\le2\sqrt{\beta\lambda}+O(\log\lambda)$, by Stirling and
-FPL Theorem 1.2. In particular any optimizer has $q=O(\sqrt\lambda)$.
+Theorem 1.2 of $(\varepsilon,r)$-representation paper.
+Any optimizer has $q=O(\sqrt\lambda)$.
 Its interval count diverges and $x\to0$: for fixed $z$, a bounded $m$ would
 give $\log\mathcal E\ge-O(\sqrt\lambda\log\lambda)$ from the first tail
 term, contradicting $\log\varepsilon\sim-\lambda$. For $z\to\infty$, if
@@ -2547,8 +2552,8 @@ This makes $B\le\varepsilon$ at relative storage cost $1+o(1)$, because
 $B/\varepsilon\le1+o(1)$ and $m\to\infty$. Exact and bound constrained
 minimal costs therefore have ratio tending to one. $\square$
 
-For $k=1$ this preserves FPL's leading bounded variation asymptotics. Their
-universal admissible class contains straight lines, so within-level Lie
+For $k=1$, leading BV asymptotics agree with $(\varepsilon,r)$-representation
+paper. Its admissible class contains straight lines, so within-level Lie
 response gaps cannot improve that minimax rate.
 
 ### 3. Pure Engel paths: rigorous structured storage bounds
@@ -2643,7 +2648,8 @@ $$
 
 This follows directly from §2 and the storage sandwich. Thus the loss from
 the HS certificate grows at least stretched exponentially with pure-path
-amplitude, within FPL's Euler decoding and generic storage convention. For
+amplitude, within $(\varepsilon,r)$-representation Euler decoding and generic
+storage convention. For
 fixed $a$ and $\varepsilon\downarrow0$, both ends of the sandwich have
 leading log storage $2\sqrt{k\log d\log(1/\varepsilon)}$, so that leading
 rate is unchanged.
@@ -2652,8 +2658,8 @@ Scope: a single depth-$k$ log-ODE factor represents this pure path exactly.
 A decoder exploiting that fact, or storing only its known nonzero Lie
 direction, has a different storage problem. These pure paths are an analytic
 Euler benchmark; practical compression must extend to changing, noncommuting
-Lie directions or mixed degrees. FPL's general rough-path bound in Theorem
-2.8 is a separate constraint; the structured comparison here uses the exact
+Lie directions or mixed degrees. The $(\varepsilon,r)$-representation
+rough-path bound in Theorem 2.8 is a separate constraint; comparison here uses exact
 HS certificate of each pure path rather than that general bound.
 
 

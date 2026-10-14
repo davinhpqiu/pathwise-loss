@@ -24,7 +24,7 @@ extraction recreates the ZIP rather than nesting it inside itself.
 |---|---|
 | Sharp planar ratio $2\sqrt2/9$ | Degree-two log-ODE, fixed partition, planar BV, nonzero cubic discrepancy; uniform in response dimension $n\ge2$, with explicit scale and perturbation radii. |
 | All-scale homogeneous merge separation | Adjacent area chains of every length $\ell\ge3$; the comparison is between the stated decoded factors, not automatically the original path. |
-| Exact BV Euler minimax $e^r-P_N(r/m)^m$ | Path-adaptive, coefficient-independent partitions; finite storage optima can move, but leading asymptotics persist. FPL already give the scalar expression. |
+| Exact BV Euler minimax $e^r-P_N(r/m)^m$ | Path-dependent, coefficient-independent partitions; finite optima can move; leading asymptotics persist. Scalar expression appears in $(\varepsilon,r)$-representation paper. |
 | Pure Engel storage bracket | Euler decoding and dense generic layout only; a single pure log-ODE factor is exact under a different decoder. |
 | Exact directional gauges | Planar levels two/three, Engel directions, single words, mixed level four at $n=2$. Higher-dimensional mixed level-four attainment is open. |
 
@@ -119,11 +119,8 @@ Superseded and exploratory runs are kept locally in `results/runs/_superseded/`.
 
 ## Verification checkpoint
 
-Current check: 350 project tests pass (one skip), all 135 retained BV
-optima and tie sets reproduce, and 4,214 Markdown/notebook formulas render
-without failures. The fresh mixed-block run has 48 rows, byte-identical to
-the retained canonical table, with current source hashes. The rebuilt
-PDF has been visually checked. Its opening now explains the stored data and
-decoding workflow before introducing the error criteria; technical tail
-constants and detailed storage rates are in the appendices. Numerical checks
-are not external proof review.
+Checks: 351 project tests pass (one skip); all 135 retained BV optima and
+tie sets reproduce; 1,134 branch Markdown/notebook expressions render.
+Fresh mixed-block run has 48 rows, byte-identical to canonical table,
+with current source hashes. Rebuilt PDF is visually checked.
+Independent proof review remains pending.

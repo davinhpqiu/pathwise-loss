@@ -16,10 +16,10 @@
     "tolerance": "1/50000"
   },
   "source_sha256": {
-    "response_distance/note.tex": "57163ebb8c61b1d5992f23fb69d66c5e3eea0e4da1776fc7b32350dccfeb43e6",
-    "response_distance/README.md": "e4877107ec6790def41eb575ce2975867098d0dc186c3ddf9023d581c14126ee",
-    "response_distance/technical.md": "82a631208b9314d13f5ca3e900e35fd18fb8f3cb9a507fe653fd88b8319ed373",
-    "response_distance/literature.md": "064465fee99d516edffbfd1a7ca3b3f76a072d6b6f90686ec6c7b05421edc27f",
+    "response_distance/note.tex": "33076e1d5cd96cc3620be38d48854ba8639dce03bbd4ff3a54e1f4956534a520",
+    "response_distance/README.md": "6a741b4996d68f577a9f7e501a5d904d7a6c86f8a5213dc838ab1ab88ecafb9e",
+    "response_distance/technical.md": "695ce72ba9dee43354d3e3e0ddac6579696f53349641df2e93297a0ba7e68687",
+    "response_distance/literature.md": "fc4587d7ad4889e231c91ba550c185e79639938a9abc7c54ec95dddad4e69c12",
     "response_distance/references.bib": "a8261293df61cba8813fa5e3a124a546a807542291e597fa809f18e03cf347ab",
     "response_distance/notebooks/examples.ipynb": "e64bd7705ed4fbddca1c77296ee433d1c06d74f9673fe94683fbf90fe00bfb94",
     "response_distance/archive/response_distance_2026-10-14_before_reorganization.zip": "6c56a11b346adaea04fecae7e01bf8f9e80d41c849e573bb265ce79ab15fc490",
@@ -50,7 +50,7 @@
     "response_distance/tests/test_response.py": "38a6b3647b55fbfadb41a5ea773e6a76c95aa7cc762fb6f93ce8c41b32bfbdf0",
     "response_distance/tests/test_response_certificates.py": "6c5f001797f1fca60836ec8a2dda239df9d463599069b4d4bca453deb4cc3437",
     "response_distance/tests/test_response_mixed.py": "108500273d8a313ff4573f9cc08d09b391683008b06e0125e151af73a9298c2c",
-    "response_distance/tests/test_response_note.py": "f53720da58f126acd247b758bfb57d2d36e97ae0a6b1161d9f9bed97c7b212bb",
+    "response_distance/tests/test_response_note.py": "f14c70f42101fb66c06b15d167686bb1f0910bc3ef1f5eac3657bb541a30ab66",
     "response_distance/tests/test_response_proof_audit.py": "2ba2dfb3f8291ec2204b74d8a6809c6c6357c9fccfa02042d7791d7889b694e3",
     "response_distance/tests/test_response_run_safety.py": "b2c992bb7c3860acf5f2db20d2d49ba5b6ee5dd5aacb02c8a70579125beef348",
     "response_distance/tests/test_response_separation.py": "207ec492eeda1aefef523378c27c91014a2700462851685f84078261d1f2eb21",
@@ -85,6 +85,6 @@
     "response_distance/results/runs/response_mixed/organized_20261014/metadata.json": "e8cb6eaaa18968af36871ace678177b14da6e9ed651b7a7a69f70ad0417a9b8d",
     "response_distance/results/runs/response_mixed/organized_20261014/mixed_response_bounds.csv": "67d05392694246ff515f520470135559b219c86f784fed3bf3fb4826aaf8210a"
   },
-  "pdf_sha256": "7a708c53faf2f96f7c72bb9bd54acc7ebb77d619aaaa495e92d1ea9df132b42f",
+  "pdf_sha256": "6b18156f55ea3732dc11dc5a225bb005c5572a10b58fede7e66bc4a048b34016",
   "package_readme_sha256": "0f7b93ed8847714de0a65629cb1926d0b090b47aef6bcbb0e9a6891d35edc221"
 }
