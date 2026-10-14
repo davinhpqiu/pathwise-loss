@@ -1,0 +1,34 @@
+# Colours from DataSig's datasig.mplstyle
+# (github.com/datasig-ac-uk/DataSig_style_guide); sizes and font from the
+# project presentation, since DataSig's 24/20 point titles suit single plots
+# rather than the multi-panel figures used here.
+
+font.family: cmss10
+mathtext.fontset: cm
+axes.unicode_minus: False
+font.size: 11
+axes.titlesize: 12
+axes.labelsize: 11
+xtick.labelsize: 10
+ytick.labelsize: 10
+legend.fontsize: 10
+lines.linewidth: 1.5
+
+text.color: 0A1446
+axes.facecolor: F1EEE6
+axes.edgecolor: 0A1446
+axes.labelcolor: 0A1446
+xtick.color: 0A1446
+xtick.labelcolor: 0A1446
+ytick.color: 0A1446
+ytick.labelcolor: 0A1446
+grid.color: 0A1446
+axes.grid: True
+grid.alpha: 0.15
+legend.facecolor: inherit
+legend.edgecolor: 0A1446
+figure.facecolor: F1EEE6
+figure.edgecolor: 0A1446
+
+figure.dpi: 110
+savefig.dpi: 200

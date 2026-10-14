@@ -114,6 +114,9 @@ Local theory and evidence are indexed in `docs/response_distance/README.md`.
 The 2 October audit is `docs/response_distance/audit_2026-10-02.md`.
 The versioned [notebook 08](notebooks/08_response_distance.ipynb) contains the
 self-contained planar BV and mixed-block proofs, with an executable example;
+the [14 October review notebook](notebooks/09_response_distance_review.ipynb)
+records checked claims, primary-source predecessors and remaining limits.
+Its detailed local audit is `docs/response_distance/review_2026-10-14.md`.
 `mixed_blocks.md` is their local working copy. `proofs.md` covers
 Lie response constants and log-ODE merges; `storage.md` covers exact bounded
 variation Euler minimax error and pure Engel storage bounds. These notes and
@@ -144,6 +147,10 @@ python scripts/study_response_mixed.py --out results/runs/response_mixed/new_run
 python -m pytest -q tests/test_response*.py
 ```
 
+The proof audit in `tests/test_response_proof_audit.py` checks exact
+degree-four elimination and truncated-exponential coefficient identities.
+It uses optional SymPy and skips if unavailable; core runners do not require it.
+
 Storage runner uses NumPy, SciPy and Matplotlib, with no ascent, GPU or sampling.
 It writes optimum and depth-profile tables, provenance and two figures. The
 pure-Lie response costs form a rigorous lower/upper bracket; only the bounded
@@ -157,7 +164,7 @@ Analytic inequalities are proved in the notes; their floating-point evaluations
 and high-precision boundary checks are numerical, without interval-certified
 rounding. Historical run metadata records source snapshots rather than
 necessarily matching current files. Working notes and outputs are ignored by
-Git; response modules, tests, runners and notebook 08 belong to the versioned
+Git; response modules, tests, runners and notebooks 08--09 belong to the versioned
 source tree. Runners do not require ignored proof notes to record provenance;
 their absence is reported explicitly. Independent proof review and novelty
 checks remain outstanding.
@@ -471,6 +478,21 @@ fails loudly if the named run disagrees.
 Figures need `results/runs/`, which is gitignored, so a fresh clone rebuilds the
 deck from committed assets and regenerates them only after rerunning the studies.
 
+### Public summary
+
+```bash
+python scripts/export_public_bundle.py    # rewrite public/pathwise_losses/data
+```
+
+`public/pathwise_losses/` is a self-contained condensed version of the
+presentation for the DataSig website: one notebook, a plotting module and a
+0.4 MB data extract. The export script is its only data source. It reuses run
+selection from `build_presentation_figures.py` and the closeout matrix from
+notebook 05, and records source hashes in `data/PROVENANCE.json`. Run it in the
+project environment: Experiment A observation times need torch and are marked
+pending otherwise. Re-execute the notebook after exporting so stored outputs
+match the data.
+
 ### On ARC
 
 ARC becomes relevant once model training starts. See [`docs/arc_guide.md`](docs/arc_guide.md).
@@ -552,12 +574,14 @@ pathwise-loss/
 │   ├── run_ou_operator.py   # OU acceptance, audit or one fit
 │   ├── run_ou_operator_study.py # staged local OU runs
 │   ├── run_classification.py# 1-NN path-distance benchmark
+│   ├── export_public_bundle.py # data extract for public/pathwise_losses
 │   ├── check_math.js        # render every formula through KaTeX
 │   └── arc/                 # SLURM submission scripts
 ├── configs/                 # one YAML per experiment; never hardcode in scripts
 ├── data/{raw,synthetic}/    # gitignored. Regenerate, don't commit.
 ├── results/{runs,logs,figures}/
 ├── papers/                  # PDFs + references.bib
+├── public/pathwise_losses/   # condensed public notebook and data extract
 └── docs/                    # local notes plus one versioned procedure
     ├── arc_guide.md         # Oxford ARC: accounts, SLURM, storage
     ├── neural_ode_operator_experiments.md # versioned design and execution record
