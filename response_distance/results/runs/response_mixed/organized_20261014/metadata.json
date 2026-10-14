@@ -1,0 +1,210 @@
+{
+  "created_at_utc": "2026-10-14T19:11:35.647861+00:00",
+  "command": [
+    "/Users/davin/Desktop/Pathwise Loss/pathwise-loss/.venv/bin/python",
+    "/Users/davin/Desktop/Pathwise Loss/pathwise-loss/response_distance/scripts/study_response_mixed.py",
+    "--out",
+    "response_distance/results/runs/response_mixed/organized_20261014"
+  ],
+  "python": "3.12.0 (v3.12.0:0fb18b02c8, Oct  2 2023, 09:45:56) [Clang 13.0.0 (clang-1300.0.29.30)]",
+  "numpy": "2.3.5",
+  "scipy": "1.17.1",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "status": "analytic envelopes and explicit n=2 matrix witnesses; supremum uncomputed; numerical rounding",
+  "cases": [
+    {
+      "name": "bv_corner",
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "cuts": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "bv_two_mixed_intervals",
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          0.8,
+          0.1
+        ],
+        [
+          1,
+          0.7
+        ],
+        [
+          0.3,
+          1
+        ],
+        [
+          1.2,
+          1.5
+        ]
+      ],
+      "cuts": [
+        0,
+        2,
+        4
+      ]
+    },
+    {
+      "name": "bv_three_corners",
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "cuts": [
+        0,
+        2,
+        4,
+        6
+      ]
+    },
+    {
+      "name": "bv_cubic_cancellation",
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "cuts": [
+        0,
+        2,
+        4
+      ]
+    },
+    {
+      "name": "bv_straight",
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "cuts": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "mixed_generic",
+      "left": [
+        1,
+        0
+      ],
+      "right": [
+        0,
+        1
+      ],
+      "left_area": 0.3,
+      "right_area": -0.2
+    },
+    {
+      "name": "mixed_balanced",
+      "left": [
+        1,
+        0
+      ],
+      "right": [
+        0,
+        1
+      ],
+      "left_area": -0.16666666666666666,
+      "right_area": -0.16666666666666666
+    },
+    {
+      "name": "mixed_pure_area",
+      "left": [
+        0,
+        0
+      ],
+      "right": [
+        0,
+        0
+      ],
+      "left_area": 1,
+      "right_area": 2
+    }
+  ],
+  "rows": 48,
+  "inside_radius_cases": 16,
+  "inside_radius_failures": 0,
+  "source_sha256": {
+    "response_distance/scripts/study_response_mixed.py": "5e691f9709314debd5066b20dd2449555cd43e4ff0e13cb6314ff431d873338f",
+    "response_distance/code/response_mixed.py": "6394346bdbf76353b8803305f04821fb57107f8f92eaa8439ee950c3dd62bcad",
+    "response_distance/code/response.py": "5b237ae8581024b0fd4963d15657270d8b6eb59a8e8ddd8927a8c7282e29dce8",
+    "response_distance/code/response_storage.py": "ffce89b9dd32a8cce6723b7e1dbc34c85f9abd0172cb845e8f428b1eab31281e",
+    "src/pathloss/provenance.py": "f0e628b64e52de97e0dfdeb5cf9dc68d7d35c3a42811507e31dd1d74248a6070",
+    "response_distance/tests/test_response_mixed.py": "108500273d8a313ff4573f9cc08d09b391683008b06e0125e151af73a9298c2c",
+    "response_distance/notebooks/examples.ipynb": "e64bd7705ed4fbddca1c77296ee433d1c06d74f9673fe94683fbf90fe00bfb94",
+    "response_distance/technical.md": "82a631208b9314d13f5ca3e900e35fd18fb8f3cb9a507fe653fd88b8319ed373"
+  },
+  "unavailable_optional_sources": []
+}

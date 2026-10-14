@@ -1,0 +1,42 @@
+{
+  "command": [
+    "python",
+    "scripts/study_response_logode_merge.py",
+    "--out",
+    "results/runs/response_logode_merge/canonical_v6_seed211",
+    "--scales",
+    "0.1",
+    "0.25",
+    "0.5",
+    "1.0",
+    "1.5",
+    "--restarts",
+    "24",
+    "--steps",
+    "750",
+    "--seed",
+    "211"
+  ],
+  "created_at_utc": "2026-09-30T20:52:27.202825+00:00",
+  "depth": 2,
+  "numpy": "2.3.5",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "python": "3.12.0",
+  "representation": "truncated log-signature with log-ODE factors",
+  "response_bound": 1.0,
+  "restarts": 24,
+  "scales": [
+    0.1,
+    0.25,
+    0.5,
+    1.0,
+    1.5
+  ],
+  "seed": 211,
+  "source_sha256": {
+    "scripts/study_response_logode_merge.py": "b1d91d970c536949dc4e49551568fe6b41c7514bef3757939f0632ac6f923ed3",
+    "src/pathloss/response.py": "86ce2808331a0d57e4c4eed3dec3d016d56b60c2be5e137a3a36e9e1d5784e03"
+  },
+  "status": "nonconvex optimized lower estimates plus analytic lower bound; proved Lie-Trotter upper bound and exact HS certificate",
+  "steps": 750
+}

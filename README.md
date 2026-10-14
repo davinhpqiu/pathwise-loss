@@ -107,63 +107,13 @@ KaTeX. KaTeX implements a subset of LaTeX, so expressions that are valid TeX can
 still fail to display. Failures give a nonzero exit status. Use `--root DIRECTORY`
 to check an isolated Markdown/notebook fixture.
 
-### Response distance and storage studies
+### Response-distance research branch
 
-Sending copy: [self-contained note](output/pdf/response_distance_note.pdf),
-[source archive](output/pdf/response_distance_source.zip) and
-[editable LaTeX source](papers/response_distance_note.tex).
-The PDF includes supporting proofs and references. Rebuild from retained
-storage outputs (also included in the archive):
-
-```bash
-python scripts/build_response_note.py
-```
-
-The builder requires installed `pdflatex`, rechecks the complete BV grid,
-and certifies displayed examples with exact fractions.
-Bibliography is generated from `papers/references.bib`;
-`--prepare-only` refreshes standalone source without PDF compilation.
-
-Start with [notebook 09](notebooks/09_response_distance_review.ipynb): concise
-results, scope, prior work and reproducible examples.
-[Notebook 08](notebooks/08_response_distance.ipynb) owns the planar BV/mixed
-proof. The [local index](docs/response_distance/README.md) links definitions,
-proof appendices, retained evidence, literature and the current audit.
-Local notes/results remain ignored; detailed earlier exposition is archived.
-
-| runner in `scripts/` | purpose |
-|---|---|
-| `check_response_separation.py` | overflow-safe finite-field ranks; full rank excludes identities, deficient rank supplies candidates |
-| `study_response_gap.py` | level response estimates against HS certificates |
-| `study_response_composition.py` | global against local interval responses |
-| `study_response_compression.py` | two-loop tensor Euler merge comparison |
-| `study_response_logode_merge.py` | two-loop log-ODE merge bounds and estimates |
-| `study_response_area_gauges.py` | spectral area bounds and numerical slack |
-| `study_response_storage.py` | exact BV integer optimization and analytic pure-Lie storage brackets |
-| `study_response_mixed.py` | planar BV log-ODE and mixed-block analytic bounds, finite-scale radii and exact matrix witnesses |
-
-Run from repository root, using a new output directory each time:
-
-```bash
-python scripts/check_response_separation.py --kmax 8 --seed 211 --out results/runs/response_separation/new_run
-python scripts/study_response_gap.py --out results/runs/response_gap/new_run --seed 211
-python scripts/study_response_composition.py --out results/runs/response_composition/new_run --seed 211
-python scripts/study_response_compression.py --out results/runs/response_compression/new_run --seed 211
-python scripts/study_response_logode_merge.py --out results/runs/response_logode_merge/new_run --seed 211
-python scripts/study_response_area_gauges.py --out results/runs/response_area_gauges/new_run --response-dims 2 3 --seed 211
-python scripts/study_response_storage.py --out results/runs/response_storage/new_run
-python scripts/study_response_mixed.py --out results/runs/response_mixed/new_run
-python -m pytest -q tests/test_response*.py
-```
-
-Storage and mixed runners use analytic bounds without ascent or GPU.
-BV storage is exact; pure-Lie response storage is bracketed.
-The mixed ratio requires nonzero cubic discrepancy on a fixed partition;
-radii are sufficient. Other searches return nonconvex lower estimates.
-Numerical evaluations are not interval certified. Source hashes identify
-snapshots; runners report absent optional notes explicitly.
-Exact algebra tests use optional SymPy and skip if unavailable.
-Independent mathematical reading and exact-ratio novelty checks remain open.
+Response-distance work is separate from the main loss-project evidence chain.
+Its documents, code, scripts, tests, notebooks, results and sending package all
+live in [response_distance/](response_distance/README.md). Start with that README
+or the [self-contained discussion note](response_distance/output/response_distance_note.pdf).
+All branch run and build commands are in its README.
 
 ### Notebooks
 

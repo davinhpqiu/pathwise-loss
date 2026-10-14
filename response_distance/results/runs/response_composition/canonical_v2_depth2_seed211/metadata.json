@@ -1,0 +1,30 @@
+{
+  "command": [
+    "python",
+    "scripts/study_response_composition.py",
+    "--out",
+    "results/runs/response_composition/canonical_v2_depth2_seed211",
+    "--depth",
+    "2",
+    "--restarts",
+    "24",
+    "--steps",
+    "750",
+    "--seed",
+    "211"
+  ],
+  "created_at_utc": "2026-09-29T21:34:27.503524+00:00",
+  "depth": 2,
+  "numpy": "2.3.5",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "python": "3.12.0",
+  "response_bound": 1.0,
+  "restarts": 24,
+  "seed": 211,
+  "source_sha256": {
+    "scripts/study_response_composition.py": "2ef15d368ac247b2c4dfbdbaa18abcabed2aa3419e124ed657f414613f8a0c3b",
+    "src/pathloss/response.py": "69e9ab2f2e1a1a473937da5047653f63ef7a7ae1c812965744ebe78b340f731b"
+  },
+  "status": "nonconvex lower estimates",
+  "steps": 750
+}

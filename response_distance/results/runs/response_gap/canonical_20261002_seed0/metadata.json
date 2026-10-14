@@ -1,0 +1,40 @@
+{
+  "config": "none",
+  "config_contents": {},
+  "git_sha": "d458129",
+  "started": "2026-10-03T00:58:49.147131+00:00",
+  "python": "3.12.0",
+  "host": "Mac",
+  "study": "response gap",
+  "channel": 2,
+  "depth": 4,
+  "response_dims": [
+    1,
+    2,
+    3,
+    5
+  ],
+  "restarts": 12,
+  "steps": 400,
+  "seed": 0,
+  "convention": "Hilbert-Schmidt on levels, Frobenius on response tuple, operator norm on terminal response",
+  "command": [
+    "/Users/davin/Desktop/Pathwise Loss/pathwise-loss/.venv/bin/python",
+    "scripts/study_response_gap.py",
+    "--out",
+    "results/runs/response_gap/canonical_20261002_seed0",
+    "--depth",
+    "4",
+    "--restarts",
+    "12",
+    "--steps",
+    "400",
+    "--seed",
+    "0"
+  ],
+  "source_sha256": {
+    "scripts/study_response_gap.py": "106e10a62e998a2b02d93528f18548e2a95f2bb407f0db474daf03120fe058c2",
+    "src/pathloss/response.py": "1b75a34f3b61d5bb3d4d432cab15747511d998321412c5c8ebf65f9e22e3fb0e"
+  },
+  "rows": 136
+}

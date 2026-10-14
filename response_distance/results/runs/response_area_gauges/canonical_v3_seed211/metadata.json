@@ -1,0 +1,52 @@
+{
+  "block_counts": [
+    2,
+    3,
+    4
+  ],
+  "channels": [
+    3,
+    4
+  ],
+  "command": [
+    "python",
+    "scripts/study_response_area_gauges.py",
+    "--out",
+    "results/runs/response_area_gauges/canonical_v3_seed211",
+    "--channels",
+    "3",
+    "4",
+    "--block-counts",
+    "2",
+    "3",
+    "4",
+    "--response-dims",
+    "2",
+    "3",
+    "--samples",
+    "4",
+    "--restarts",
+    "12",
+    "--steps",
+    "400",
+    "--seed",
+    "211"
+  ],
+  "created_at_utc": "2026-09-30T20:52:55.599468+00:00",
+  "numpy": "2.3.5",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "python": "3.12.0",
+  "response_dims": [
+    2,
+    3
+  ],
+  "restarts": 12,
+  "samples": 4,
+  "seed": 211,
+  "source_sha256": {
+    "scripts/study_response_area_gauges.py": "4307fd6ee49a7eac5173c8697df62773adcba548e53b3919431f0cc26cc20129",
+    "src/pathloss/response.py": "86ce2808331a0d57e4c4eed3dec3d016d56b60c2be5e137a3a36e9e1d5784e03"
+  },
+  "status": "proved spectral upper bounds; nonconvex optimized lower estimates",
+  "steps": 400
+}

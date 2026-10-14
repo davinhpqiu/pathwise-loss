@@ -1,0 +1,32 @@
+{
+  "command": [
+    "/Users/davin/Desktop/Pathwise Loss/pathwise-loss/.venv/bin/python",
+    "scripts/study_response_storage.py",
+    "--out",
+    "results/runs/response_storage/canonical_v2_20260930"
+  ],
+  "created_at_utc": "2026-09-30T23:32:02.796940+00:00",
+  "python": "3.12.0",
+  "numpy": "2.3.5",
+  "scipy": "1.17.1",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "storage": "m times exact cumulative Witt dimension; dense generic slots",
+  "decoder": "Euler polynomial; no log-ODE substitution",
+  "pure_response_status": "rigorous lower and upper envelopes; supremum unknown",
+  "source_sha256": {
+    "scripts/study_response_storage.py": "f630131cf7b6cc14df235057be4a9700e29f17d39758fd6ad108b5821a7d0ed2",
+    "src/pathloss/response_storage.py": "f50984c79441dec37d79fa4bb8c41e8323e6f441c97288e67d9bcfbe85b1b66c",
+    "tests/test_response_storage.py": "14513c84161a7a5a5ba88687caadfe32b066d7a4945b731fdbcd2f7673dff7ed",
+    "docs/response_distance/storage.md": "4ead5cc29710fc2331432ee8d645e28c9f73d344a7b15bdfefb9e62012fbf0cf"
+  },
+  "summary": {
+    "bv_cases": 135,
+    "bv_optimum_sets_changed": 85,
+    "bv_strict_cost_improvements": 84,
+    "bv_canonical_depth_changes": 10,
+    "bv_min_cost_ratio": 0.5714285714285714,
+    "engel_cases": 75,
+    "engel_certified_depth_changes": 35,
+    "engel_min_upper_to_hs_ratio": 7.662711612564724e-08
+  }
+}

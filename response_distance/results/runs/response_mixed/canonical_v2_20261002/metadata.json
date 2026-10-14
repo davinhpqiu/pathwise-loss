@@ -1,0 +1,210 @@
+{
+  "created_at_utc": "2026-10-03T01:18:07.362834+00:00",
+  "command": [
+    "/Users/davin/Desktop/Pathwise Loss/pathwise-loss/.venv/bin/python",
+    "scripts/study_response_mixed.py",
+    "--out",
+    "results/runs/response_mixed/canonical_v2_20261002"
+  ],
+  "python": "3.12.0 (v3.12.0:0fb18b02c8, Oct  2 2023, 09:45:56) [Clang 13.0.0 (clang-1300.0.29.30)]",
+  "numpy": "2.3.5",
+  "scipy": "1.17.1",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "status": "analytic envelopes and explicit n=2 matrix witnesses; supremum uncomputed; numerical rounding",
+  "cases": [
+    {
+      "name": "bv_corner",
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "cuts": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "bv_two_mixed_intervals",
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          0.8,
+          0.1
+        ],
+        [
+          1,
+          0.7
+        ],
+        [
+          0.3,
+          1
+        ],
+        [
+          1.2,
+          1.5
+        ]
+      ],
+      "cuts": [
+        0,
+        2,
+        4
+      ]
+    },
+    {
+      "name": "bv_three_corners",
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          3,
+          2
+        ],
+        [
+          3,
+          3
+        ]
+      ],
+      "cuts": [
+        0,
+        2,
+        4,
+        6
+      ]
+    },
+    {
+      "name": "bv_cubic_cancellation",
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "cuts": [
+        0,
+        2,
+        4
+      ]
+    },
+    {
+      "name": "bv_straight",
+      "path": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ],
+      "cuts": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "mixed_generic",
+      "left": [
+        1,
+        0
+      ],
+      "right": [
+        0,
+        1
+      ],
+      "left_area": 0.3,
+      "right_area": -0.2
+    },
+    {
+      "name": "mixed_balanced",
+      "left": [
+        1,
+        0
+      ],
+      "right": [
+        0,
+        1
+      ],
+      "left_area": -0.16666666666666666,
+      "right_area": -0.16666666666666666
+    },
+    {
+      "name": "mixed_pure_area",
+      "left": [
+        0,
+        0
+      ],
+      "right": [
+        0,
+        0
+      ],
+      "left_area": 1,
+      "right_area": 2
+    }
+  ],
+  "rows": 48,
+  "inside_radius_cases": 16,
+  "inside_radius_failures": 0,
+  "source_sha256": {
+    "scripts/study_response_mixed.py": "10094236392e162cfdcebda2051c2a1e3b44c5d6d7aa6d32010357a7632b2976",
+    "src/pathloss/response_mixed.py": "016f3ac3273e38fd0582844d3df3e9c8c3e0f80a24a7d507ac09228473abda2e",
+    "src/pathloss/response.py": "1b75a34f3b61d5bb3d4d432cab15747511d998321412c5c8ebf65f9e22e3fb0e",
+    "src/pathloss/response_storage.py": "f50984c79441dec37d79fa4bb8c41e8323e6f441c97288e67d9bcfbe85b1b66c",
+    "src/pathloss/provenance.py": "f0e628b64e52de97e0dfdeb5cf9dc68d7d35c3a42811507e31dd1d74248a6070",
+    "tests/test_response_mixed.py": "c5bf9a41ea977e7f563e2ada13f5a55f4ef25ddd07bf263a8a517d5e3d458475",
+    "notebooks/08_response_distance.ipynb": "fae7a3c3d2a30958701a8f8717396b1d0fc9a929ef91f1c66593cf87949f7622",
+    "docs/response_distance/mixed_blocks.md": "f5f2a294bd3fc96af03da20cb2661794b466536f438e8226ba866554859b801e"
+  },
+  "unavailable_optional_sources": []
+}

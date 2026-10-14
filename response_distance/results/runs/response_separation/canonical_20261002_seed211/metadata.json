@@ -1,0 +1,24 @@
+{
+  "created_utc": "2026-10-02T22:42:09.223942+00:00",
+  "command": [
+    "scripts/check_response_separation.py",
+    "--kmax",
+    "9",
+    "--seed",
+    "211",
+    "--out",
+    "results/runs/response_separation/canonical_20261002_seed211"
+  ],
+  "prime": 2147483647,
+  "seed": 211,
+  "kmax": 9,
+  "python": "3.12.0 (v3.12.0:0fb18b02c8, Oct  2 2023, 09:45:56) [Clang 13.0.0 (clang-1300.0.29.30)]",
+  "numpy": "2.3.5",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "source_sha256": {
+    "scripts/check_response_separation.py": "c500a00d3ceb4395961d2a66b8a569b72bc61a528d0509eedf78dc5052eaa18a"
+  },
+  "isolation_checked": 67793,
+  "isolation_failures": 0,
+  "interpretation": "Full rank certifies absence; deficiency is a candidate only."
+}

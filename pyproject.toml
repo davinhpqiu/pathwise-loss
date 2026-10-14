@@ -10,12 +10,16 @@ requires-python = ">=3.10"
 dependencies = ["numpy>=1.26", "scipy>=1.11", "matplotlib>=3.8"]
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["src", "."]
+include = ["pathloss*", "response_distance", "response_distance.code", "response_distance.scripts"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
-testpaths = ["tests"]
+pythonpath = ["src", "."]
+testpaths = ["tests", "response_distance/tests"]
 
 [tool.ruff]
 line-length = 88
-src = ["src", "tests"]
+src = ["src", "tests", "response_distance"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["pathloss", "response_distance"]
