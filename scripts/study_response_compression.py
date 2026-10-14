@@ -1,6 +1,7 @@
 """Response-aware merge study for two coordinate-plane loops.
 
-Design is recorded in ``docs/response_distance/findings.md`` before execution.
+Original design: docs/response_distance/archive/2026-10-14_findings.md.
+Current evidence index: docs/response_distance/findings.md.
 Every optimized value is a nonconvex lower estimate; Hilbert--Schmidt quantity
 is a proved upper bound for the expanded response polynomial.
 """

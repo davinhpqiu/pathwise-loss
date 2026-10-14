@@ -832,6 +832,16 @@ def logode_merge_level_hs_norm(
     if abs(inner_product) == gram_limit:
         return 0.0
     norm_scale = max(left_norm, right_norm)
+    if min(left_norm, right_norm) / norm_scale < 1.0e-50:
+        # Global normalisation can erase the smaller squared norm.
+        with localcontext() as context:
+            context.prec = 80
+            left, right, inner = map(
+                Decimal.from_float, (left_norm, right_norm, inner_product)
+            )
+            return _decimal_gram_merge_norm(
+                [[left * left, inner], [inner, right * right]], level
+            )
     normalised_inner = (inner_product / norm_scale) / norm_scale
     matrix = np.array(
         [
@@ -839,7 +849,13 @@ def logode_merge_level_hs_norm(
             [normalised_inner, (right_norm / norm_scale) ** 2],
         ]
     )
-    return norm_scale**level * multi_logode_merge_level_hs_norm(matrix, level)
+    factor = multi_logode_merge_level_hs_norm(matrix, level)
+    if factor == 0.0:
+        return 0.0
+    log_value = level * math.log(norm_scale) + math.log(factor)
+    return (
+        math.exp(log_value) if log_value <= math.log(np.finfo(float).max) else math.inf
+    )
 
 
 def _weak_compositions(total: int, parts: int) -> list[tuple[int, ...]]:
@@ -871,6 +887,40 @@ def _decimal_gram_merge_difference(
         return float(fine - merged_base**level)
 
 
+def _decimal_gram_merge_norm(matrix: list[list[Decimal]], level: int) -> float:
+    """Original-scale evaluation across disparate Gram exponents."""
+    nonzero = [abs(value) for row in matrix for value in row if value]
+    if not nonzero:
+        return 0.0
+    spread = max(value.adjusted() for value in nonzero) - min(
+        value.adjusted() for value in nonzero
+    )
+    with localcontext() as context:
+        context.prec = max(80, level * spread + 80)
+        compositions = _weak_compositions(level, len(matrix))
+        words = [
+            tuple(index for index, count in enumerate(counts) for _ in range(count))
+            for counts in compositions
+        ]
+        weights = [
+            math.factorial(level)
+            // math.prod(math.factorial(count) for count in counts)
+            for counts in compositions
+        ]
+        fine = Decimal(0)
+        for left, left_weight in zip(words, weights, strict=True):
+            for right, right_weight in zip(words, weights, strict=True):
+                term = Decimal(left_weight * right_weight)
+                for i, j in zip(left, right, strict=True):
+                    term *= matrix[i][j]
+                fine += term
+        merged = sum((sum(row, Decimal(0)) for row in matrix), Decimal(0)) ** level
+        difference = fine - merged
+        if difference < 0:
+            raise ArithmeticError("computed negative squared certificate norm")
+        return float(difference.sqrt() / Decimal(math.factorial(level)))
+
+
 def multi_logode_merge_level_hs_norm(
     gram: np.ndarray,
     level: int,
@@ -892,6 +942,7 @@ def multi_logode_merge_level_hs_norm(
     scale = float(np.max(np.abs(matrix)))
     if scale == 0.0:
         return 0.0
+    original = matrix.copy()
     matrix = matrix / scale
     tolerance = 1.0e-12
     if not np.allclose(matrix, matrix.T, rtol=0.0, atol=tolerance):
@@ -902,6 +953,36 @@ def multi_logode_merge_level_hs_norm(
         raise ValueError("gram must be positive semidefinite")
     if level == 1 or matrix.shape[0] == 1:
         return 0.0
+    nonzero = np.abs(original[original != 0.0])
+    if float(np.min(nonzero)) / scale < 1.0e-100:
+        # Check small blocks using their own budgets before original-scale
+        # evaluation. A normalised tiny diagonal may already have underflowed.
+        diagonal = np.diag(original)
+        if np.any(diagonal < 0.0):
+            raise ValueError("gram must be positive semidefinite")
+        positive = diagonal > 0.0
+        if np.any(original[~positive] != 0.0):
+            raise ValueError("gram must be positive semidefinite")
+        roots = np.sqrt(diagonal[positive])
+        correlations = original[np.ix_(positive, positive)] / roots[:, None]
+        correlations /= roots[None, :]
+        if (
+            not np.all(np.isfinite(correlations))
+            or float(np.min(np.linalg.eigvalsh(correlations))) < -tolerance
+        ):
+            raise ValueError("gram must be positive semidefinite")
+        decimal_matrix = [
+            [
+                (
+                    Decimal.from_float(float(original[i, j]))
+                    + Decimal.from_float(float(original[j, i]))
+                )
+                / 2
+                for j in range(len(original))
+            ]
+            for i in range(len(original))
+        ]
+        return _decimal_gram_merge_norm(decimal_matrix, level)
 
     block_count = matrix.shape[0]
     compositions = _weak_compositions(level, block_count)
@@ -929,10 +1010,15 @@ def multi_logode_merge_level_hs_norm(
     if difference_squared_scaled < -roundoff:
         raise ArithmeticError("computed negative squared certificate norm")
     difference_squared_scaled = max(0.0, difference_squared_scaled)
+    if difference_squared_scaled == 0.0:
+        return 0.0
+    log_value = (
+        (level / 2) * math.log(scale)
+        + 0.5 * math.log(difference_squared_scaled)
+        - math.lgamma(level + 1)
+    )
     return (
-        scale ** (level / 2)
-        * math.sqrt(difference_squared_scaled)
-        / math.factorial(level)
+        math.exp(log_value) if log_value <= math.log(np.finfo(float).max) else math.inf
     )
 
 

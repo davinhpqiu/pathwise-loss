@@ -109,18 +109,27 @@ to check an isolated Markdown/notebook fixture.
 
 ### Response distance and storage studies
 
-This research branch compares terminal responses of norm-bounded linear CDEs.
-Local theory and evidence are indexed in `docs/response_distance/README.md`.
-The 2 October audit is `docs/response_distance/audit_2026-10-02.md`.
-The versioned [notebook 08](notebooks/08_response_distance.ipynb) contains the
-self-contained planar BV and mixed-block proofs, with an executable example;
-the [14 October review notebook](notebooks/09_response_distance_review.ipynb)
-records checked claims, primary-source predecessors and remaining limits.
-Its detailed local audit is `docs/response_distance/review_2026-10-14.md`.
-`mixed_blocks.md` is their local working copy. `proofs.md` covers
-Lie response constants and log-ODE merges; `storage.md` covers exact bounded
-variation Euler minimax error and pure Engel storage bounds. These notes and
-run outputs follow the repository's local, untracked working-note convention.
+Sending copy: [self-contained note](output/pdf/response_distance_note.pdf),
+[source archive](output/pdf/response_distance_source.zip) and
+[editable LaTeX source](papers/response_distance_note.tex).
+The PDF includes supporting proofs and references. Rebuild from retained
+storage outputs (also included in the archive):
+
+```bash
+python scripts/build_response_note.py
+```
+
+The builder requires installed `pdflatex`, rechecks the complete BV grid,
+and certifies displayed examples with exact fractions.
+Bibliography is generated from `papers/references.bib`;
+`--prepare-only` refreshes standalone source without PDF compilation.
+
+Start with [notebook 09](notebooks/09_response_distance_review.ipynb): concise
+results, scope, prior work and reproducible examples.
+[Notebook 08](notebooks/08_response_distance.ipynb) owns the planar BV/mixed
+proof. The [local index](docs/response_distance/README.md) links definitions,
+proof appendices, retained evidence, literature and the current audit.
+Local notes/results remain ignored; detailed earlier exposition is archived.
 
 | runner in `scripts/` | purpose |
 |---|---|
@@ -147,27 +156,14 @@ python scripts/study_response_mixed.py --out results/runs/response_mixed/new_run
 python -m pytest -q tests/test_response*.py
 ```
 
-The proof audit in `tests/test_response_proof_audit.py` checks exact
-degree-four elimination and truncated-exponential coefficient identities.
-It uses optional SymPy and skips if unavailable; core runners do not require it.
-
-Storage runner uses NumPy, SciPy and Matplotlib, with no ascent, GPU or sampling.
-It writes optimum and depth-profile tables, provenance and two figures. The
-pure-Lie response costs form a rigorous lower/upper bracket; only the bounded
-variation response optimum is computed exactly. The mixed runner also needs
-no ascent: it checks analytic bounds using explicit matrix witnesses. Its BV
-theorem requires a nonzero sum of interval cubic log-signatures on the fixed
-partition; straight paths and cancellation cases are reported separately.
-Radii are sufficient, not maximal. Other response searches use nonconvex
-estimates and must retain their lower-estimate labels.
-Analytic inequalities are proved in the notes; their floating-point evaluations
-and high-precision boundary checks are numerical, without interval-certified
-rounding. Historical run metadata records source snapshots rather than
-necessarily matching current files. Working notes and outputs are ignored by
-Git; response modules, tests, runners and notebooks 08--09 belong to the versioned
-source tree. Runners do not require ignored proof notes to record provenance;
-their absence is reported explicitly. Independent proof review and novelty
-checks remain outstanding.
+Storage and mixed runners use analytic bounds without ascent or GPU.
+BV storage is exact; pure-Lie response storage is bracketed.
+The mixed ratio requires nonzero cubic discrepancy on a fixed partition;
+radii are sufficient. Other searches return nonconvex lower estimates.
+Numerical evaluations are not interval certified. Source hashes identify
+snapshots; runners report absent optional notes explicitly.
+Exact algebra tests use optional SymPy and skip if unavailable.
+Independent mathematical reading and exact-ratio novelty checks remain open.
 
 ### Notebooks
 

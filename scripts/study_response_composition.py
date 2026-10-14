@@ -1,6 +1,7 @@
 """Low-compute study of common and composed finite responses.
 
-Design is recorded in ``docs/response_distance/findings.md`` before execution.
+Original design: docs/response_distance/archive/2026-10-14_findings.md.
+Current evidence index: docs/response_distance/findings.md.
 Suprema are nonconvex lower estimates. The script writes every optimization
 budget and elapsed time beside its result.
 """

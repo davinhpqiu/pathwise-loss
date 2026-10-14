@@ -211,6 +211,23 @@ def test_degenerate_cubic_cases_are_excluded() -> None:
         assert planar_merge_separation_radius(data) == 0.0
 
 
+def test_cubic_cancellation_can_leave_nonzero_higher_order_response() -> None:
+    square = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0], [0.0, 0.0]])
+    cuts = (0, 2, 4)
+    data = planar_bv_logode_data(square, cuts)
+    assert data.leading_hs == 0.0
+    assert planar_merge_separation_radius(data) == 0.0
+    fine = piecewise_linear_signature(square, 4)
+    coarse = decoder_series(square, cuts, 4)
+    assert np.linalg.norm(fine[3] - coarse[3]) < 1e-14
+    assert np.linalg.norm(fine[4] - coarse[4]) > 1e-3
+    witness = np.array(
+        [np.diag([0.5, -0.5]), np.array([[1.0, 1.0], [1.0, -1.0]]) / (2 * math.sqrt(2))]
+    )
+    assert np.linalg.norm(witness) == pytest.approx(1.0)
+    assert bv_matrix_error(square, cuts, witness, 0.2) > 1e-7
+
+
 def test_dilation_covariance_and_subdivision() -> None:
     path = np.array([[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]])
     base = planar_bv_logode_data(path)

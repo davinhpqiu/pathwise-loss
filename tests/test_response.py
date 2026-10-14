@@ -202,6 +202,42 @@ def test_small_indefinite_gram_is_rejected() -> None:
         logode_merge_level_hs_norm(1e-8, 1e-8, 2e-16, 2)
 
 
+@pytest.mark.parametrize("large", [1e60, 1e100, 1e150, 1e200])
+@pytest.mark.parametrize("correlation", [0.0, 0.5, -0.5])
+def test_two_block_certificate_preserves_disparate_norms(
+    large: float, correlation: float
+) -> None:
+    small = 1.0 / large
+    product = large * small
+    expected = product * math.sqrt((1.0 - correlation**2) / 2.0)
+    assert logode_merge_level_hs_norm(
+        large, small, correlation * product, 2
+    ) == pytest.approx(expected)
+    if large <= 1e150:
+        gram = np.array(
+            [[large**2, correlation * product], [correlation * product, small**2]]
+        )
+        assert multi_logode_merge_level_hs_norm(gram, 2) == pytest.approx(expected)
+
+
+def test_disparate_gram_rejects_hidden_negative_diagonal() -> None:
+    with pytest.raises(ValueError, match="positive semidefinite"):
+        multi_logode_merge_level_hs_norm(np.diag([1e200, -1e-200]), 2)
+
+
+@pytest.mark.parametrize("large", [1e60, 1e100, 1e150, 1e200])
+def test_disparate_cubic_certificate_matches_positive_orthogonal_formula(
+    large: float,
+) -> None:
+    small = 1.0 / large
+    expected = (large * small) * math.hypot(large, small) / math.sqrt(6.0)
+    assert logode_merge_level_hs_norm(large, small, 0.0, 3) == pytest.approx(expected)
+
+
+def test_large_collinear_gram_has_zero_error_without_overflow() -> None:
+    assert multi_logode_merge_level_hs_norm(1e300 * np.ones((2, 2)), 4) == 0.0
+
+
 def test_orthogonal_certificate_controls_omitted_tail() -> None:
     """A loose stopping tolerance must still exceed an independent partial sum."""
     left, right = 0.3, 1.2

@@ -1,7 +1,7 @@
 """Deterministic anchors for planar BV and mixed-block log-ODE separation.
 
 Theory and pre-run design: notebooks/08_response_distance.ipynb;
-local working copy: docs/response_distance/mixed_blocks.md.
+local proof index: docs/response_distance/mixed_blocks.md.
 Reports analytic bounds plus explicit matrix witnesses, without ascent.
 """
 
