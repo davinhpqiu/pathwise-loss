@@ -1,13 +1,15 @@
 # Response distance
 
-A separate research branch on response-aware path compression. Updated
-14 October 2026. The question is whether preserving a path's effect on bounded
-linear systems permits cheaper representations than tensor-error certificates.
+Research on response distance between paths and its comparison with signature
+tensor geometry. Updated 15 October 2026. We ask which path differences bounded
+linear systems can detect, and how much tensor certificates overstate their
+separation. Compression provides comparison examples and possible consequences.
 
 ## Read only these
 
-- [Discussion note](output/response_distance_note.pdf): the self-contained
-  sending copy, including selected proofs and references.
+- [Discussion note](output/response_distance_note.pdf): five pages introducing
+  response distance, tensor certificates and two separation results, with proofs
+  and one certified example.
 - [Technical appendix](technical.md): definitions and the complete working
   proofs, including constants, homogeneous merges, storage and planar BV results.
 - [Literature review](literature.md): primary-source locators and novelty limits.
@@ -119,7 +121,7 @@ Superseded and exploratory runs are kept locally in `results/runs/_superseded/`.
 
 ## Verification checkpoint
 
-Checks: 351 project tests pass (one skip); all 135 retained BV optima and
+Checks: 352 project tests pass (one skip); all 135 retained BV optima and
 tie sets reproduce; 1,134 branch Markdown/notebook expressions render.
 Fresh mixed-block run has 48 rows, byte-identical to canonical table,
 with current source hashes. Rebuilt PDF is visually checked.

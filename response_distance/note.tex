@@ -3,222 +3,194 @@
 \usepackage[utf8]{inputenc}
 \usepackage{lmodern,microtype}
 \usepackage[margin=25mm]{geometry}
-\usepackage{amsmath,amssymb,amsthm,mathtools,booktabs}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
 \usepackage{xcolor}
 \usepackage[colorlinks=true,linkcolor=blue!45!black,citecolor=blue!45!black,urlcolor=blue!45!black]{hyperref}
-\usepackage{enumitem}
 \hypersetup{
- pdftitle={Response-aware path compression},
+ pdftitle={The geometry of paths seen through bounded linear systems},
  pdfauthor={Davin},
- pdfsubject={Discussion draft: planar distortion and exact Euler storage}
+ pdfsubject={Discussion draft: response distance and tensor certificates}
 }
-\setlist{nosep,leftmargin=*}
 \setlength{\parskip}{4pt}
 \setlength{\parindent}{0pt}
 \emergencystretch=2em
-\newtheorem{theorem}{Theorem}
-\newtheorem{proposition}[theorem]{Proposition}
-\newtheorem{lemma}[theorem]{Lemma}
-\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}{Proposition}
 \newcommand{\HS}{\mathrm{HS}}
 \newcommand{\op}{\mathrm{op}}
 \newcommand{\R}{\mathbb R}
-\newcommand{\E}{\mathcal E}
 \newcommand{\B}{\mathcal B}
 \newcommand{\Del}{\Delta}
 \newcommand{\norm}[1]{\left\lVert#1\right\rVert}
-\DeclareMathOperator{\ad}{ad}
-\title{\vspace{-12mm}Response-aware path compression\\
-\large Sharp planar distortion and exact Euler storage}
+\title{\vspace{-12mm}The geometry of paths seen through bounded linear systems\\
+\large Response distance and tensor certificates}
 \author{Davin}
-\date{14 October 2026}
-
-% BEGIN GENERATED GRID
-\newcommand{\GridCases}{135}
-\newcommand{\GridMoved}{85}
-\newcommand{\GridCheaper}{84}
-\newcommand{\GridSaving}{42.9}
-% END GENERATED GRID
+\date{15 October 2026}
 
 \begin{document}
 \maketitle
 \vspace{-6mm}
 \begin{abstract}
-Path compression stores a driving signal while controlling its effect on
-differential equations. This discussion draft compares worst-case terminal
-error over jointly Frobenius-bounded linear systems with a weighted
-Hilbert--Schmidt signature-error certificate.
-
-For planar bounded-variation paths, storing displacement and area on each
-interval and decoding by matrix exponentials gives a response-to-certificate
-ratio tending to \(2\sqrt2/9\) under small path scaling. This requires a fixed
-partition and nonzero cubic discrepancy; convergence is uniform in response
-dimension \(n\ge2\). Explicit scale and perturbation bounds certify finite
-compression decisions. Chains of adjacent area-only blocks admit a strict gap
-at every positive scale.
-
-For Euler decoding, we derive exact bounded-variation minimax error under
-path-dependent, coefficient-independent partitions. Replacing a length envelope
-by this constraint can change optimal truncation depth and interval count.
-Finite storage costs decrease in examples, while leading asymptotics agree.
+How different do two driving paths look to linear systems with bounded matrix
+coefficients? This discussion draft measures their separation by worst-case
+terminal-response difference and compares it with a tensor certificate: a
+weighted Hilbert--Schmidt signature difference that bounds response distance
+from above. Two structured comparisons quantify the gap. For planar
+bounded-variation paths and their degree-two log-ODE approximations, a fixed
+partition with nonzero cubic discrepancy gives small-amplitude ratio
+\(2\sqrt2/9\), uniformly in response dimension at least two. For chains of at
+least three adjacent area-only blocks, explicit separation persists at every
+positive amplitude, with bounds independent of chain length.
 \end{abstract}
 
-\section{Compression and response error}
-A compressed path representation stores interval summaries from which a
-system's response can be computed. In \((\varepsilon,r)\)-representation
-framework \cite{ferrucci2026concise}, terminal error must be at most
-\(\varepsilon\) for every linear system with coefficient budget \(r\).
-We compare this requirement with a tensor-error certificate to determine
-whether response accuracy permits cheaper storage.
+\section{Response distance and tensor geometry}
+We ask how bounded linear systems distinguish paths, and how response distance
+compares with tensor-norm differences between their signatures or approximations.
 
-\subsection{Stored data and the decoder}
-Let \(X:[0,1]\to\R^d\) be continuous with finite Euclidean variation
+\paragraph{Response distance.}
+Let \(X,\widetilde X:[0,1]\to\R^d\) be continuous paths of finite Euclidean
+variation, defined for \(X\) by
 \[
  \norm{X}_{1\text{-var}}
- =\sup_{\tau}\sum_{[u,v]\in\tau}\norm{X_v-X_u}_2,
+ =\sup_\tau\sum_{[u,v]\in\tau}\norm{X_v-X_u}_2,
 \]
-where \(\tau\) ranges over finite partitions of \([0,1]\).
-Here \(\norm{\cdot}_2\) is Euclidean norm; BV abbreviates bounded variation.
-For \(\pi=(0=t_0<\cdots<t_m=1)\), write \(X_i=X|_{[t_{i-1},t_i]}\).
-Its signature collects iterated integrals:
+where \(\tau\) ranges over finite partitions into intervals and
+\(\norm{\cdot}_2\) is Euclidean norm. BV abbreviates bounded variation.
+For a tuple \(A=(A_1,\ldots,A_d)\) of real \(n\times n\) matrices, let
+\(\Phi^A(X)=Y_1\) be terminal response of
 \[
- S(X)_0=1,\qquad
- S(X)_j=\int_{0<u_1<\cdots<u_j<1}
+ dY=\sum_i YA_i\,dX^i,\qquad Y_0=I_n,
+\]
+where \(I_n\) is identity. Input dimension is \(d\); response dimension is
+\(n\). Fix joint coefficient budget
+\(|A|^2=\sum_i\norm{A_i}_F^2\le r^2\), \(r>0\), using Frobenius norm
+\(\norm{A_i}_F^2=\operatorname{tr}(A_i^\top A_i)\).
+Use Euclidean operator norm
+\(\norm{M}_{\op}=\sup_{\norm{v}_2=1}\norm{Mv}_2\). Define
+\begin{equation}\label{eq:criterion}
+ \Del_{r,n}(X,\widetilde X)
+ =\sup_{|A|\le r}\norm{\Phi^A(X)-\Phi^A(\widetilde X)}_{\op}.
+\end{equation}
+This measures largest terminal-response difference over admissible systems
+and unit initial states. It is a pseudodistance: distinct paths can have
+identical responses and hence zero separation. Requiring separation at most
+\(\varepsilon>0\) expresses response accuracy in
+\((\varepsilon,r)\)-representation framework \cite{ferrucci2026concise}.
+
+\paragraph{Tensor certificate.}
+The signature records ordered iterated integrals:
+\[
+ S(X)_0=1,\qquad S(X)_j=\int_{0<u_1<\cdots<u_j<1}
  dX_{u_1}\otimes\cdots\otimes dX_{u_j},\quad j\ge1.
 \]
-For \(S(X_i)\), use integration times in \([t_{i-1},t_i]\).
+For standard basis \((e_i)\), tensor word
+\(e_{i_1}\otimes\cdots\otimes e_{i_j}\) records a sequence of \(j\)
+directions. Define
+\(R_A(e_{i_1}\otimes\cdots\otimes e_{i_j})=A_{i_1}\cdots A_{i_j}\),
+extended linearly over convergent series, with empty word mapped to \(I_n\).
+Iterated integration gives \(\Phi^A(X)=R_A(S(X))\).
+
+For convergent tensor series \(F,G\) with \(F_0=G_0=1\), extend
+\(\Del_{r,n}\) by replacing the responses in \eqref{eq:criterion} with
+\(R_A(F),R_A(G)\). Write \(F_j,G_j\) for degree components. Declare standard
+word tensors orthonormal; their Hilbert--Schmidt (HS) norm is Euclidean norm
+of word coefficients. Define
+\begin{equation}\label{eq:certificate}
+ \B_r(F,G)=\sum_{j\ge1}r^j\norm{F_j-G_j}_{\HS}.
+\end{equation}
+We consider pairs for which this sum is finite. Degreewise Cauchy--Schwarz
+gives, for \(|A|\le r\),
+\[
+ \norm{R_A(F_j-G_j)}_{\op}\le r^j\norm{F_j-G_j}_{\HS},
+ \qquad\Del_{r,n}(F,G)\le\B_r(F,G).
+\]
+Thus \(\B_r\le\varepsilon\) certifies response distance at most
+\(\varepsilon\). When \(\B_r>\varepsilon\), this test leaves response
+accuracy undecided. We quantify how much this tensor measure can overstate
+response separation.
+
+\paragraph{Comparison pairs.}
+Degree-two approximations provide pairs with an explicit first discrepancy.
 Tensor multiplication concatenates words. For \(U_0=0\), define
 \(e_\otimes^U=\exp_\otimes U=\sum_{q\ge0}U^{\otimes q}/q!\), with
 \(U^{\otimes0}=1\); \(\log_\otimes\) is its formal inverse on series with
-constant term one.
+constant term one. Brackets are commutators:
+\([U,V]=U\otimes V-V\otimes U\) for tensors and \([A,B]=AB-BA\) for matrices.
 
-Store one truncated log-signature per interval. Degree-two truncation retains
-displacement and signed area in the plane:
-\[
- \ell_i^{\le2}=\ell_{i,1}+\ell_{i,2},\qquad
- \ell_{i,j}=(\log_\otimes S(X_i))_j.
-\]
-Indices \(i,j\) denote interval and tensor degree. Exponentiating stored logs
-and multiplying in time order gives
+For partition \(\pi=(0=t_0<\cdots<t_m=1)\), let
+\(X_i=X|_{[t_{i-1},t_i]}\) and
+\(\ell_{i,j}=(\log_\otimes S(X_i))_j\). Store
+\(\ell_i^{\le2}=\ell_{i,1}+\ell_{i,2}\): displacement and signed area in
+the plane. Exact signature and decoded series are
 \[
  F=S(X),\qquad G_\pi=\prod_{i=1}^m\exp_\otimes(\ell_i^{\le2}).
 \]
-Thus \(F\) is exact signature and \(G_\pi\) is decoded series; only
-\((\ell_i^{\le2})_{i=1}^m\) is stored.
+Indices \(i,j\) denote interval and tensor degree; products follow time order.
+Local signatures use corresponding integration intervals.
 
-Fix a tuple \(A=(A_1,\ldots,A_d)\) of real \(n\times n\) matrices,
-with \(d\) driver channels and \(n\) response states. Its row-state system is
-\[
- dY=\sum_{i=1}^d YA_i\,dX^i,\qquad Y_0=I_n.
-\]
-Here \(I_n\) is identity matrix. For standard driver basis \((e_i)_{i=1}^d\),
-define
-\(R_A(e_{i_1}\otimes\cdots\otimes e_{i_j})=A_{i_1}\cdots A_{i_j}\),
-extended linearly over convergent series, with empty word mapped to \(I_n\).
-Brackets denote commutators: \([U,V]=U\otimes V-V\otimes U\) for tensors,
-and \([A,B]=AB-BA\) for matrices. Exact and decoded terminal responses are
+Degree-two log-ODE decoding evaluates these retained terms in the system:
 \[
  \Phi^A(X)=R_A(F),\qquad
  \widehat\Phi^A_\pi(X)=R_A(G_\pi)
-     =\prod_{i=1}^m\exp\bigl(R_A(\ell_i^{\le2})\bigr).
+ =\prod_i\exp\bigl(R_A(\ell_i^{\le2})\bigr).
 \]
-Lie polynomials are linear combinations of nested commutators.
-Degree-two log-ODE decoding evaluates each stored Lie polynomial,
-exponentiates, then composes. One tuple \(A\) acts on every interval.
-Transposing tuples gives column-state convention with unchanged norms.
-
-\begin{center}
-\(\begin{aligned}
- X&\xrightarrow{\text{solve exactly}}\Phi^A(X),\\[5pt]
- X&\xrightarrow{\text{split }\pi}
- \underbrace{(\ell_i^{\le2})_{i=1}^m}_{\text{finite stored data}}
+One tuple \(A\) acts on every interval:
+\[
+ X\xrightarrow{\text{split }\pi}
+ \underbrace{(\ell_i^{\le2})_{i=1}^m}_{\text{stored data}}
  \xrightarrow{\text{exponentiate and compose}}\widehat\Phi^A_\pi(X).
-\end{aligned}\)
-\end{center}
-
-\subsection{True response error versus a tensor certificate}
-Impose coefficient budget \(|A|^2=\sum_i\norm{A_i}_F^2\le r^2\), \(r>0\),
-where \(\norm{A_i}_F^2=\operatorname{tr}(A_i^\top A_i)\).
-For \(F_0=G_0=1\), true response error is
-\begin{equation}\label{eq:criterion}
- \Del_{r,n}(F,G)=\sup_{|A|\le r}\norm{R_A(F)-R_A(G)}_{\op}.
-\end{equation}
-Here \(\norm{M}_{\op}=\sup_{\norm{v}_2=1}\norm{Mv}_2\), so this bounds
-error for every unit initial state. Degree-two decoding uses \(G=G_\pi\).
-
-For degree components \(F_j,G_j\), declare standard word tensors orthonormal.
-Hilbert--Schmidt (HS) norm is Euclidean norm of word coefficients. Define
-\[
- \B_r(F,G)=\sum_{j\ge1}r^j\norm{F_j-G_j}_{\HS}.
 \]
-Degreewise Cauchy--Schwarz gives \(\Del_{r,n}\le\B_r\); the series converge
-for representations considered here. Tolerance \(\varepsilon>0\) is met when
-\(\Del_{r,n}\le\varepsilon\). Certificate condition
-\(\B_r\le\varepsilon\) is sufficient and can reject response-feasible
-representations.
 
-For straight line \(X_u=ue_1\) compared with zero signal, both errors equal
-\(e^r-1\): choose \(A_1=rQ\) for a rank-one orthogonal projection \(Q\),
-and other matrices zero. Sections~2--3 use Lie structure under log-ODE decoding;
-Section~4 treats Euler decoding.
+\section{A planar distance-to-certificate ratio}
+First compare a path with its degree-two representation. Their response
+distance measures which discarded information bounded systems can detect.
+Scaling path amplitude isolates its first nonzero degree.
 
-\section{Planar log-ODE error: the first discarded term}
-Fix \(d=2\) and partition \(\pi\). Exact and decoded interval series agree
-through degree two, so their first possible discrepancies add:
+Fix \(d=2\) and partition \(\pi\). Interval factors agree through degree two,
+so their first possible discrepancies add:
 \[
- D_3:=(F-G_\pi)_3=\sum_i\ell_{i,3}.
+ D_3=(F-G_\pi)_3=\sum_i\ell_{i,3}.
 \]
-Dropped cubic logs determine leading error when \(D_3\ne0\).
-
-Scale \(X\) to \(sX\), \(s>0\), keeping \(r\) fixed. Tensor dilation is
-\((\delta_sF)_j=s^jF_j\). With \(t=sr\), write
+Define dilation \((\delta_sF)_j=s^jF_j\). Scaling \(X\) by \(s>0\) at
+coefficient budget \(r\) is equivalent to dilation by \(t=sr\) at unit budget.
+Write
 \[
  \Del_n(t)=\Del_{1,n}(\delta_tF,\delta_tG_\pi),\qquad
  \B(t)=\B_1(\delta_tF,\delta_tG_\pi).
 \]
-These equal errors for \(sX\) at budget \(r\).
 
-\begin{theorem}\label{thm:bv}
-If \(D_3\ne0\), then for every \(n\ge2\),
+\begin{proposition}\label{prop:bv}
+If \(D_3\ne0\), then
 \[
  \frac{\Del_n(t)}{\B(t)}\longrightarrow
  \rho:=\frac{2\sqrt2}{9}\quad(t\downarrow0),
 \]
-uniformly in \(n\). Explicit positive scale and BV perturbation radii ensure
-\(\Del_n(t)<\B(t)\); formulas appear in Appendix~\ref{app:planar}.
-\end{theorem}
+uniformly in response dimension \(n\ge2\).
+\end{proposition}
 
-\paragraph{Why this constant?}
 HS norm counts word coefficients independently. Matrix products share one
-budget-constrained tuple, and cubic Lie terms evaluate to nested commutators.
-A driver rotation reduces any nonzero planar cubic direction to a multiple
-of \([e_1,[e_1,e_2]]\). Its coefficients \(1,-2,1\) give HS norm \(\sqrt6\).
-B\"ottcher--Wenzel applied twice \cite{bottcher2008frobenius} and joint
-unit budget give matrix-response maximum \(4/(3\sqrt3)\), attained in
-dimension two. Hence
-\[
- \frac{4/(3\sqrt3)}{\sqrt6}=\frac{2\sqrt2}{9}.
-\]
-Thus leading certificate error exceeds response error by factor
-\(1/\rho\approx3.18\). Appendix~\ref{app:planar} proves attainment and bounds
-higher-degree tails.
+budget-constrained tuple, and cubic Lie terms become nested commutators.
+A driver rotation reduces any planar cubic Lie direction to a multiple of
+\([e_1,[e_1,e_2]]\). Its coefficients \(1,-2,1\) give HS norm \(\sqrt6\).
+B\"ottcher--Wenzel \cite{bottcher2008frobenius} gives sharp response maximum
+\(4/(3\sqrt3)\), attained in dimension two. Their quotient is \(\rho\),
+so leading certificate error exceeds response error by factor
+\(1/\rho\approx3.18\). Appendix~\ref{app:planar} proves the gauge and tail bounds.
 
-\paragraph{A finite compression decision.}
+\paragraph{A finite-scale separation.}
 For corner \(0\to e_1\to e_1+e_2\), store displacement and area in one
-interval. At unit coefficient budget,
+interval. At unit budget,
 \[
  \Phi^A(tX)=e^{tA_1}e^{tA_2},\qquad
- \widehat\Phi^A_\pi(tX)
- =e^{t(A_1+A_2)+(t^2/2)[A_1,A_2]}.
+ \widehat\Phi^A_\pi(tX)=e^{t(A_1+A_2)+(t^2/2)[A_1,A_2]}.
 \]
 \begin{samepage}
 At \(t=1/20\), rational enclosures prove, for every \(n\ge2\),
 \begin{equation}\label{eq:corner}
  \Del_n(t)<1.934\times10^{-5}<2\times10^{-5}<3.608\times10^{-5}<\B(t).
 \end{equation}
-Tolerance \(2\times10^{-5}\) accepts this representation under response
-bound and rejects it under full HS certificate.
-Appendix~\ref{app:cert} supplies rational certificates.
+These representations are within response distance \(2\times10^{-5}\),
+while their tensor certificate exceeds that tolerance.
+Appendix~\ref{app:planar} gives exact arithmetic.
 \par
 \end{samepage}
 
@@ -226,585 +198,171 @@ A two-interval square loop can have \(D_3=0\) and nonzero quartic error;
 partition refinement can make \(D_3\) vanish. Mesh-uniform bounds and extension
 to rough inputs with roughness exponent \(2<p<3\) remain open.
 
-\section{Homogeneous merges at every positive scale}
-Merging stored area blocks replaces their ordered product by an exponential
-of their sum. Area is preserved; noncommuting matrix responses can change.
-
-For \(\ell\ge3\) blocks in \(d=\ell+1\) channels, let
-\(U_i=[e_i,e_{i+1}]\), \(1\le i\le\ell\), and compare
+\section{Area-chain distance separation at every amplitude}
+Our second comparison replaces an ordered product of area blocks by an
+exponential of their sum. Total area is preserved; order can affect
+higher-degree tensors and matrix responses.
+For \(\ell\ge3\), \(d=\ell+1\), set \(U_i=[e_i,e_{i+1}]\),
+\(1\le i\le\ell\), and compare
 \[
- F_\lambda=\prod_{i=1}^{\ell}e_\otimes^{\lambda U_i},\qquad
- G_\lambda=e_\otimes^{\lambda\sum_iU_i},\qquad \lambda>0.
+ F_\lambda=\prod_{i=1}^\ell e_\otimes^{\lambda U_i},\qquad
+ G_\lambda=e_\otimes^{\lambda\sum_iU_i},\qquad\lambda>0.
 \]
-Here \(U_i\) represents area in coordinate plane \((i,i+1)\), with amplitude
-\(\lambda\). At unit tuple budget, write
-\(\Del_n(\lambda)=\Del_{1,n}(F_\lambda,G_\lambda)\)
-and \(\B(\lambda)=\B_1(F_\lambda,G_\lambda)\).
+Here \(\lambda\) is area amplitude. Write
+\(\Del_n(\lambda)=\Del_{1,n}(F_\lambda,G_\lambda)\) and
+\(\B(\lambda)=\B_1(F_\lambda,G_\lambda)\).
 
-\begin{theorem}\label{thm:chain}
-For every \(\ell\ge3\), every response dimension \(n\ge1\) and \(\lambda>0\),
+\begin{proposition}\label{prop:chain}
+For every \(\ell\ge3\), \(n\ge1\), and \(\lambda>0\),
 \begin{equation}\label{eq:chain}
  \Del_n(\lambda)
  <\frac{\lambda^2}{\sqrt2}e^{\sqrt2\lambda}
  <\frac{e^{\sqrt6\lambda}-1-\sqrt6\lambda}{\sqrt3}
  \le\B(\lambda).
 \end{equation}
-The separation bounds are independent of chain length.
-\end{theorem}
+Bounds are independent of chain length.
+\end{proposition}
 
-Response bounds permit an \(\ell\)-to-one merge for tolerances rejected by
-full certificate. Fixed generic depth-two layout reduces storage by factor
-\(\ell\). For truncated BV loops, total error also includes initial decoding
-error, by triangle inequality. Pure area rough blocks have exact fine series.
-Appendix~\ref{app:chain} proves all-scale bounds by coefficient comparison.
+This separates the response and tensor measures for the stated pair at every
+amplitude. If \(F_\lambda\) itself approximates a BV path, add that initial
+response error by triangle inequality. Appendix~\ref{app:chain} proves the bounds.
+Compression is one consequence: under fixed generic depth-two layout,
+replacing \(\ell\) records by one reduces storage by factor \(\ell\) at
+tolerances inside the proved gap.
 
-\section{Exact Euler minimax and storage}
-Euler decoding evaluates a truncated signature polynomial, reconstructed from
-stored log-signature coordinates. Choose depth \(N\) and interval count \(m\)
-to minimize storage subject to response tolerance.
-
-For positive integers \(N,m\), put
-\(P_N(x)=\sum_{j=0}^Nx^j/j!\). Write \(R_{A,j}\) for the restriction of
-\(R_A\) to degree \(j\). The decoded response is
-\[
- E^A_{N,\pi}(X)=\prod_{i=1}^m
- \left[I_n+\sum_{j=1}^NR_{A,j}(S(X_i)_j)\right].
-\]
-
-For each path, choose one partition controlling every admissible tuple.
-
-\begin{theorem}\label{thm:euler}
-For \(N,m,d,n\ge1\), \(r>0\), and continuous paths \(X:[0,1]\to\R^d\)
-with \(\norm{X}_{1\text{-var}}\le1\),
-\begin{equation}\label{eq:minimax}
- \sup_X\ \inf_{\pi:\,m\ {\rm intervals}}\ \sup_{|A|\le r}
- \norm{\Phi^A(X)-E^A_{N,\pi}(X)}_{\op}
- =\E(N,m,r):=e^r-P_N(r/m)^m.
-\end{equation}
-Partitions are path-dependent and coefficient-independent.
-Equal-variation partitions give upper bound; a straight line with rank-one
-development attains equality.
-\end{theorem}
-
-The \((\varepsilon,r)\)-representation paper gives this scalar expression in
-(1.13). Appendix~\ref{app:euler} proves
-universal upper bound and partition minimization. Their length envelope is
-\[
- B(N,m,r)=\frac{e^r r^{N+1}}{(N+1)!m^N}.
-\]
-Fix Euler decoder and generic coordinate layout. Let \(\Lambda_d(N)\) count
-independent log-signature coordinates through degree \(N\) in \(d\) channels.
-Storage is \(m\Lambda_d(N)\) scalars. Appendix~\ref{app:asymp} gives dimension
-formula and storage asymptotics.
-
-\paragraph{Finite integer movement.}
-For \(d=2,r=1,\varepsilon=10^{-2}\), the two optima are
-\begin{center}
-\begin{tabular}{lrrr}
-\toprule
-Constraint & \(N\) & \(m\) & stored scalars\\
-\midrule
-Exact BV minimax & 4 & 1 & 8\\
-Length envelope & 5 & 1 & 14\\
-\bottomrule
-\end{tabular}
-\end{center}
-Appendix~\ref{app:cert} certifies global minimality with rational arithmetic.
-On the retained grid \(d\in\{2,3,5\}\),
-\(r\in\{0.1,0.5,1,2,5,10,20,50,100\}\) and
-\(\varepsilon\in\{10^{-1},10^{-2},10^{-4},10^{-8},10^{-12}\}\),
-optimum sets change in \GridMoved\ of \GridCases\ cases;
-\GridCheaper\ have strictly lower storage, with largest saving \GridSaving\%.
-Grid searches use high-precision boundary refinement without interval
-certification.
-
-\paragraph{Storage limits.}
-At fixed \(d\ge2\), the ratio of minimum costs under \(\E\le\varepsilon\)
-and \(B\le\varepsilon\) tends to one in either limit:
-\(\varepsilon\downarrow0\) at fixed \(r>0\), or \(r\to\infty\) at fixed
-\(\varepsilon>0\). Appendix~\ref{app:asymp} proves this and gives depth,
-interval and cost asymptotics.
-
-\begin{samepage}
-For pure Engel directions, obtained by repeated bracketing of two drivers,
-HS-certified Euler storage overhead grows with amplitude. A single pure
-log-signature block is exact under log-ODE decoding.
-Appendix~\ref{app:engel} states and proves the storage bracket.
-\par
-\end{samepage}
-
-\begin{samepage}
-\section{Prior work and boundaries}
-Development separation through polynomial identities appears in
-Chevyrev--Lyons, \S4.2 and Theorem 4.8 \cite{chevyrev2016characteristic}.
-Planar degree-six matrix identities \cite{nikolaev1986two} obstruct separation
-by dimension-two responses. Spectral Lie-polynomial evaluations and
-low-degree calculations appear in Boedihardjo--Geng--Souris
-\cite{boedihardjo2020developments} under different norm budgets;
-exact pure-path tail asymptotics appear in
-Li--Gao \cite{li2026exact}. The Engel gauge below is a
-B\"ottcher--Wenzel corollary \cite{bottcher2008frobenius}.
-Product-formula bounds appear in \cite{iserles2024elementary}; fixed-system
-adaptive log-ODE analysis in \cite{bayer2023adaptive}.
-The \((\varepsilon,r)\)-representation paper identifies first discarded
-local log-signature error after (2.10).
-
-Novelty of constrained response/HS comparison and finite-scale consequences
-requires confirmation. General rough inputs with \(2<p<3\), mesh-uniform
-nondegeneracy, exact finite-scale suprema and general cubic-zero behavior
-remain open. General rough-path asymptotics and empirical averaged-error
-figures in the \((\varepsilon,r)\)-representation paper are outside these
-results' scope.
-\par
-\end{samepage}
+\paragraph{Prior work and scope.}
+The \((\varepsilon,r)\)-representation paper supplies response criterion and
+identifies first discarded local log-signature error after (2.10)
+\cite{ferrucci2026concise}. Proofs use B\"ottcher--Wenzel
+\cite{bottcher2008frobenius} and a two-factor commutator error bound
+\cite{iserles2024elementary}. Independent proof review and novelty
+confirmation remain pending.
 
 \clearpage
 \appendix
-\section{Planar gauge, tails and stability}\label{app:planar}
-Write \(S_j(X)=S(X)_j\) and \(E_{ij}\) for a matrix unit with entry one
-at \((i,j)\) and zero elsewhere.
-For homogeneous \(D\) of degree \(j\), write
-\(\gamma_{j,n}(D)=\sup_{|A|\le1}\norm{R_A(D)}_{\op}\).
-Let \(Z=[e_1,e_2]\). Every planar cubic Lie element is
-\(D=[w,Z]\) with \(w\in\R^2\), and
-\(\norm{D}_{\HS}=\sqrt6\norm{w}_2\).
+\section{Planar gauge, tails and finite example}\label{app:planar}
+Let \(Z=[e_1,e_2]\). Every planar cubic Lie element is \(D=[w,Z]\),
+\(w\in\R^2\), with \(\norm{D}_{\HS}=\sqrt6\norm{w}_2\).
 Proper driver rotations preserve tuple ball and fix \(Z\), reducing to
-\(D=\norm{w}_2[e_1,Z]\).
-B\"ottcher--Wenzel and scalar maximization give
+\(D=\norm{w}_2[e_1,Z]\). B\"ottcher--Wenzel applied twice gives
 \[
  \norm{[A_1,[A_1,A_2]]}_{\op}
- \le2\norm{A_1}_F^2\norm{A_2}_F\le\frac4{3\sqrt3}.
+ \le2\norm{A_1}_F^2\norm{A_2}_F\le\frac4{3\sqrt3}\quad(|A|\le1).
 \]
 Equality holds at
 \[
- A_1=\frac1{\sqrt3}\begin{pmatrix}1&0\\0&-1\end{pmatrix},
- \qquad A_2=\frac1{\sqrt3}\begin{pmatrix}0&1\\0&0\end{pmatrix},
+ A_1=\frac1{\sqrt3}\begin{pmatrix}1&0\\0&-1\end{pmatrix},\qquad
+ A_2=\frac1{\sqrt3}\begin{pmatrix}0&1\\0&0\end{pmatrix}.
 \]
-whose cubic response is \(4E_{12}/(3\sqrt3)\).
-Embedding these matrices proves equality for \(n\ge2\); hence
-\(\gamma_{3,n}(D)=\rho\norm{D}_{\HS}\).
-One commutator step similarly gives
-\(\gamma_{2,n}(\alpha Z)=|\alpha|/\sqrt2=\norm{\alpha Z}_{\HS}/2\).
-It is attained at \(A_1=\operatorname{diag}(1,-1)/2\) and
-\(A_2=E_{12}/\sqrt2\).
+Embedding in dimension \(n\ge2\) therefore proves
+\(\sup_{|A|\le1}\norm{R_A(D)}_{\op}=\rho\norm{D}_{\HS}\).
+One commutator step also gives
+\(\sup_{|A|\le1}\norm{R_A(\alpha Z)}_{\op}
+ \le|\alpha|/\sqrt2=\norm{\alpha Z}_{\HS}/2\), \(\alpha\in\R\).
 
-\paragraph{Explicit tails and radius.}
-Let \(L=\norm{X}_{1\text{-var}}\) and put
+\paragraph{Full-series tails.}
+Put \(L=\norm{X}_{1\text{-var}}\), \(h=\norm{D_3}_{\HS}\),
+\(a=\sum_i\norm{\ell_{i,1}}_2\), and
+\(b=\sum_i\norm{\ell_{i,2}}_{\HS}\). Define
 \[
- h=\norm{D_3}_{\HS},\qquad
- a=\sum_i\norm{\ell_{i,1}}_2,\qquad
- b=\sum_i\norm{\ell_{i,2}}_{\HS}.
+ T_4(a,b;t)=e^{at+bt^2}-1-at-(a^2/2+b)t^2-(a^3/6+ab)t^3,
 \]
-Define scalar majorant tail from degree four:
-\[
- T_4(a,b;t)=e^{at+bt^2}-1-at-(a^2/2+b)t^2-(a^3/6+ab)t^3.
-\]
-Its coefficients are nonnegative. Define
-\(Q_R(t)=T_4(L,0;t)+T_4(a,b/2;t)\) and
+\(Q_R(t)=T_4(L,0;t)+T_4(a,b/2;t)\), and
 \(Q_H(t)=T_4(L,0;t)+T_4(a,b;t)\). Then
 \begin{equation}\label{eq:tails}
  |\Del_n(t)-\rho ht^3|\le Q_R(t),\qquad
  ht^3\le\B(t)\le ht^3+Q_H(t).
 \end{equation}
-For \(h>0\), choose \(T>0\), set \(C_T=Q_R(T)/T^4\), and define
-\begin{equation}\label{eq:radius}
- t_*=\min\{T,(1-\rho)h/(2C_T)\},\qquad c=(1+\rho)/2.
-\end{equation}
-For \(0<t\le t_*\),
-\(\Del_n(t)\le cht^3<ht^3\le\B(t)\).
-
-\paragraph{First discrepancy.}
-Signature and decoded series \(F,G\) agreeing through degree two have
-\(D_3=F_3-G_3=(\log_\otimes F)_3-(\log_\otimes G)_3\), a cubic Lie tensor.
-Cubic gauge and uniform response tail give first bound in \eqref{eq:tails};
-degree-three certificate term gives second. Thus
+Indeed, \(\norm{S(X)_j}_{\HS}\le L^j/j!\) gives majorant \(e^{Lt}\).
+Tensor products give decoder majorant \(e^{at+bt^2}\); area response bound
+improves this to \(e^{at+(b/2)t^2}\). Removing degrees zero through three
+gives \(Q_R,Q_H\). Cubic discrepancy is \(\sum_i\ell_{i,3}\), since
+multiplication by nonconstant factors raises degree. Cubic gauge and triangle
+inequality give response bound in \eqref{eq:tails}; degree-three certificate
+term gives its lower bound. Hence
 \[
  \left|\frac{\Del_n(t)}{\B(t)}-\rho\right|
- \le\frac{Q_R(t)+\rho Q_H(t)}{ht^3}.
+ \le\frac{Q_R(t)+\rho Q_H(t)}{ht^3}=O(t).
 \]
-Both tails are \(O(t^4)\), independently of \(n\).
-Interval factors first differ by \(\ell_{i,3}\). Nonconstant factors raise
-degree, so \(D_3=\sum_i\ell_{i,3}\).
+Tail constants are independent of \(n\), proving Proposition~\ref{prop:bv}.
+In particular, \(Q_R(t)<(1-\rho)ht^3\) implies \(\Del_n(t)<\B(t)\).
 
-\paragraph{Full series control.}
-BV factorial bound \(\norm{S_j(X)}_{\HS}\le L^j/j!\) majorizes \(F\) by
-\(e^{Lt}\).
-Tensor products majorize \(G_\pi\) by \(e^{at+bt^2}\).
-Area gauge majorizes matrix decoder by \(e^{at+(b/2)t^2}\).
-Removing degrees zero to three gives \(Q_R,Q_H\). Equivalently,
+\paragraph{Rational corner certificate.}
+For the one-interval corner,
 \[
- T_4(a,b;t)=e^p-P_3(p)+q(e^p-P_1(p))+e^p(e^q-P_1(q)),
- \quad p=at,\ q=bt^2.
+ D_3=([e_1,Z]-[e_2,Z])/12,\quad
+ L=2,\quad h=\sqrt3/6,\quad a=\sqrt2,\quad b=\sqrt2/2.
 \]
-Nonnegative coefficients imply \(Q_R(t)\le C_Tt^4\) on \(0\le t\le T\),
-which proves \eqref{eq:radius} and the strict gap.
-
-\paragraph{BV stability.}
-For \(X_0=Y_0=0\), variations at most \(L\), and
-\(\eta=\norm{X-Y}_{1\text{-var}}\), interpolation and insertion of
-one \(d(Y-X)\) into iterated integrals give
+For rational \(x\ge0\), integer \(J\ge0\), and \(x<J+2\), put
+\(P_J(x)=\sum_{j=0}^Jx^j/j!\). Successive omitted-term ratios give
 \[
- \norm{S_j(X)-S_j(Y)}_{\HS}
- \le\frac{\eta L^{j-1}}{(j-1)!}.
+ P_J(x)\le e^x\le P_J(x)
+ +\frac{x^{J+1}}{(J+1)!}\frac1{1-x/(J+2)}.
 \]
-At insertion time \(u\), let \(L_{\rm before},L_{\rm after}\) be variations
-of interpolated path before and after \(u\). Summing positions gives
-\((L_{\rm before}+L_{\rm after})^{j-1}/(j-1)!\le L^{j-1}/(j-1)!\).
-Integrate against variation measure of \(Y-X\), then interpolation parameter.
-In
-\[
- \ell_3=S_3-\tfrac12(S_1\otimes S_2+S_2\otimes S_1)
-              +\tfrac13 S_1^{\otimes3},
-\]
-with \(\ell_3(X)=(\log_\otimes S(X))_3\), the three differences have bounds
-\(\eta L^2/2\), \(3\eta L^2/2\),
-and \(\eta L^2\). Therefore
-\(\norm{\ell_3(X)-\ell_3(Y)}_{\HS}\le3\eta L^2\).
-On a common partition, local difference variations sum to \(\eta\), giving
-the same bound for \(D_3\). With \(L_i=\norm{X_i}_{1\text{-var}}\),
-\(a\le L\) and \(b\le\sum_iL_i^2\le L^2\).
-For baseline \(X\), let \(L_X=\norm{X}_{1\text{-var}}\),
-\(h_X=\norm{D_3(X)}_{\HS}>0\), and set
-\[
- L=L_X+1,\qquad \eta_*=\min\{1,h_X/(6L^2)\}.
-\]
-Paths \(Y\) with \(Y_0=0\) and \(\norm{X-Y}_{1\text{-var}}\le\eta_*\)
-have cubic norm at least \(h_X/2\). Replacing \(Q_R\) by
-\(Q_R^*(t)=T_4(L,0;t)+T_4(L,L^2/2;t)\) and \(h\) by \(h_X/2\) in
-\eqref{eq:radius} gives a common positive radius.
-
-\paragraph{Mixed blocks.}
-For \(v_1,v_2\in\R^2\) and \(\alpha_1,\alpha_2\in\R\), compare
-\[
- e_\otimes^{tv_1+t^2\alpha_1Z}e_\otimes^{tv_2+t^2\alpha_2Z}
- \quad\hbox{with}\quad
- e_\otimes^{t(v_1+v_2)+t^2(\alpha_1+\alpha_2+\omega/2)Z},
- \qquad\omega=\det(v_1,v_2).
-\]
-Baker--Campbell--Hausdorff expansion gives cubic discrepancy \(t^3[w,Z]\), where
-\[
- w=\tfrac12(\alpha_2v_1-\alpha_1v_2)
-                  +\tfrac{\omega}{12}(v_1-v_2).
-\]
-Cubic gauge and tail argument apply when \(w\ne0\), with response tail
-\(T_4(a_f,b_f/2;t)+T_4(a_c,b_c/2;t)\), where
-\[
- a_f=\norm{v_1}_2+\norm{v_2}_2,\quad b_f=\sqrt2(|\alpha_1|+|\alpha_2|),
- \quad a_c=\norm{v_1+v_2}_2,\quad b_c=\sqrt2|\alpha_1+\alpha_2+\omega/2|.
-\]
-For independent \(v_1,v_2\), \(w=0\) exactly when
-\(\alpha_1=\alpha_2=-\omega/6\). Pure planar area blocks commute.
-
-\section{Gram certificates and all-scale chain proof}\label{app:chain}
-Let blocks \(U_1,\ldots,U_\ell\) have common tensor degree \(k\ge1\) and Gram matrix
-\(g_{ij}=\langle U_i,U_j\rangle_{\HS}\).
-For nonnegative integer tuple \(\alpha=(\alpha_1,\ldots,\alpha_\ell)\),
-let \(|\alpha|=\sum_i\alpha_i\),
-\(\alpha!=\prod_i\alpha_i!\), and \(\binom m\alpha=m!/\alpha!\) when
-\(|\alpha|=m\). Define \(w(\alpha)\) as the nondecreasing word containing
-\(\alpha_i\) copies of index \(i\), and
-\(W_\alpha=U_1^{\otimes\alpha_1}\otimes\cdots\otimes U_\ell^{\otimes\alpha_\ell}\).
-Write \(F_m,G_m\) for coefficients of \(\lambda^m\) in ordered and merged
-series; they have tensor degree \(km\):
-\[
- F_m=\sum_{|\alpha|=m}W_\alpha/\alpha!,
- \qquad G_m=(\sum_iU_i)^{\otimes m}/m!.
-\]
-With \(H_m=m!\norm{F_m-G_m}_{\HS}\), tensor inner products give
-\begin{equation}\label{eq:gram}
- H_m^2=\sum_{|\alpha|=|\beta|=m}
- \binom m\alpha\binom m\beta
- \prod_{v=1}^m g_{w(\alpha)_v,w(\beta)_v}
- -\left(\sum_{i,j}g_{ij}\right)^m.
-\end{equation}
-Here \(\langle W_\alpha,W_\beta\rangle_{\HS}\) is the displayed product.
-Writing \(s_i=\sum_jg_{ij}\), the multinomial theorem gives
-\(\langle F_m,G_m\rangle=(\sum_i s_i)^m/(m!)^2=\norm{G_m}_{\HS}^2\),
-which proves \eqref{eq:gram}.
-
-\paragraph{Response bound.}
-For \(X_i=R_A(U_i)\), put
-\[
- M=\sup_{|A|\le1}\sum_i\norm{X_i}_{\op},\qquad
- K=\sup_{|A|\le1}\sum_{i<j}\norm{[X_i,X_j]}_{\op}.
-\]
-If \(M=0\), response error vanishes and positive chain certificate gives
-separation. For \(M>0\), two-factor commutator representation
-\cite{iserles2024elementary}
-gives
-\[
- \norm{e^{\lambda X}e^{\lambda Y}-e^{\lambda(X+Y)}}_{\op}
- \le\frac{\lambda^2}{2}\norm{[X,Y]}_{\op}
-             e^{\lambda(\norm{X}_{\op}+\norm{Y}_{\op})}.
-\]
-For completeness, differentiate
-\(e^{(\lambda-s)(X+Y)}e^{sX}e^{sY}\) and use
-\[
- [e^{sX},Y]=\int_0^s e^{(s-u)X}[X,Y]e^{uX}\,du.
-\]
-Induction over factors, with
-\([\sum_{i<j}X_i,X_j]=\sum_{i<j}[X_i,X_j]\), yields
-\[
- \Del_n(\lambda)\le\frac{\lambda^2K}{2}e^{\lambda M}.
-\]
-Comparing power coefficients with
-\(\B(\lambda)=\sum_{m\ge2}\lambda^mH_m/m!\), a sufficient condition is
-\[
- K<\inf_{m\ge2}\frac{2H_m}{m(m-1)M^{m-2}}\quad(M>0).
-\]
-
-\paragraph{Analytic verification for chains.}
-For \(U_i=[e_i,e_{i+1}]\), blocks are mutually orthogonal with norm \(\sqrt2\).
-Let \(a_i=\norm{A_i}_F\) and \(c_\ell=\cos(\pi/(\ell+2))\).
-The path-graph largest eigenvalue gives
-\(\sum_i a_i a_{i+1}\le c_\ell\sum_i a_i^2\le c_\ell\).
-B\"ottcher--Wenzel therefore gives
-\[
- M\le\sqrt2c_\ell<\sqrt2,\qquad
- K\le2\sqrt2\sum_{i<j}(a_i a_{i+1})(a_j a_{j+1})
- \le\sqrt2c_\ell^2<\sqrt2.
-\]
-These inequalities hold for each tuple before taking suprema.
-Retain only nonmonotone words over the first three orthogonal blocks.
-There are \(3^m-\binom{m+2}{2}\) such words, each absent from \(F_m\)
-and having coefficient \(1/m!\) in \(G_m\). Hence
-\[
- H_m^2\ge2^m(3^m-\binom{m+2}{2})\ge2^m3^{m-1},\qquad m\ge2.
-\]
-The counting inequality follows at \(m=2\) and by induction:
-\(\binom{m+3}{2}/\binom{m+2}{2}=(m+3)/(m+1)<3\).
-Consequently every coefficient threshold is at least
-\[
- L_m=\frac{4\,3^{(m-1)/2}}{m(m-1)}.
-\]
-Its consecutive ratio is \(\sqrt3(m-1)/(m+1)\):
-below one up to \(m=3\), and above one for \(m\ge4\).
-For \(m=4+s\), the latter follows from
-\(3(m-1)^2-(m+1)^2=2s^2+8s+2>0\).
-Thus \(\inf_{m\ge2}L_m=L_4=\sqrt3>\sqrt2>K\).
-Summing \(H_m\ge(\sqrt6)^m/\sqrt3\) gives the last bound in
-\eqref{eq:chain}; the same coefficient comparison gives its middle strict
-inequality, proving Theorem~\ref{thm:chain}.
-
-\section{Euler minimax proof}\label{app:euler}
-Put \(x_i=|A|\norm{X_i}_{1\text{-var}}\) and \(R=\sum_i x_i\).
-Expanding all exact interval factors, the Euler product retains precisely
-multi-indices with every interval degree at most \(N\). Factorial estimates give
-\[
- \norm{\Phi^A(X)-E^A_{N,\pi}(X)}_{\op}
- \le\sum_{\max j_i>N}\prod_i\frac{x_i^{j_i}}{j_i!}
- =e^R-\prod_iP_N(x_i).
-\]
-The majorant increases in each \(x_i\).
-For \(N\ge2\), direct coefficient comparison gives
-\[
- P_{N-1}(x)^2-P_N(x)P_{N-2}(x)
- =\frac{x^{N-1}}{N!}\sum_{j=0}^{N-1}(N-j)\frac{x^j}{j!}\ge0.
-\]
-For \(N=1\), \(\log P_1=\log(1+x)\) is concave as well.
-Thus \(\log P_N\) is concave, and Jensen maximizes the product at equal
-\(x_i=R/m\). An equal-variation partition is independent of \(A\) and gives
-the uniform bound \(\E(N,m,r)\) on the normalized path class.
-
-For \(X_t=te_1\), choose rank-one orthogonal projection \(Q\),
-\(A_1=rQ\), and other matrices zero. On its range, with
-\(\Delta t_i=t_i-t_{i-1}\), error is
-\(e^r-\prod_iP_N(r\Delta t_i)\).
-Jensen gives error at least \(\E(N,m,r)\) for every partition;
-equal intervals attain it, proving \eqref{eq:minimax}.
-
-\section{Storage limit arguments}\label{app:asymp}
-
-Witt's formula gives generic log-signature dimension:
-\[
- \Lambda_d(N)=\sum_{j=1}^N\frac1j\sum_{v\mid j}\mu(v)d^{j/v},
-\]
-where \(\mu(1)=1\); \(\mu(v)=(-1)^s\) for a product of \(s\) distinct primes,
-and \(\mu(v)=0\) when \(v\) has a squared prime divisor.
-
-\paragraph{Limiting storage statement.}
-Let \(C_{d,k}(z,\varepsilon)\) be minimum \(m\Lambda_d(kq)\) over positive
-integers \(q,m\) satisfying \(\E(q,m,z)\le\varepsilon\), with
-\(d\ge2,k\ge1\) fixed and \(z,\varepsilon>0\). Stored depth is \(kq\).
-Put \(\beta=k\log d\), \(\lambda=z+\log(z/\varepsilon)\), with natural logs.
-For any optimizing pair \((q_*,m_*)\), in either limit
-\(z\to\infty\) at fixed \(\varepsilon>0\), or \(\varepsilon\downarrow0\)
-at fixed \(z>0\),
-\begin{equation}\label{eq:asymp}
- q_*\sim\sqrt{\lambda/\beta},\qquad
- \log(m_*/z)\sim\sqrt{\beta\lambda},\qquad
- \log(C_{d,k}/z)\sim2\sqrt{\beta\lambda}.
-\end{equation}
-Here \(f\sim g\) means \(f/g\to1\). Replacing constraint
-\(\E(q,m,z)\le\varepsilon\) by \(B(q,m,z)\le\varepsilon\) changes minimum
-cost by a factor tending to one. For \(k=1\), leading BV rates agree with
-the \((\varepsilon,r)\)-representation paper.
-
-\paragraph{Proof.}
-Write \(x=z/m\), \(a=e^{-x}\sum_{j>q}x^j/j!\), and
-\(B=e^z z^{q+1}/((q+1)!m^q)\).
-Repeated integration of \(e^{-u}\) gives
-\[
- e^{-x}\frac{x^{q+1}}{(q+1)!}\le a\le\frac{x^{q+1}}{(q+1)!}.
-\]
-Since \(\E=e^z[1-(1-a)^m]\), Bernoulli's inequality yields
-\begin{equation}\label{eq:EB}
- \frac{e^{-x}}{1+ma}\le\frac{\E}{B}\le1.
-\end{equation}
-Feasibility \(\E\le\varepsilon<e^z\) and
-\(1-(1-a)^m\ge1-e^{-ma}\) also imply
-\begin{equation}\label{eq:ma}
- ma\le-\log(1-\varepsilon e^{-z}).
-\end{equation}
-
-\paragraph{Optimizer regime.}
-For fixed \(d,k\), Witt's formula gives
-\(\log\Lambda_d(kq)=\beta q-\log q+O(1)\).
-Take \(q\) nearest \(\sqrt{\lambda/\beta}\) and
-\[
- m=\left\lceil z\exp\left(\frac{\lambda-\log((q+1)!)}q\right)\right\rceil.
-\]
-This pair is \(B\)-feasible. Stirling and relative rounding error give
-\(\log(C_{d,k}/z)\le2\sqrt{\beta\lambda}+O(\log\lambda)\).
-Since \(m\ge1\), every optimizer has \(q=O(\sqrt\lambda)\);
-for large \(z\), use \(\log z=O(\log\lambda)\).
-
-At fixed \(z\), bounded \(m\) and \(q=O(\sqrt\lambda)\) would, by the first
-omitted term and \(1-(1-a)^m\ge a\), give
-\(\log\E\ge-O(\sqrt\lambda\log\lambda)\), contradicting
-\(\log\varepsilon=-\lambda+O(1)\). Thus \(m\to\infty\) and \(x\to0\).
-At \(z\to\infty\), \(m=1\) gives
-\(\log P_q(z)=O(\sqrt z\log z)=o(z)\), so \(\E\sim e^z\), infeasible.
-If \(m\ge2\) and \(x\ge c>0\), then
-\[
- \E\ge e^{z-x}\frac{x^{q+1}}{(q+1)!}
- \quad\Longrightarrow\quad
- \log\E\ge z/2-O(\sqrt z\log z),
-\]
-also infeasible. Hence \(x\to0\), and \(m\to\infty\), in both regimes.
-
-At fixed \(z\), \(ma\le z x^q/(q+1)!\le zx/2\to0\) once \(x<1\).
-For large \(z\), \eqref{eq:ma} gives \(ma\to0\).
-It follows from \eqref{eq:EB} that \(\E/B\to1\) at every optimizer, so
-\(\log B\le\log\varepsilon+o(1)\).
-Consequently
-\[
- \log(C_{d,k}/z)\ge\beta q+\lambda/q-O(\log\lambda).
-\]
-The minimum \(2\sqrt{\beta\lambda}\) forces
-\(q/\sqrt{\lambda/\beta}\to1\) by the preceding upper and lower bounds.
-Subtracting \(\log\Lambda_d(kq)\) gives the formula for \(\log(m/z)\).
-
-Finally, at an exact optimizer inflate \(m\) by
-\(\max\{1,(B/\varepsilon)^{1/q}\}\), rounding upward.
-This is \(B\)-feasible and costs a relative \(1+o(1)\) since
-\(B/\varepsilon\le1+o(1)\) and \(m\to\infty\).
-Since \(\E\le B\), this proves convergence of minimum-cost ratio to one.
-
-\section{Engel gauge and structured storage scope}\label{app:engel}
-
-Fix \(d,n\ge2\) and \(k\ge2\). Define \(\ad_U(V)=[U,V]\) and
-Engel direction \(E_k=\ad_{e_1}^{k-1}(e_2)\). Put
-\[
- h_k=\sqrt{\binom{2k-2}{k-1}},\quad
- g_k=[2(k-1)]^{(k-1)/2}k^{-k/2},\quad s_k=g_k/\sqrt2.
-\]
-Here \(h_k=\norm{E_k}_{\HS}\), \(g_k=\gamma_{k,n}(E_k)\), and \(s_k\)
-is an attained positive eigenvalue. For amplitude \(b>0\), pure degree-\(k\)
-weakly geometric rough path has signature increments
-\(S_{u,v}=\exp_\otimes((v-u)bE_k)\), \(0\le u\le v\le1\), and roughness
-exponent \(p\ge k\). Absorb coefficient radius \(r\) into \(a=br^k\).
-Let \(C_k^{\rm true}(a,\varepsilon)\) minimize generic Euler cost
-\(m\Lambda_d(N)\) over \(N,m\ge1\) meeting response tolerance
-\(\varepsilon>0\), with path-dependent, coefficient-independent partitions.
-When \(\varepsilon<e^{a s_k}-1\), true Euler storage is bracketed by
-\[
- C_{d,k}(a s_k,\varepsilon)\le C_k^{\rm true}(a,\varepsilon)
- \le C_{d,k}(a g_k,\varepsilon)\le C_{d,k}(a h_k,\varepsilon).
-\]
-Consequently, at fixed \(d,k,\varepsilon\),
-\[
- \liminf_{a\to\infty}\frac1{\sqrt a}
- \log\frac{C_{d,k}(a h_k,\varepsilon)}{C_k^{\rm true}(a,\varepsilon)}
- \ge2\sqrt{k\log d}\,(\sqrt{h_k}-\sqrt{g_k})>0.
-\]
-A single depth-\(k\) log-ODE factor represents this path exactly.
-
-\paragraph{Gauges and storage proof.}
-Repeated B\"ottcher--Wenzel gives
-\[
- \norm{\ad_A^{k-1}(B)}_{\op}
- \le2^{(k-1)/2}\norm{A}_F^{k-1}\norm{B}_F.
-\]
-Maximizing the upper bound under \(\norm{A}_F^2+\norm{B}_F^2\le1\)
-gives squared norms \((k-1)/k,1/k\) and value \(g_k\).
-A diagonal block \(A=\sqrt{(k-1)/(2k)}\operatorname{diag}(1,-1)\)
-and \(B=E_{12}/\sqrt k\) attain operator norm \(g_k\).
-Binomial expansion of \(E_k\) gives HS norm \(h_k\).
-Stirling gives \(g_k/h_k=O(k^{-1/4}2^{-k/2})\).
-
-At effective amplitude \(a\), let \(\delta_k(q,m,a)\) be worst unit-budget
-response error at Euler depth \(kq\) on equal \(m\)-interval partition,
-\(q,m\ge1\). Nonnegative scalar error coefficients give
-\[
- \E(q,m,a s_k)\le\delta_k(q,m,a)\le\E(q,m,a g_k)<\E(q,m,a h_k).
-\]
-For the lower witness, set \(\alpha=\sqrt{(k-1)/k}\), \(\eta=1/\sqrt k\):
-\[
- A_1=\frac\alpha{\sqrt2}\begin{pmatrix}1&0\\0&-1\end{pmatrix},
- \quad A_2=\frac\eta{\sqrt2}
-                 \begin{pmatrix}0&1\\(-1)^{k-1}&0\end{pmatrix}.
-\]
-Embedded in dimension \(n\), this unit tuple evaluates \(E_k\) to a
-symmetric block with off-diagonal entries \(s_k\), hence eigenvalue \(s_k\).
-Jensen gives the same lower bound for adaptive partitions.
-Let \(c_j\ge0\) be coefficients of \(e^x-P_q(x/m)^m\).
-Each tensor-degree-\(kj\) error is \(c_j a^j E_k^{\otimes j}\).
-Its norm is \(c_j(a h_k)^j\), whose sum equals \(\E(q,m,a h_k)\).
-
-For \(\varepsilon<e^{a s_k}-1\), depths below \(k\) are infeasible.
-Depth \(N\ge k\) gives the same polynomial as \(k\lfloor N/k\rfloor\),
-with no smaller storage. This proves storage sandwich; \eqref{eq:asymp}
-gives amplitude bound.
-At fixed \(a\), all bracket endpoints have common leading
-logarithmic rate \(2\sqrt{k\log d\log(1/\varepsilon)}\).
-
-\section{Rational certificates and reproducibility}\label{app:cert}
-For the one-interval corner of Section~2, with \(Z=[e_1,e_2]\),
-\[
- D_3=([e_1,Z]-[e_2,Z])/12,\qquad
- h=\sqrt3/6,\quad a=\sqrt2,\quad b=\sqrt2/2.
-\]
-For rational \(x\ge0\) and integer \(J\ge0\) with \(x<J+2\),
-\[
- P_J(x)\le e^x\le
- P_J(x)+\frac{x^{J+1}}{(J+1)!}\frac1{1-x/(J+2)}.
-\]
-Successive omitted-term ratios are bounded by \(x/(J+2)\).
-Displayed example enclosures use \(J=24\).
-Integer squares verify
+Use \(J=24\) and rational bounds, verified by integer squares,
 \[
  \sqrt2<707107/500000,\quad
- \sqrt3>34641/20000,\quad \sqrt6<244949/100000.
+ \sqrt3>34641/20000,\quad\sqrt6<244949/100000.
 \]
-For the corner, \(\rho h=\sqrt6/27\).
-Positive coefficients permit replacing \(\sqrt2\) parameters by their upper
-bounds in \(Q_R\); apply the exponential enclosure, and use the lower
-\(\sqrt3\) bound in \(ht^3\). Exact fractions then give \eqref{eq:corner}.
+At \(t=1/20\), apply these to \(\rho ht^3+Q_R(t)\), using
+\(\rho h=\sqrt6/27\) and nonnegative coefficients of \(T_4\).
+The lower bound \(ht^3\) for \(\B(t)\) then proves \eqref{eq:corner}
+with exact fractions.
 
-For the storage example, bound \(e=e^1\) by the same rational enclosure.
-For \(d=2\), first five cumulative dimensions are \(2,3,5,8,14\).
-Enumerating every \((N,m)\) of cost at most 8 for \(\E\), and at most 14
-for \(B\), gives unique optima in the table. Higher depths
-cost more with \(m=1\). Each feasibility inequality is strictly decided by
-the rational bounds.
+\section{All-scale chain proof}\label{app:chain}
+For \(|A|\le1\), put \(C_i=[A_i,A_{i+1}]\),
+\(a_i=\norm{A_i}_F\), and \(c_\ell=\cos(\pi/(\ell+2))<1\).
+The path-graph largest eigenvalue gives
+\(\sum_{i=1}^\ell a_i a_{i+1}\le c_\ell\sum_i a_i^2\le c_\ell\).
+B\"ottcher--Wenzel gives
+\[
+ M:=\sup_{|A|\le1}\sum_i\norm{C_i}_{\op}\le\sqrt2c_\ell,
+ \qquad
+ K:=\sup_{|A|\le1}\sum_{i<j}\norm{[C_i,C_j]}_{\op}
+ \le\sqrt2c_\ell^2.
+\]
+For the second bound, use
+\(\norm{[C_i,C_j]}_{\op}\le2\sqrt2
+ (a_i a_{i+1})(a_j a_{j+1})\), then sum pairs.
+For real square matrices \(P,Q\), two-factor commutator bound
+\cite{iserles2024elementary} is
+\[
+ \norm{e^{\lambda P}e^{\lambda Q}-e^{\lambda(P+Q)}}_{\op}
+ \le\frac{\lambda^2}{2}\norm{[P,Q]}_{\op}
+ e^{\lambda(\norm{P}_{\op}+\norm{Q}_{\op})}.
+\]
+Differentiate \(e^{(\lambda-s)(P+Q)}e^{sP}e^{sQ}\) and use
+\([e^{sP},Q]=\int_0^s e^{(s-u)P}[P,Q]e^{uP}\,du\).
+Induction over factors gives
+\[
+ \Del_n(\lambda)\le\frac{\lambda^2K}{2}e^{\lambda M}
+ <\frac{\lambda^2}{\sqrt2}e^{\sqrt2\lambda}.
+\]
 
-Accompanying source archive contains proofs, modules, tests, runners, notebook
-and curated evidence. Build runner regenerates grid statistics from retained
-CSV and rechecks every optimum and tie set. General floating-point searches
-are uncertified.
+Write \(F_\lambda-G_\lambda=\sum_{m\ge2}\lambda^mD_{2m}\) and
+\(H_m=m!\norm{D_{2m}}_{\HS}\); tensor degree is \(2m\).
+Blocks \(U_i\) are orthogonal with norm \(\sqrt2\). Among words of length
+\(m\) over \(U_1,U_2,U_3\), exactly \(\binom{m+2}{2}\) are nondecreasing.
+Other words are absent from ordered product, and have coefficient \(1/m!\)
+in merged exponential. Orthogonality gives
+\[
+ H_m^2\ge2^m\left(3^m-\binom{m+2}{2}\right)\ge2^m3^{m-1},\quad m\ge2.
+\]
+The last inequality holds at \(m=2\) and follows by induction from
+\(\binom{m+3}{2}/\binom{m+2}{2}=(m+3)/(m+1)<3\).
+Summing \(\B(\lambda)=\sum_{m\ge2}\lambda^mH_m/m!\) proves last bound
+in \eqref{eq:chain}.
 
-\clearpage
+For middle inequality, ratio of degree-\(m\) scalar coefficients is
+\(L_m/\sqrt2\), where
+\[
+ L_m=\frac{4\,3^{(m-1)/2}}{m(m-1)},\qquad
+ \frac{L_{m+1}}{L_m}=\sqrt3\,\frac{m-1}{m+1}.
+\]
+This ratio is below one for \(m\le3\) and above one for \(m\ge4\).
+Thus \(\inf_{m\ge2}L_m=L_4=\sqrt3>\sqrt2\), proving strict coefficient
+comparison at every degree and Proposition~\ref{prop:chain}.
+
 % BEGIN GENERATED REFERENCES
 \begin{thebibliography}{99}
 \bibitem{ferrucci2026concise}
@@ -817,36 +375,11 @@ B{\"o}ttcher, Albrecht; Wenzel, David.
 \emph{The Frobenius norm and the commutator}.
 Linear Algebra and its Applications 429, 1864--1885 (2008).
 \url{https://doi.org/10.1016/j.laa.2008.05.020}.
-\bibitem{chevyrev2016characteristic}
-Chevyrev, Ilya; Lyons, Terry.
-\emph{Characteristic functions of measures on geometric rough paths}.
-The Annals of Probability 44, 4049--4082 (2016).
-\url{https://arxiv.org/abs/1307.3580}.
-\bibitem{nikolaev1986two}
-Nikolaev, Rusalin S.
-\emph{Identities of two variables in the {L}ie algebra {sl}(2, {K}) over a field of characteristic zero}.
-Pliska Studia Mathematica Bulgarica 8, 65--76 (1986).
-\url{https://www.math.bas.bg/pliska/Pliska-08/Pliska-08-1986-065-076.pdf}.
-\bibitem{boedihardjo2020developments}
-Boedihardjo, Horatio; Geng, Xi; Souris, Nikolaos P.
-\emph{Path developments and tail asymptotics of signature for pure rough paths}.
-Advances in Mathematics 364, 107043 (2020).
-\url{https://arxiv.org/abs/1811.12170}.
-\bibitem{li2026exact}
-Li, Nannan; Gao, Xing.
-\emph{Exact signature tail asymptotics for pure rough paths}.
-2026.
-\url{https://arxiv.org/abs/2606.30055}.
 \bibitem{iserles2024elementary}
 Iserles, Arieh; Kropielnicka, Karolina.
 \emph{An elementary approach to splittings of unbounded operators}.
 2024.
 \url{https://arxiv.org/abs/2401.06635}.
-\bibitem{bayer2023adaptive}
-Bayer, Christian; Breneis, Simon; Lyons, Terry.
-\emph{An adaptive algorithm for rough differential equations}.
-2023.
-\url{https://arxiv.org/abs/2307.12590}.
 \end{thebibliography}
 % END GENERATED REFERENCES
 \end{document}

@@ -16,8 +16,8 @@
     "tolerance": "1/50000"
   },
   "source_sha256": {
-    "response_distance/note.tex": "33076e1d5cd96cc3620be38d48854ba8639dce03bbd4ff3a54e1f4956534a520",
-    "response_distance/README.md": "6a741b4996d68f577a9f7e501a5d904d7a6c86f8a5213dc838ab1ab88ecafb9e",
+    "response_distance/note.tex": "e9977bfecde74b78fc9ddb556082653b0fd208a6a8783f7ce6675c828514c393",
+    "response_distance/README.md": "c5412074f74671b15692cbfb4a4ab597c50562680098726036393142e30eb376",
     "response_distance/technical.md": "695ce72ba9dee43354d3e3e0ddac6579696f53349641df2e93297a0ba7e68687",
     "response_distance/literature.md": "fc4587d7ad4889e231c91ba550c185e79639938a9abc7c54ec95dddad4e69c12",
     "response_distance/references.bib": "a8261293df61cba8813fa5e3a124a546a807542291e597fa809f18e03cf347ab",
@@ -37,7 +37,7 @@
     "response_distance/code/response_mixed.py": "6394346bdbf76353b8803305f04821fb57107f8f92eaa8439ee950c3dd62bcad",
     "response_distance/code/response_storage.py": "ffce89b9dd32a8cce6723b7e1dbc34c85f9abd0172cb845e8f428b1eab31281e",
     "response_distance/scripts/__init__.py": "95f1295737c8bdc653b837286d66126ed595b96a64de0b09d22880eb1f537035",
-    "response_distance/scripts/build_response_note.py": "4844e746852fea3b5e63d636d706f642011301b58181fa4b92dd9e7040a85b8a",
+    "response_distance/scripts/build_response_note.py": "718fe23ffe9a7f29c74619b84c09dc39701da4ee9a3539265777fd865927082e",
     "response_distance/scripts/check_response_separation.py": "42a68724c5cf22379fb42ba2d24c2d9b419ce683735f6a36b1c488d21acc7c50",
     "response_distance/scripts/study_response_area_gauges.py": "1f92decdfb586f5e68f0b80181da510879f7b4b8e0416ee1e02fe1035a37ec4d",
     "response_distance/scripts/study_response_composition.py": "baed0233be1e1f0f63e9d5a66fc02a8fb2467ac8bc0f68a9f62caac1212d5cd4",
@@ -50,7 +50,7 @@
     "response_distance/tests/test_response.py": "38a6b3647b55fbfadb41a5ea773e6a76c95aa7cc762fb6f93ce8c41b32bfbdf0",
     "response_distance/tests/test_response_certificates.py": "6c5f001797f1fca60836ec8a2dda239df9d463599069b4d4bca453deb4cc3437",
     "response_distance/tests/test_response_mixed.py": "108500273d8a313ff4573f9cc08d09b391683008b06e0125e151af73a9298c2c",
-    "response_distance/tests/test_response_note.py": "f14c70f42101fb66c06b15d167686bb1f0910bc3ef1f5eac3657bb541a30ab66",
+    "response_distance/tests/test_response_note.py": "37a64acf0b632f48cd84d729becb7ab329a826672da4dd2850c64da383666f25",
     "response_distance/tests/test_response_proof_audit.py": "2ba2dfb3f8291ec2204b74d8a6809c6c6357c9fccfa02042d7791d7889b694e3",
     "response_distance/tests/test_response_run_safety.py": "b2c992bb7c3860acf5f2db20d2d49ba5b6ee5dd5aacb02c8a70579125beef348",
     "response_distance/tests/test_response_separation.py": "207ec492eeda1aefef523378c27c91014a2700462851685f84078261d1f2eb21",
@@ -85,6 +85,6 @@
     "response_distance/results/runs/response_mixed/organized_20261014/metadata.json": "e8cb6eaaa18968af36871ace678177b14da6e9ed651b7a7a69f70ad0417a9b8d",
     "response_distance/results/runs/response_mixed/organized_20261014/mixed_response_bounds.csv": "67d05392694246ff515f520470135559b219c86f784fed3bf3fb4826aaf8210a"
   },
-  "pdf_sha256": "6b18156f55ea3732dc11dc5a225bb005c5572a10b58fede7e66bc4a048b34016",
+  "pdf_sha256": "ce78d287027c8bf436cd441d71fdb52ec2acc6bee517d1941f334d0868c17f42",
   "package_readme_sha256": "0f7b93ed8847714de0a65629cb1926d0b090b47aef6bcbb0e9a6891d35edc221"
 }

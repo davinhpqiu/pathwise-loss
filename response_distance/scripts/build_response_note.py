@@ -235,16 +235,6 @@ def main() -> None:
         raise AssertionError("rational storage check fails")
     source_path = ROOT / SOURCE
     source = source_path.read_text()
-    grid = "\n".join(
-        rf"\newcommand{{\{macro}}}{{{stats[field]}}}"
-        for macro, field in (
-            ("GridCases", "cases"),
-            ("GridMoved", "optimum_sets_changed"),
-            ("GridCheaper", "strictly_cheaper"),
-            ("GridSaving", "max_saving_percent"),
-        )
-    )
-    source = replace_block(source, "GRID", grid)
     source = replace_block(
         source,
         "REFERENCES",

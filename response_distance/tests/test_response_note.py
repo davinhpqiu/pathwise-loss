@@ -46,15 +46,15 @@ def test_note_citations_all_resolve_from_canonical_bibliography() -> None:
     assert r"\bibitem{bottcher2008frobenius}" in references
 
 
-def test_note_explains_decoder_before_theorem_and_defers_tail_bookkeeping() -> None:
+def test_note_explains_decoder_before_proposition_and_defers_tail_bookkeeping() -> None:
     root = Path(__file__).resolve().parents[2]
     source = (root / "response_distance/note.tex").read_text()
     main, appendix = source.split(r"\appendix", 1)
-    opening = main.split(r"\label{thm:bv}", 1)[0]
+    opening = main.split(r"\label{prop:bv}", 1)[0]
     assert r"\ell_i^{\le2}" in opening
     assert r"\widehat\Phi^A_\pi(X)" in opening
     assert r"\xrightarrow{\text{exponentiate and compose}}" in opening
-    for symbol in ("T_4", "Q_R", "Q_H", "C_T", "t_*"):
+    for symbol in ("T_4", "Q_R", "Q_H"):
         assert symbol not in main
         assert symbol in appendix
 
@@ -68,16 +68,34 @@ def test_moved_note_equations_keep_unique_resolving_labels() -> None:
     assert set(references) <= set(labels)
 
 
-def test_note_defines_norms_and_tensor_operations_before_criteria() -> None:
+def test_note_introduces_path_distance_before_certificate_and_compression() -> None:
     root = Path(__file__).resolve().parents[2]
     source = (root / "response_distance/note.tex").read_text()
-    opening = source.split(r"\label{eq:criterion}", 1)[0]
+    distance = source.index(r"\label{eq:criterion}")
+    certificate = source.index(r"\label{eq:certificate}")
+    comparison = source.index(r"\paragraph{Comparison pairs.}")
+    assert distance < certificate < comparison
+    opening = source[:distance]
     for definition in (
         r"\norm{X}_{1\text{-var}}",
-        r"S(X)_0=1",
-        r"e_\otimes^U=\exp_\otimes U=",
-        r"[U,V]=U\otimes V-V\otimes U",
         r"\norm{A_i}_F^2=\operatorname{tr}(A_i^\top A_i)",
+        r"\norm{M}_{\op}=\sup_{\norm{v}_2=1}\norm{Mv}_2",
     ):
         assert definition in opening
-    assert r"\norm{M}_{\op}=\sup_{\norm{v}_2=1}\norm{Mv}_2" in source
+    assert r"S(X)_0=1" in source[distance:certificate]
+    for definition in (
+        r"e_\otimes^U=\exp_\otimes U=",
+        r"[U,V]=U\otimes V-V\otimes U",
+    ):
+        assert definition in source[comparison:]
+
+
+def test_short_note_keeps_two_results_with_proofs_and_finite_example() -> None:
+    root = Path(__file__).resolve().parents[2]
+    source = (root / "response_distance/note.tex").read_text()
+    assert source.count(r"\begin{proposition}") == 2
+    assert r"\begin{theorem}" not in source
+    for label in ("prop:bv", "prop:chain", "eq:corner", "app:planar", "app:chain"):
+        assert rf"\label{{{label}}}" in source
+    for removed in ("Euler", "Engel", "GridCases", r"\Lambda_d", "FPL"):
+        assert removed not in source
